@@ -53,8 +53,13 @@ RUN pip install --no-cache-dir --ignore-installed \
       pybamm fmpy \
       "jupyterhub==5.5.3" ipykernel
 
-# f1tenth_gym（MIT，源码安装）
-RUN pip install --no-cache-dir git+https://github.com/f1tenth/f1tenth_gym.git
+# f1tenth_gym（MIT）——暂时摘掉：
+#   它依赖 gym==0.19.0；gym 0.19.0 没有 Python 3.12 的 wheel，pip 回退到 sdist 构建，
+#   而其 setup.py 的 extras_require 写法不合法，被新版 setuptools 拒收
+#   （"metadata-generation-failed"，2026-10-17 CI 第四次构建实测）。
+#   MVP（Step 2/3：JupyterHub + FASTSim）不需要它；TODO：后续单独处理
+#   （备选：找新版 fork，或在 Python 3.10 的独立 venv 里装）。
+# RUN pip install --no-cache-dir git+https://github.com/f1tenth/f1tenth_gym.git
 
 # ---------- 4. esmini v3.10.0 预编译包 ----------
 RUN mkdir -p /opt/esmini && cd /opt/esmini \
