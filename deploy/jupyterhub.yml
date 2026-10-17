@@ -1,0 +1,35 @@
+# IEV CloudLab — JupyterHub 单机部署（Docker Compose + DockerSpawner）
+# 宿主机：CentOS Stream 10，SELinux enforcing
+# 落点：设计文档 §5 Step 3（6 条防坑铁律）
+services:
+  jupyterhub:
+    image: jupyterhub/jupyterhub:5.5.3
+    container_name: jupyterhub
+    restart: unless-stopped
+    # 铁律1：官方裸镜像不含插件，启动时补装
+    command: >
+      bash -c "
+      pip install --no-cache-dir
+        dockerspawner
+        jupyterhub-idle-culler==2.0.0
+        jupyterhub-nativeauthenticator
+      && exec jupyterhub --config /srv/jupyterhub/jupyterhub_config.py"
+    ports:
+      - "127.0.0.1:8000:8000"  # 仅本机；对外走 Cloudflare Tunnel
+    volumes:
+      # 铁律2：docker.sock 绝不加 :z，用 label=disable
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 铁律2b：持久化 Hub 的 SQLite 状态库
+      - /opt/ievlab/hub_data:/srv/jupyterhub:z
+      # 配置文件
+      - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:z,ro
+      # 铁律5：pre_spawn_hook 需要操作宿主机用户目录，挂进来
+      - /opt/ievlab/home:/opt/ievlab/home:z
+    security_opt:
+      - label=disable
+    networks:
+      - ievlab_net
+
+networks:
+  ievlab_net:
+    driver: bridge
