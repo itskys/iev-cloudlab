@@ -42,11 +42,11 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # ---------- 3. Python 包 ----------
 # numpy/scipy 必须 pin 1.x：scenariogeneration 0.9.3 与 numpy 2.x 不兼容（实测）
-# 预装 apt 系 Python 包：Ubuntu 通过 apt 装的 python3-psutil/packaging 等没有 RECORD 文件，
-# pip 升级时会报 "Cannot uninstall ... RECORD file not found"（2026-10-17 CI 实测连踩 psutil、packaging 两坑）。
-# 用 --ignore-installed 一次性覆盖，避免逐个补洞。
-RUN pip install --no-cache-dir --ignore-installed "psutil" "packaging" "setuptools" "wheel" \
- && pip install --no-cache-dir \
+# --ignore-installed（整行）：Ubuntu/ROS 通过 apt 预装了一批 python3-* 包
+#  （psutil、packaging、lark……），它们没有 RECORD 文件，pip 升级时会报
+#   "Cannot uninstall ... RECORD file not found"。2026-10-17 CI 连踩三坑，
+#   改为整行 --ignore-installed，直接覆盖安装、一劳永逸（不可变镜像内是安全做法）。
+RUN pip install --no-cache-dir --ignore-installed \
       "numpy==1.26.4" "scipy==1.13.1" \
       "scenariogeneration==0.9.3" \
       "carla==0.9.16" \
