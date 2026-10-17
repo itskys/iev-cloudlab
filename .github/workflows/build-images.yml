@@ -1,0 +1,57 @@
+# IEV CloudLab — 镜像构建流水线
+# 推送到 GHCR：ghcr.io/<owner>/iev-base:jazzy-24.04
+# 构建约 30–60 分钟（ROS Jazzy 安装是大头）
+
+name: build-images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "deploy/fastdds_udp.xml"
+      - ".github/workflows/build-images.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  iev-base:
+    runs-on: ubuntu-latest
+    steps:
+      # GitHub runner 磁盘小，先清（设计文档 §5 要求）
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/iev-base.Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/iev-base:jazzy-24.04
+            ghcr.io/${{ github.repository_owner }}/iev-base:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
