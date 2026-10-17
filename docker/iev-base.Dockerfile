@@ -42,7 +42,10 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # ---------- 3. Python 包 ----------
 # numpy/scipy 必须 pin 1.x：scenariogeneration 0.9.3 与 numpy 2.x 不兼容（实测）
-RUN pip install --no-cache-dir \
+# psutil 预装：Ubuntu 的 python3-psutil（apt 装，无 RECORD）会被 pip 升级时卡住
+#   "Cannot uninstall psutil 5.9.8, RECORD file not found"（2026-10-17 CI 实测）
+RUN pip install --no-cache-dir --ignore-installed "psutil" \
+ && pip install --no-cache-dir \
       "numpy==1.26.4" "scipy==1.13.1" \
       "scenariogeneration==0.9.3" \
       "carla==0.9.16" \
