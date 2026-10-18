@@ -19,6 +19,9 @@ services:
       - /opt/ievlab/hub_data:/srv/jupyterhub:z
       # 配置文件
       - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:z,ro
+      # 自研邮箱验证码认证器 + 自定义登录模板
+      - ./otp_authenticator.py:/srv/jupyterhub/otp_authenticator.py:z,ro
+      - ./templates:/srv/jupyterhub/templates:z,ro
       # 铁律5：pre_spawn_hook 需要操作宿主机用户目录，挂进来
       - /opt/ievlab/home:/opt/ievlab/home:z
     security_opt:
