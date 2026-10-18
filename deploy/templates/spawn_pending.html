@@ -42,11 +42,27 @@
     });
   </script>
   <script type="text/javascript">
-    // spawn_pending 模块不存在时降级：定时刷新进度
+    // 轮询 Hub API，spawn 完成后自动跳转（替代缺失的 spawn_pending.js 模块）
     (function() {
-      if (typeof require === "undefined") return;
-      try { require(["spawn_pending"]); }
-      catch (e) { setTimeout(function(){ location.reload(); }, 5000); }
+      var baseUrl = document.querySelector('base') ? document.querySelector('base').href : '/hub/';
+      // 从 URL 提取用户名：/hub/spawn-pending/<username>
+      var m = window.location.pathname.match(/spawn-pending\/([^\/]+)/);
+      var username = m ? m[1] : '';
+      if (!username) { setTimeout(function(){ location.reload(); }, 5000); return; }
+      var apiUrl = baseUrl + 'api/users/' + encodeURIComponent(username);
+      function poll() {
+        fetch(apiUrl, {credentials: 'same-origin'})
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.server || (data.servers && Object.keys(data.servers).length > 0)) {
+              window.location.href = baseUrl + 'user/' + encodeURIComponent(username) + '/lab';
+            } else {
+              setTimeout(poll, 2000);
+            }
+          })
+          .catch(function() { setTimeout(poll, 3000); });
+      }
+      setTimeout(poll, 1500);
     })();
   </script>
 {% endblock script %}
