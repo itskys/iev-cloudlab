@@ -425,5 +425,88 @@
     });
   })();
   </script>
+  <script>
+  /* Admin 页（React 渲染）运行时翻译：MutationObserver 监听 DOM 变化替换英文 */
+  (function() {
+    if (!window.location.pathname.includes("/hub/admin")) return;
+    var MAP = {
+      "Search users": "搜索用户",
+      "only active servers": "仅显示运行中的服务器",
+      "Manage Groups": "管理分组",
+      "Add Users": "添加用户",
+      "Start All": "全部启动",
+      "Stop All": "全部停止",
+      "Shutdown Hub": "关闭 Hub",
+      "Displaying": "显示",
+      "of": "，共",
+      "Previous": "上一页",
+      "Next": "下一页",
+      "Items per page:": "每页条数：",
+      "User": "用户",
+      "Admin": "管理员",
+      "Server": "服务器",
+      "Last Activity": "最近活动",
+      "Edit User": "编辑用户",
+      "Delete User": "删除用户",
+      "Start Server": "启动服务器",
+      "Stop Server": "停止服务器"
+    };
+    function translateNode(node) {
+      if (node.nodeType === 3) {
+        var t = node.textContent.trim();
+        if (MAP[t]) node.textContent = node.textContent.replace(t, MAP[t]);
+        // "Displaying 1-1 of 1" 这类组合
+        if (/^Displaying\s+\d+-\d+\s+of\s+\d+$/.test(t)) {
+          var m = t.match(/Displaying\s+(\d+-\d+)\s+of\s+(\d+)/);
+          node.textContent = node.textContent.replace(t, "显示 " + m[1] + "，共 " + m[2] + " 条");
+        }
+        // "N minutes ago" / "N hours ago"
+        var tm = t.match(/^(\d+)\s+(minute|hour|day)s?\s+ago$/);
+        if (tm) {
+          var unit = {"minute": "分钟", "hour": "小时", "day": "天"}[tm[2]] || tm[2];
+          node.textContent = node.textContent.replace(t, tm[1] + " " + unit + "前");
+        }
+      } else if (node.nodeType === 1) {
+        // placeholder 属性
+        if (node.placeholder && MAP[node.placeholder.trim()]) {
+          node.placeholder = MAP[node.placeholder.trim()];
+        }
+        node.childNodes.forEach(translateNode);
+      }
+    }
+    function getLang() {
+      var l = localStorage.getItem("ievlab-lang");
+      if (!l) l = (navigator.language || "en").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
+      return l;
+    }
+    function apply() {
+      if (getLang() !== "zh") return;
+      translateNode(document.body);
+    }
+    var obs = new MutationObserver(function(muts) {
+      if (getLang() !== "zh") return;
+      muts.forEach(function(m) {
+        m.addedNodes.forEach(translateNode);
+        if (m.type === "characterData") translateNode(m.target);
+      });
+    });
+    // React 渲染完成后开始观察
+    var tries = 0;
+    var timer = setInterval(function() {
+      tries++;
+      if (document.getElementById("react-admin-hook") || tries > 40) {
+        clearInterval(timer);
+        apply();
+        obs.observe(document.body, {childList: true, subtree: true, characterData: true});
+      }
+    }, 250);
+    // 语言切换时重新翻译
+    var origSet = window.ievSetLang;
+    window.ievSetLang = function(l) {
+      if (origSet) origSet(l);
+      setTimeout(apply, 300);
+    };
+  })();
+  </script>
 </body>
 </html>
