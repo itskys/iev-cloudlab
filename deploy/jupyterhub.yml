@@ -7,13 +7,9 @@ services:
     container_name: jupyterhub
     restart: unless-stopped
     # 铁律1：官方裸镜像不含插件，启动时补装
-    command: >
-      bash -c "
-      pip install --no-cache-dir
-        dockerspawner
-        jupyterhub-idle-culler==2.0.0
-        jupyterhub-nativeauthenticator
-      && exec jupyterhub --config /srv/jupyterhub/jupyterhub_config.py"
+    # 用 exec 数组形式（argv 精确传递），避免字符串 command 被按空白切分
+    # （2026-10-17 实测：字符串 + YAML 折叠写法会导致 bash 收到多行脚本而启动失败）
+    command: ["bash", "-c", "pip install --no-cache-dir dockerspawner jupyterhub-idle-culler==2.0.0 jupyterhub-nativeauthenticator && exec jupyterhub --config /srv/jupyterhub/jupyterhub_config.py"]
     ports:
       - "127.0.0.1:8000:8000"  # 仅本机；对外走 Cloudflare Tunnel
     volumes:
@@ -31,5 +27,8 @@ services:
       - ievlab_net
 
 networks:
+  # 显式命名：必须与 jupyterhub_config.py 里 c.DockerSpawner.network_name="ievlab_net" 一致，
+  # 否则学生容器会被挂到 deploy_ievlab_net 而 Hub 去连 ievlab_net（铁律4）
   ievlab_net:
+    name: ievlab_net
     driver: bridge
