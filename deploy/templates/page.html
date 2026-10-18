@@ -316,6 +316,10 @@
         token_request: "申请新的 API 令牌",
         token_new: "你的新 API 令牌",
         token_revoke: "撤销",
+        token_list: "API 令牌列表",
+        token_lastused: "上次使用",
+        token_created: "创建时间",
+        token_expires_col: "过期时间",
         sp_starting: "正在启动实验环境…",
         sp_redirect: "就绪后会自动跳转，请稍候。",
         sp_log: "事件日志"
@@ -356,6 +360,10 @@
         token_request: "Request new API token",
         token_new: "Your new API Token",
         token_revoke: "Revoke",
+        token_list: "API Tokens",
+        token_lastused: "Last used",
+        token_created: "Created",
+        token_expires_col: "Expires",
         sp_starting: "Starting lab environment…",
         sp_redirect: "You will be redirected automatically when ready.",
         sp_log: "Event log"
@@ -449,27 +457,40 @@
       "Edit User": "编辑用户",
       "Delete User": "删除用户",
       "Start Server": "启动服务器",
-      "Stop Server": "停止服务器"
+      "Stop Server": "停止服务器",
+      "Actions": "操作",
+      "Server is pending": "服务器启动中",
+      "Spawn Page": "启动页",
+      "Never": "从不"
     };
     function translateNode(node) {
       if (node.nodeType === 3) {
         var t = node.textContent.trim();
-        if (MAP[t]) node.textContent = node.textContent.replace(t, MAP[t]);
-        // "Displaying 1-1 of 1" 这类组合
-        if (/^Displaying\s+\d+-\d+\s+of\s+\d+$/.test(t)) {
-          var m = t.match(/Displaying\s+(\d+-\d+)\s+of\s+(\d+)/);
-          node.textContent = node.textContent.replace(t, "显示 " + m[1] + "，共 " + m[2] + " 条");
+        // "Displaying 1-1 of 1" 这类组合（先处理，避免被简单替换破坏）
+        var dm = t.match(/^(Displaying|显示)\s+(\d+-\d+)\s+of\s+(\d+)$/);
+        if (dm) {
+          node.textContent = node.textContent.replace(t, "显示 " + dm[2] + "，共 " + dm[3] + " 条");
+          return;
         }
-        // "N minutes ago" / "N hours ago"
-        var tm = t.match(/^(\d+)\s+(minute|hour|day)s?\s+ago$/);
+        // "N seconds/minutes/hours/days ago"
+        var tm = t.match(/^(\d+)\s+(second|minute|hour|day)s?\s+ago$/);
         if (tm) {
-          var unit = {"minute": "分钟", "hour": "小时", "day": "天"}[tm[2]] || tm[2];
+          var unit = {"second": "秒", "minute": "分钟", "hour": "小时", "day": "天"}[tm[2]] || tm[2];
           node.textContent = node.textContent.replace(t, tm[1] + " " + unit + "前");
+          return;
         }
+        if (MAP[t]) node.textContent = node.textContent.replace(t, MAP[t]);
       } else if (node.nodeType === 1) {
         // placeholder 属性
         if (node.placeholder && MAP[node.placeholder.trim()]) {
           node.placeholder = MAP[node.placeholder.trim()];
+        }
+        // "Displaying 1-1 of 1" 可能分散在多个文本节点：整段替换
+        var full = node.textContent;
+        var dm2 = full.match(/(Displaying|显示)\s+(\d+-\d+)\s+of\s+(\d+)/);
+        if (dm2 && node.childNodes.length <= 3) {
+          node.textContent = full.replace(dm2[0], "显示 " + dm2[2] + "，共 " + dm2[3] + " 条");
+          return;
         }
         node.childNodes.forEach(translateNode);
       }
@@ -498,6 +519,13 @@
         clearInterval(timer);
         apply();
         obs.observe(document.body, {childList: true, subtree: true, characterData: true});
+        // 兜底：React 异步加载数据，前 60 秒每 2 秒全量扫一遍
+        var sweep = 0;
+        var sweeper = setInterval(function() {
+          sweep++;
+          if (getLang() === "zh") apply();
+          if (sweep >= 30) clearInterval(sweeper);
+        }, 2000);
       }
     }, 250);
     // 语言切换时重新翻译
