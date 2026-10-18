@@ -1,0 +1,87 @@
+{% extends "page.html" %}
+{% if announcement_login is string %}
+  {% set announcement = announcement_login %}
+{% endif %}
+{% block login_widget %}
+{% endblock login_widget %}
+{% block main %}
+  {% block login %}
+    <div id="login-main" class="container">
+      {% block login_container %}
+        <form action="{{ authenticator_login_url }}" method="post" role="form" id="otp-login-form">
+          <div class="auth-form-header">
+            <h1>IEV CloudLab 登录</h1>
+          </div>
+          <div class='auth-form-body m-auto'>
+            {% if login_error %}<p class="login_error">{{ login_error }}</p>{% endif %}
+            <input type="hidden" name="_xsrf" value="{{ xsrf }}" />
+            <label for="email_input">邮箱地址：</label>
+            <input id="email_input"
+                   type="email"
+                   autocapitalize="off"
+                   autocorrect="off"
+                   autocomplete="email"
+                   class="form-control"
+                   name="email"
+                   placeholder="请输入你的邮箱"
+                   autofocus="autofocus" />
+            <div style="margin-top: 8px;">
+              <button type="button" id="send-code-btn" class="btn btn-jupyter">发送验证码</button>
+              <span id="send-code-msg" style="margin-left: 8px; color: #555;"></span>
+            </div>
+            <label for="code_input" style="margin-top: 12px;">验证码：</label>
+            <input id="code_input"
+                   type="text"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   class="form-control"
+                   name="code"
+                   placeholder="6 位数字验证码"
+                   maxlength="6" />
+            <input type="submit" class='btn btn-jupyter form-control' value='登录' style="margin-top: 12px;" />
+          </div>
+        </form>
+        <script>
+        (function() {
+          var btn = document.getElementById('send-code-btn');
+          var msg = document.getElementById('send-code-msg');
+          var emailInput = document.getElementById('email_input');
+          function getXsrf() {
+            var m = document.querySelector('input[name="_xsrf"]');
+            return m ? m.value : '';
+          }
+          btn.addEventListener('click', function() {
+            var email = emailInput.value.trim();
+            if (!email) { msg.textContent = '请先输入邮箱地址'; return; }
+            btn.disabled = true;
+            msg.textContent = '发送中…';
+            fetch('{{ base_url }}hub/otp/send', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-XSRFToken': getXsrf(),
+              },
+              body: JSON.stringify({email: email}),
+            }).then(function(r) { return r.json(); })
+              .then(function(d) {
+                msg.textContent = d.message || '已发送';
+                document.getElementById('code_input').focus();
+                // 60 秒冷却
+                var n = 60;
+                var timer = setInterval(function() {
+                  n -= 1;
+                  if (n <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '发送验证码'; }
+                  else { btn.textContent = '重新发送(' + n + ')' ; }
+                }, 1000);
+              })
+              .catch(function() {
+                msg.textContent = '发送失败，请稍后重试';
+                btn.disabled = false;
+              });
+          });
+        })();
+        </script>
+      {% endblock login_container %}
+    </div>
+  {% endblock login %}
+{% endblock main %}
