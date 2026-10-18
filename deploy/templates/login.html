@@ -15,7 +15,33 @@
       padding: 32px 16px;
       background: radial-gradient(1200px 600px at 50% -10%, #e8f0fe 0%, #f7f9fc 55%, #f7f9fc 100%);
       margin: -24px -15px 0;
+      position: relative;
     }
+    /* 小地球语言切换器 */
+    .iev-lang-switch { position: absolute; top: 14px; right: 18px; z-index: 10; }
+    .iev-lang-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1px solid #dfe1e6; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      transition: box-shadow .15s;
+    }
+    .iev-lang-btn:hover { box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+    .iev-lang-btn svg { width: 20px; height: 20px; stroke: #42526e; }
+    .iev-lang-menu {
+      position: absolute; top: 44px; right: 0;
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.14);
+      border: 1px solid #dfe1e6; overflow: hidden;
+      display: none; min-width: 130px;
+    }
+    .iev-lang-menu.open { display: block; }
+    .iev-lang-opt {
+      padding: 10px 16px; font-size: 14px; color: #172b4d;
+      cursor: pointer; white-space: nowrap;
+    }
+    .iev-lang-opt:hover { background: #f4f5f7; }
+    .iev-lang-opt.active { color: #1a73e8; font-weight: 700; }
     .iev-card {
       width: 100%;
       max-width: 430px;
@@ -70,11 +96,25 @@
   </style>
 
   <div class="iev-login-wrap">
+    <div class="iev-lang-switch">
+      <button type="button" class="iev-lang-btn" id="iev-lang-btn" title="Language / 语言">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      </button>
+      <div class="iev-lang-menu" id="iev-lang-menu">
+        <div class="iev-lang-opt" data-lang="zh">中文</div>
+        <div class="iev-lang-opt" data-lang="en">English</div>
+      </div>
+    </div>
+
     <div class="iev-card">
       <div class="iev-brand">
         <div class="iev-badge">IEV</div>
         <p class="iev-title">IEV CloudLab</p>
-        <p class="iev-subtitle">智能电动汽车云仿真实验平台</p>
+        <p class="iev-subtitle" data-i18n="card_subtitle">智能电动汽车云仿真实验平台</p>
       </div>
 
       {% if login_error %}<p class="login_error iev-error" style="text-align:center;">{{ login_error }}</p>{% endif %}
@@ -83,46 +123,132 @@
         <input type="hidden" name="_xsrf" value="{{ xsrf }}" />
 
         <div class="iev-field">
-          <label for="email_input">邮箱地址</label>
+          <label for="email_input" data-i18n="email_label">邮箱地址</label>
           <div class="iev-email-row">
             <input id="email_input" type="email" class="iev-input"
                    autocapitalize="off" autocorrect="off" autocomplete="email"
-                   name="email" placeholder="请输入你的邮箱" autofocus="autofocus" />
-            <button type="button" id="send-code-btn" class="iev-send-btn">发送验证码</button>
+                   name="email" data-i18n-ph="email_ph" placeholder="请输入你的邮箱" autofocus="autofocus" />
+            <button type="button" id="send-code-btn" class="iev-send-btn" data-i18n="send_code">发送验证码</button>
           </div>
           <div id="send-code-msg" class="iev-msg"></div>
         </div>
 
         <div class="iev-field">
-          <label for="code_input">验证码</label>
+          <label for="code_input" data-i18n="code_label">验证码</label>
           <input id="code_input" type="text" class="iev-input"
                  inputmode="numeric" autocomplete="one-time-code"
-                 name="code" placeholder="6 位数字验证码" maxlength="6" />
+                 name="code" data-i18n-ph="code_ph" placeholder="6 位数字验证码" maxlength="6" />
         </div>
 
-        <button type="submit" class="iev-login-btn">登 录</button>
+        <button type="submit" class="iev-login-btn" data-i18n="signin">登 录</button>
       </form>
 
-      <p class="iev-hint">验证码 10 分钟内有效，请勿转发给他人</p>
+      <p class="iev-hint" data-i18n="hint">验证码 10 分钟内有效，请勿转发给他人</p>
     </div>
   </div>
 
   <script>
   (function() {
-    var btn = document.getElementById('send-code-btn');
+    // ---------- i18n ----------
+    var I18N = {
+      zh: {
+        brand_subtitle: "智能电动汽车云仿真实验平台",
+        footer_platform: "IEV CloudLab · 智能电动汽车云仿真实验平台",
+        card_subtitle: "智能电动汽车云仿真实验平台",
+        email_label: "邮箱地址",
+        email_ph: "请输入你的邮箱",
+        send_code: "发送验证码",
+        resend: function(n) { return "重新发送(" + n + ")"; },
+        code_label: "验证码",
+        code_ph: "6 位数字验证码",
+        signin: "登 录",
+        hint: "验证码 10 分钟内有效，请勿转发给他人",
+        need_email: "请先输入邮箱地址",
+        sending: "发送中…",
+        sent: "如果该邮箱已注册，验证码已发送",
+        send_fail: "发送失败，请稍后重试"
+      },
+      en: {
+        brand_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
+        footer_platform: "IEV CloudLab · Intelligent Electric Vehicle Cloud Simulation Laboratory",
+        card_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
+        email_label: "Email address",
+        email_ph: "Enter your email",
+        send_code: "Send code",
+        resend: function(n) { return "Resend (" + n + ")"; },
+        code_label: "Verification code",
+        code_ph: "6-digit code",
+        signin: "Sign in",
+        hint: "Code valid for 10 minutes, do not share it",
+        need_email: "Please enter your email first",
+        sending: "Sending…",
+        sent: "If this email is registered, the code has been sent",
+        send_fail: "Failed to send, please try again later"
+      }
+    };
+    var lang = localStorage.getItem("ievlab-lang");
+    if (!lang) {
+      lang = (navigator.language || "en").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
+    }
+    function t(key) {
+      var dict = I18N[lang] || I18N.en;
+      var val = dict[key];
+      if (val === undefined) val = I18N.en[key];
+      return val;
+    }
+    function applyLang() {
+      document.querySelectorAll("[data-i18n]").forEach(function(el) {
+        var val = t(el.getAttribute("data-i18n"));
+        if (typeof val === "string") el.textContent = val;
+      });
+      document.querySelectorAll("[data-i18n-ph]").forEach(function(el) {
+        var val = t(el.getAttribute("data-i18n-ph"));
+        if (typeof val === "string") el.setAttribute("placeholder", val);
+      });
+      document.querySelectorAll(".iev-lang-opt").forEach(function(el) {
+        el.classList.toggle("active", el.getAttribute("data-lang") === lang);
+      });
+      // 发送按钮恢复默认文案（非倒计时中）
+      var sendBtn = document.getElementById("send-code-btn");
+      if (sendBtn && !sendBtn.disabled) sendBtn.textContent = t("send_code");
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    }
+    function setLang(l) {
+      lang = l;
+      localStorage.setItem("ievlab-lang", l);
+      applyLang();
+    }
+    // 语言菜单
+    var btn = document.getElementById("iev-lang-btn");
+    var menu = document.getElementById("iev-lang-menu");
+    btn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      menu.classList.toggle("open");
+    });
+    document.addEventListener("click", function() { menu.classList.remove("open"); });
+    document.querySelectorAll(".iev-lang-opt").forEach(function(el) {
+      el.addEventListener("click", function(e) {
+        e.stopPropagation();
+        setLang(el.getAttribute("data-lang"));
+        menu.classList.remove("open");
+      });
+    });
+    applyLang();
+
+    // ---------- 验证码发送 ----------
+    var sendBtn = document.getElementById('send-code-btn');
     var msg = document.getElementById('send-code-msg');
     var emailInput = document.getElementById('email_input');
     function getXsrf() {
       var m = document.querySelector('input[name="_xsrf"]');
       return m ? m.value : '';
     }
-    btn.addEventListener('click', function() {
+    sendBtn.addEventListener('click', function() {
       var email = emailInput.value.trim();
-      if (!email) { msg.textContent = '请先输入邮箱地址'; msg.classList.add('iev-error'); return; }
+      if (!email) { msg.textContent = t("need_email"); msg.classList.add('iev-error'); return; }
       msg.classList.remove('iev-error');
-      btn.disabled = true;
-      var origText = '发送验证码';
-      msg.textContent = '发送中…';
+      sendBtn.disabled = true;
+      msg.textContent = t("sending");
       fetch('{{ base_url }}hub/otp/send', {
         method: 'POST',
         headers: {
@@ -132,19 +258,19 @@
         body: JSON.stringify({email: email}),
       }).then(function(r) { return r.json(); })
         .then(function(d) {
-          msg.textContent = d.message || '已发送';
+          msg.textContent = t("sent");
           document.getElementById('code_input').focus();
           var n = 60;
           var timer = setInterval(function() {
             n -= 1;
-            if (n <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = origText; }
-            else { btn.textContent = '重新发送(' + n + ')'; }
+            if (n <= 0) { clearInterval(timer); sendBtn.disabled = false; sendBtn.textContent = t("send_code"); }
+            else { sendBtn.textContent = t("resend")(n); }
           }, 1000);
         })
         .catch(function() {
-          msg.textContent = '发送失败，请稍后重试';
+          msg.textContent = t("send_fail");
           msg.classList.add('iev-error');
-          btn.disabled = false;
+          sendBtn.disabled = false;
         });
     });
   })();
