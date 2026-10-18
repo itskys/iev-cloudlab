@@ -79,9 +79,10 @@ class EsminiEnv:
 
     def _setup_ctypes(self):
         lib = self._lib
-        lib.SE_Init.argtypes = [ctypes.c_char_p, ctypes.c_int,
-                                ctypes.c_int, ctypes.c_int, ctypes.c_int]
-        lib.SE_Init.restype = ctypes.c_int
+        # 实测：SE_Init/SE_InitWithString 返回 -1，必须用 SE_InitWithArgs
+        lib.SE_InitWithArgs.argtypes = [ctypes.c_int,
+                                        ctypes.POINTER(ctypes.c_char_p)]
+        lib.SE_InitWithArgs.restype = ctypes.c_int
         lib.SE_StepDT.argtypes = [ctypes.c_float]
         lib.SE_StepDT.restype = ctypes.c_int
         lib.SE_Close.restype = None
@@ -98,13 +99,30 @@ class EsminiEnv:
         """初始化场景，返回初始观测。"""
         if self._initialized:
             self._lib.SE_Close()
-        args = f'--headless --osc {self.scenario}'
+        # 用 SE_InitWithArgs (argc/argv)，实测唯一可用的初始化方式
+        arg_list = ['esmini', '--headless', '--osc', self.scenario,
+                    '--fixed_timestep', str(self.dt)]
         if self.road:
-            args += f' --road {self.road}'
-        # SE_Init 需要 argc/argv 风格，这里用简化调用
-        ret = self._lib.SE_Init(args.encode(), 0, 0, 0, 0)
+            arg_list += ['--road', self.road]
+        argv = (ctypes.c_char_p * len(arg_list))(
+            *[a.encode() for a in arg_list])
+        # 切换到场景文件目录（esmini 用相对路径解析）
+        _cwd = os.getcwd()
+        scenario_dir = os.path.dirname(os.path.abspath(self.scenario))
+        if scenario_dir:
+            os.chdir(scenario_dir)
+            # argv 中的路径改为相对路径
+            arg_list[3] = os.path.basename(self.scenario)
+            if self.road:
+                arg_list[5] = os.path.basename(self.road)
+            argv = (ctypes.c_char_p * len(arg_list))(
+                *[a.encode() for a in arg_list])
+        try:
+            ret = self._lib.SE_InitWithArgs(len(arg_list), argv)
+        finally:
+            os.chdir(_cwd)
         if ret != 0:
-            raise RuntimeError(f'esmini SE_Init failed: {ret}')
+            raise RuntimeError(f'esmini SE_InitWithArgs failed: {ret}')
         self._initialized = True
         self.sim_time = 0.0
         self.vehicle.reset(x=ego_x, y=ego_y, yaw=ego_yaw, v=ego_v)
