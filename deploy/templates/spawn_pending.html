@@ -42,6 +42,11 @@
     });
   </script>
   <script type="text/javascript">
-    require(["spawn_pending"]);
+    // spawn_pending 模块不存在时降级：定时刷新进度
+    (function() {
+      if (typeof require === "undefined") return;
+      try { require(["spawn_pending"]); }
+      catch (e) { setTimeout(function(){ location.reload(); }, 5000); }
+    })();
   </script>
 {% endblock script %}
