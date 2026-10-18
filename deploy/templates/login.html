@@ -6,82 +6,148 @@
 {% endblock login_widget %}
 {% block main %}
   {% block login %}
-    <div id="login-main" class="container">
-      {% block login_container %}
-        <form action="{{ authenticator_login_url }}" method="post" role="form" id="otp-login-form">
-          <div class="auth-form-header">
-            <h1>IEV CloudLab 登录</h1>
+  <style>
+    .iev-login-wrap {
+      min-height: 62vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      background: radial-gradient(1200px 600px at 50% -10%, #e8f0fe 0%, #f7f9fc 55%, #f7f9fc 100%);
+      margin: -24px -15px 0;
+    }
+    .iev-card {
+      width: 100%;
+      max-width: 430px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+      padding: 36px 34px 30px;
+    }
+    .iev-brand { text-align: center; margin-bottom: 26px; }
+    .iev-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px; border-radius: 16px;
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      color: #fff; font-weight: 800; font-size: 22px;
+      box-shadow: 0 6px 16px rgba(26, 115, 232, 0.35);
+      margin-bottom: 14px;
+    }
+    .iev-title { font-size: 22px; font-weight: 700; color: #172b4d; margin: 0 0 4px; }
+    .iev-subtitle { font-size: 13px; color: #6b778c; margin: 0; }
+    .iev-field { margin-bottom: 14px; }
+    .iev-field label { display: block; font-size: 13px; font-weight: 600; color: #42526e; margin-bottom: 6px; }
+    .iev-input {
+      width: 100%; padding: 11px 14px; font-size: 15px;
+      border: 1.5px solid #dfe1e6; border-radius: 10px;
+      transition: border-color .15s, box-shadow .15s;
+      box-sizing: border-box;
+    }
+    .iev-input:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15); }
+    .iev-email-row { display: flex; gap: 8px; }
+    .iev-email-row .iev-input { flex: 1; }
+    .iev-send-btn {
+      white-space: nowrap; padding: 0 16px;
+      border: 1.5px solid #1a73e8; border-radius: 10px;
+      background: #fff; color: #1a73e8; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .15s;
+    }
+    .iev-send-btn:hover:not(:disabled) { background: #e8f0fe; }
+    .iev-send-btn:disabled { opacity: .55; cursor: default; }
+    .iev-msg { font-size: 12.5px; color: #6b778c; margin-top: 6px; min-height: 18px; }
+    .iev-login-btn {
+      width: 100%; padding: 12px; margin-top: 6px;
+      border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #1a73e8, #1558b0);
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
+      transition: transform .1s, box-shadow .15s;
+    }
+    .iev-login-btn:hover { box-shadow: 0 6px 18px rgba(26, 115, 232, 0.40); }
+    .iev-login-btn:active { transform: translateY(1px); }
+    .iev-hint { text-align: center; font-size: 12px; color: #97a0af; margin-top: 16px; }
+    .iev-error { color: #de350b !important; }
+  </style>
+
+  <div class="iev-login-wrap">
+    <div class="iev-card">
+      <div class="iev-brand">
+        <div class="iev-badge">IEV</div>
+        <p class="iev-title">IEV CloudLab</p>
+        <p class="iev-subtitle">智能电动汽车云仿真实验平台</p>
+      </div>
+
+      {% if login_error %}<p class="login_error iev-error" style="text-align:center;">{{ login_error }}</p>{% endif %}
+
+      <form action="{{ authenticator_login_url }}" method="post" role="form" id="otp-login-form">
+        <input type="hidden" name="_xsrf" value="{{ xsrf }}" />
+
+        <div class="iev-field">
+          <label for="email_input">邮箱地址</label>
+          <div class="iev-email-row">
+            <input id="email_input" type="email" class="iev-input"
+                   autocapitalize="off" autocorrect="off" autocomplete="email"
+                   name="email" placeholder="请输入你的邮箱" autofocus="autofocus" />
+            <button type="button" id="send-code-btn" class="iev-send-btn">发送验证码</button>
           </div>
-          <div class='auth-form-body m-auto'>
-            {% if login_error %}<p class="login_error">{{ login_error }}</p>{% endif %}
-            <input type="hidden" name="_xsrf" value="{{ xsrf }}" />
-            <label for="email_input">邮箱地址：</label>
-            <input id="email_input"
-                   type="email"
-                   autocapitalize="off"
-                   autocorrect="off"
-                   autocomplete="email"
-                   class="form-control"
-                   name="email"
-                   placeholder="请输入你的邮箱"
-                   autofocus="autofocus" />
-            <div style="margin-top: 8px;">
-              <button type="button" id="send-code-btn" class="btn btn-jupyter">发送验证码</button>
-              <span id="send-code-msg" style="margin-left: 8px; color: #555;"></span>
-            </div>
-            <label for="code_input" style="margin-top: 12px;">验证码：</label>
-            <input id="code_input"
-                   type="text"
-                   inputmode="numeric"
-                   autocomplete="one-time-code"
-                   class="form-control"
-                   name="code"
-                   placeholder="6 位数字验证码"
-                   maxlength="6" />
-            <input type="submit" class='btn btn-jupyter form-control' value='登录' style="margin-top: 12px;" />
-          </div>
-        </form>
-        <script>
-        (function() {
-          var btn = document.getElementById('send-code-btn');
-          var msg = document.getElementById('send-code-msg');
-          var emailInput = document.getElementById('email_input');
-          function getXsrf() {
-            var m = document.querySelector('input[name="_xsrf"]');
-            return m ? m.value : '';
-          }
-          btn.addEventListener('click', function() {
-            var email = emailInput.value.trim();
-            if (!email) { msg.textContent = '请先输入邮箱地址'; return; }
-            btn.disabled = true;
-            msg.textContent = '发送中…';
-            fetch('{{ base_url }}hub/otp/send', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-XSRFToken': getXsrf(),
-              },
-              body: JSON.stringify({email: email}),
-            }).then(function(r) { return r.json(); })
-              .then(function(d) {
-                msg.textContent = d.message || '已发送';
-                document.getElementById('code_input').focus();
-                // 60 秒冷却
-                var n = 60;
-                var timer = setInterval(function() {
-                  n -= 1;
-                  if (n <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '发送验证码'; }
-                  else { btn.textContent = '重新发送(' + n + ')' ; }
-                }, 1000);
-              })
-              .catch(function() {
-                msg.textContent = '发送失败，请稍后重试';
-                btn.disabled = false;
-              });
-          });
-        })();
-        </script>
-      {% endblock login_container %}
+          <div id="send-code-msg" class="iev-msg"></div>
+        </div>
+
+        <div class="iev-field">
+          <label for="code_input">验证码</label>
+          <input id="code_input" type="text" class="iev-input"
+                 inputmode="numeric" autocomplete="one-time-code"
+                 name="code" placeholder="6 位数字验证码" maxlength="6" />
+        </div>
+
+        <button type="submit" class="iev-login-btn">登 录</button>
+      </form>
+
+      <p class="iev-hint">验证码 10 分钟内有效，请勿转发给他人</p>
     </div>
+  </div>
+
+  <script>
+  (function() {
+    var btn = document.getElementById('send-code-btn');
+    var msg = document.getElementById('send-code-msg');
+    var emailInput = document.getElementById('email_input');
+    function getXsrf() {
+      var m = document.querySelector('input[name="_xsrf"]');
+      return m ? m.value : '';
+    }
+    btn.addEventListener('click', function() {
+      var email = emailInput.value.trim();
+      if (!email) { msg.textContent = '请先输入邮箱地址'; msg.classList.add('iev-error'); return; }
+      msg.classList.remove('iev-error');
+      btn.disabled = true;
+      var origText = '发送验证码';
+      msg.textContent = '发送中…';
+      fetch('{{ base_url }}hub/otp/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRFToken': getXsrf(),
+        },
+        body: JSON.stringify({email: email}),
+      }).then(function(r) { return r.json(); })
+        .then(function(d) {
+          msg.textContent = d.message || '已发送';
+          document.getElementById('code_input').focus();
+          var n = 60;
+          var timer = setInterval(function() {
+            n -= 1;
+            if (n <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = origText; }
+            else { btn.textContent = '重新发送(' + n + ')'; }
+          }, 1000);
+        })
+        .catch(function() {
+          msg.textContent = '发送失败，请稍后重试';
+          msg.classList.add('iev-error');
+          btn.disabled = false;
+        });
+    });
+  })();
+  </script>
   {% endblock login %}
 {% endblock main %}
