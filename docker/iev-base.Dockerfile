@@ -51,7 +51,8 @@ RUN pip install --no-cache-dir --ignore-installed \
       "scenariogeneration==0.9.3" \
       "carla==0.9.16" \
       pybamm fmpy \
-      "jupyterhub==5.5.3" ipykernel
+      "jupyterhub==5.5.3" ipykernel \
+      jupyter_server jupyterlab
 
 # f1tenth_gym（MIT）——暂时摘掉：
 #   它依赖 gym==0.19.0；gym 0.19.0 没有 Python 3.12 的 wheel，pip 回退到 sdist 构建，
