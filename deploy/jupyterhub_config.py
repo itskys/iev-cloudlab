@@ -3,15 +3,30 @@
 import os
 import sys
 
-# ---------- 铁律6：认证（默认 PAM 在容器内无系统账号，必须换掉） ----------
-c.JupyterHub.authenticator_class = "nativeauthenticator.NativeAuthenticator"
-c.NativeAuthenticator.open_signup = False  # 关闭公开注册，由管理员预建账号
-c.Authenticator.admin_users = {"admin"}    # TODO: 改成实际管理员用户名
+# 自研认证模块与模板挂在 /srv/jupyterhub，需进 sys.path
+sys.path.insert(0, "/srv/jupyterhub")
+
+# ---------- 认证：邮箱验证码（无密码登录） ----------
+# 登录页只显示空邮箱输入框，不预置任何地址（防垃圾邮件收割）；
+# 验证码经 Gmail SMTP 发送，10 分钟有效，一次性，限流。
+c.JupyterHub.authenticator_class = "otp_authenticator.EmailOTPAuthenticator"
+c.EmailOTPAuthenticator.allowed_emails = {
+    "beabaed@gmail.com": "admin",  # 管理员
+    "itskys@gmail.com": "teacher",  # 教师
+}
+c.EmailOTPAuthenticator.allowed_domains = [
+    "zhjpec.edu.cn",  # 学生域：用户名取 @ 前本地部分
+]
+c.EmailOTPAuthenticator.smtp_user = "itskys@gmail.com"  # 发件人（待用户确认）
+c.EmailOTPAuthenticator.smtp_password_file = "/srv/jupyterhub/.smtp-password"
+c.JupyterHub.template_paths = ["/srv/jupyterhub/templates"]
+# OTP 的 authenticate() 只对验证通过的允许邮箱返回用户名，故可全放行
+c.Authenticator.allow_all = True
+c.Authenticator.admin_users = {"admin"}
 
 # ---------- Spawner ----------
 c.JupyterHub.spawner_class = "dockerspawner.DockerSpawner"
-# TODO: 把 <org> 换成实际 GHCR 组织名
-c.DockerSpawner.image = "ghcr.io/<org>/iev-base:jazzy-24.04"
+c.DockerSpawner.image = "ghcr.io/itskys/iev-base:jazzy-24.04"
 # 铁律3：容器停止即删除壳，防 409 Conflict
 c.DockerSpawner.remove = True
 # 铁律4：与 Hub 同一自定义网络，防 504
