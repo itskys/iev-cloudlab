@@ -51,6 +51,7 @@ RUN pip install --no-cache-dir --ignore-installed \
       "scenariogeneration==0.9.3" \
       "carla==0.9.16" \
       pybamm fmpy \
+      matplotlib stable_baselines3 \
       "jupyterhub==5.5.3" ipykernel \
       jupyter_server jupyterlab
 
