@@ -105,6 +105,10 @@
     {% endblock meta %}
   </head>
   <body>
+  <style>
+    html, body { height: 100%; }
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+  </style>
     <noscript>
       <div id='noscript'>
         JupyterHub requires JavaScript.
@@ -141,14 +145,14 @@
               {% if user %}
                 {% block nav_bar_left_items %}
                   <li class="nav-item">
-                    <a class="nav-link" href="{{ base_url }}home">Home</a>
+                    <a class="nav-link" href="{{ base_url }}home" data-i18n="nav_home">Home</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="{{ base_url }}token">Token</a>
+                    <a class="nav-link" href="{{ base_url }}token" data-i18n="nav_token">Token</a>
                   </li>
                   {% if 'admin-ui' in parsed_scopes %}
                     <li class="nav-item">
-                      <a class="nav-link" href="{{ base_url }}admin">Admin</a>
+                      <a class="nav-link" href="{{ base_url }}admin" data-i18n="nav_admin">Admin</a>
                     </li>
                   {% endif %}
                   {% if services %}
@@ -174,6 +178,22 @@
             </ul>
             <ul class="nav navbar-nav me-2">
               {% block nav_bar_right_items %}
+                <li class="nav-item" style="display: flex; align-items: center; margin-right: 4px;">
+                  <div style="position: relative;">
+                    <button type="button" id="iev-lang-btn" title="Language / 语言"
+                            style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #dfe1e6; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: #42526e;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                      </svg>
+                    </button>
+                    <div id="iev-lang-menu" style="position: absolute; top: 38px; right: 0; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.14); border: 1px solid #dfe1e6; overflow: hidden; display: none; min-width: 120px; z-index: 1000;">
+                      <div class="iev-lang-opt" data-lang="zh" style="padding: 10px 16px; font-size: 14px; cursor: pointer;">中文</div>
+                      <div class="iev-lang-opt" data-lang="en" style="padding: 10px 16px; font-size: 14px; cursor: pointer;">English</div>
+                    </div>
+                  </div>
+                </li>
                 <li class="nav-item">
                   {% block theme_toggle %}
                     <button class="btn btn-sm"
@@ -192,12 +212,12 @@
                         <a id="logout"
                            role="button"
                            class="btn btn-sm btn-outline-contrast"
-                           href="{{ logout_url }}"> <i aria-hidden="true" class="fa fa-sign-out"></i>Logout</a>
+                           href="{{ logout_url }}"> <i aria-hidden="true" class="fa fa-sign-out"></i><span data-i18n="nav_logout">Logout</span></a>
                       {% else %}
                         <a id="login"
                            role="button"
                            class="btn btn-sm btn-outline-contrast"
-                           href="{{ login_url }}">Login</a>
+                           href="{{ login_url }}"><span data-i18n="nav_login">Login</span></a>
                       {% endif %}
                     </span>
                   {% endblock login_widget %}
@@ -217,7 +237,7 @@
     {% endblock announcement %}
     {% block main %}
     {% endblock main %}
-    <footer style="margin-top: 48px; padding: 16px 0; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee;">
+    <footer style="margin-top: auto; padding: 16px 0; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; background: #fff;">
       <span data-i18n="footer_platform">IEV CloudLab · 智能电动汽车云仿真实验平台</span><br/>
       <span style="color: #aaa;">Powered by <a href="https://jupyter.org/hub" target="_blank" style="color: #888;">JupyterHub</a></span>
     </footer>
