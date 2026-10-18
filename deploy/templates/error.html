@@ -1,0 +1,58 @@
+{% extends "page.html" %}
+{% block login_widget %}
+{% endblock login_widget %}
+{% block main %}
+  <style>
+    .iev-err-wrap { max-width: 560px; margin: 0 auto; padding: 48px 20px; }
+    .iev-err-card {
+      background: #fff; border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+      padding: 44px 36px; text-align: center;
+    }
+    .iev-err-card h1 { font-size: 22px; font-weight: 700; color: #172b4d; margin: 0 0 10px; }
+    .iev-err-card p { font-size: 14px; color: #6b778c; }
+  </style>
+  <div class="iev-err-wrap"><div class="iev-err-card">
+    {% block h1_error %}
+      <h1>{{ status_code }} : {{ status_message }}</h1>
+    {% endblock h1_error %}
+    {% block error_detail %}
+      {% if message_html %}
+        <p>{{ message_html | safe }}</p>
+      {% elif message %}
+        <p>{{ message }}</p>
+      {% endif %}
+      {% if extra_error_html %}<p>{{ extra_error_html | safe }}</p>{% endif %}
+    {% endblock error_detail %}
+  </div>
+  </div></div>
+{% endblock main %}
+{% block script %}
+  {{ super() }}
+  <script type="text/javascript">
+    function _remove_redirects_from_url() {
+      if (window.location.search.length <= 1) {
+        return;
+      }
+      var search_parameters = window.location.search.slice(1).split('&');
+      for (var i = 0; i < search_parameters.length; i++) {
+        if (search_parameters[i].split('=')[0] === 'redirects') {
+          // remote redirects from search parameters
+          search_parameters.splice(i, 1);
+          var new_search = '';
+          if (search_parameters.length) {
+            new_search = '?' + search_parameters.join('&');
+          }
+          var new_url = window.location.origin +
+            window.location.pathname +
+            new_search +
+            window.location.hash;
+          window.history.replaceState({}, "", new_url);
+          return;
+        }
+      }
+    }
+
+    _remove_redirects_from_url();
+  </script>
+{% endblock script %}
