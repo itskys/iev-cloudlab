@@ -119,19 +119,15 @@ class EsminiEnv:
                                            ctypes.c_float, ctypes.c_float,
                                            ctypes.c_float, ctypes.c_float,
                                            ctypes.c_float, ctypes.c_float]
-        # SE_GetObjectState(id, *state) 简化版按需扩展
-        lib.SE_GetObjectState.argtypes = [ctypes.c_int,
-                                          ctypes.POINTER(ctypes.c_float) * 12]
 
     def reset(self, ego_x=10.0, ego_y=0.0, ego_yaw=0.0, ego_v=15.0):
         """初始化场景，返回初始观测。"""
         if self._initialized:
             self._lib.SE_Close()
         # 用 SE_InitWithArgs (argc/argv)，实测唯一可用的初始化方式
+        # 注意：不传 --road，xosc 文件内已引用 xodr
         arg_list = ['esmini', '--headless', '--osc', self.scenario,
                     '--fixed_timestep', str(self.dt)]
-        if self.road:
-            arg_list += ['--road', self.road]
         argv = (ctypes.c_char_p * len(arg_list))(
             *[a.encode() for a in arg_list])
         # 切换到场景文件目录（esmini 用相对路径解析）
@@ -141,8 +137,6 @@ class EsminiEnv:
             os.chdir(scenario_dir)
             # argv 中的路径改为相对路径
             arg_list[3] = os.path.basename(self.scenario)
-            if self.road:
-                arg_list[5] = os.path.basename(self.road)
             argv = (ctypes.c_char_p * len(arg_list))(
                 *[a.encode() for a in arg_list])
         try:
