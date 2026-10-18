@@ -74,7 +74,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN uv python install 3.10 \
  && uv venv --python 3.10 /opt/envs/py310-fastsim \
  && uv pip install --python /opt/envs/py310-fastsim/bin/python \
-      "fastsim==2.1.5" ipykernel \
+      "fastsim==2.1.5" ipykernel pymoo \
  && /opt/envs/py310-fastsim/bin/python -m ipykernel install \
       --name py310-fastsim --display-name "Python 3.10 (FASTSim)"
 
