@@ -50,8 +50,15 @@
       var username = m ? m[1] : '';
       if (!username) { setTimeout(function(){ location.reload(); }, 5000); return; }
       var apiUrl = baseUrl + 'api/users/' + encodeURIComponent(username);
+      function getCookie(name) {
+        var m = document.cookie.match(new RegExp('(^|;\s*)' + name + '=([^;]*)'));
+        return m ? decodeURIComponent(m[2]) : '';
+      }
       function poll() {
-        fetch(apiUrl, {credentials: 'same-origin'})
+        fetch(apiUrl, {
+          credentials: 'same-origin',
+          headers: {'X-XSRFToken': getCookie('_xsrf')}
+        })
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.server || (data.servers && Object.keys(data.servers).length > 0)) {
