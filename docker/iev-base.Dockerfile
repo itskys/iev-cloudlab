@@ -68,6 +68,8 @@ RUN mkdir -p /opt/esmini && cd /opt/esmini \
 ENV PATH="/opt/esmini/esmini/bin:${PATH}"
 
 # ---------- 5. FASTSim 2.1.5 独立 Python 3.10 kernel（uv 隔离） ----------
+# uv 默认把解释器装进 /root/.local，jovyan 用户无权访问 → 显式指定全局路径
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN uv python install 3.10 \
  && uv venv --python 3.10 /opt/envs/py310-fastsim \
