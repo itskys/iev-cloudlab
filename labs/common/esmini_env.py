@@ -64,8 +64,10 @@ class EsminiEnv:
 
         # 加载 esmini 动态库
         if not os.path.exists(lib_path):
-            # 尝试常见路径
-            for p in ['/opt/esmini/lib/libesminiLib.so',
+            # 尝试常见路径（实测：库在 bin/ 目录下）
+            for p in ['/opt/esmini/esmini/bin/libesminiLib.so',
+                      '/opt/esmini/esmini/lib/libesminiLib.so',
+                      '/opt/esmini/lib/libesminiLib.so',
                       '/usr/local/lib/libesminiLib.so',
                       './libesminiLib.so']:
                 if os.path.exists(p):
