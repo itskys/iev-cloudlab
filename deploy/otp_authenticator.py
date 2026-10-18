@@ -11,11 +11,13 @@ from email.mime.text import MIMEText
 
 from jupyterhub.auth import Authenticator
 from jupyterhub.handlers import BaseHandler
+from tornado.web import HTTPError
 from traitlets import Dict, Integer, List, Unicode
 
 # 内存验证码库：email -> {code, expires, attempts, sends:[timestamps]}
 # 注：Hub 重启后失效，可接受（验证码本就只有 10 分钟命）
 _otp_store = {}
+
 
 
 def _make_send_handler(auth):
