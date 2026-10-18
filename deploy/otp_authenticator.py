@@ -18,20 +18,28 @@ from traitlets import Dict, Integer, List, Unicode
 _otp_store = {}
 
 
-class _SendCodeHandler(BaseHandler):
-    """AJAX：POST /hub/otp/send  {email} → {ok: true}（永远返回成功，防枚举）"""
+def _make_send_handler(auth):
+    """闭包捕获 authenticator 实例（get_handlers 拿到的是 JH 应用对象，无 .settings）"""
 
-    async def post(self):
-        auth = self.settings["otp_authenticator"]
-        try:
-            data = json.loads(self.request.body.decode("utf-8"))
-        except Exception:
-            data = {}
-        email = (data.get("email") or "").strip().lower()
-        await auth.send_code(email)
-        self.set_header("Content-Type", "application/json")
-        # 无论邮箱是否在允许列表，都返回同样文案
-        self.write(json.dumps({"ok": True, "message": "如果该邮箱已注册，验证码已发送"}))
+    class _SendCodeHandler(BaseHandler):
+        """AJAX：POST /hub/otp/send  {email} → {ok: true}（永远返回成功，防枚举）"""
+
+        async def post(self):
+            try:
+                data = json.loads(self.request.body.decode("utf-8"))
+            except Exception:
+                data = {}
+            email = (data.get("email") or "").strip().lower()
+            try:
+                await auth.send_code(email)
+            except Exception:
+                # 发信失败也不向前端暴露细节
+                pass
+            self.set_header("Content-Type", "application/json")
+            # 无论邮箱是否在允许列表，都返回同样文案
+            self.write(json.dumps({"ok": True, "message": "如果该邮箱已注册，验证码已发送"}))
+
+    return _SendCodeHandler
 
 
 class EmailOTPAuthenticator(Authenticator):
@@ -57,8 +65,7 @@ class EmailOTPAuthenticator(Authenticator):
     max_verify_attempts = Integer(5, help="每个验证码最多试错次数").tag(config=True)
 
     def get_handlers(self, app):
-        app.settings["otp_authenticator"] = self
-        return [(r"/otp/send", _SendCodeHandler)]
+        return [(r"/otp/send", _make_send_handler(self))]
 
     # ---------- 内部 ----------
     # 保留用户名：域名派生时禁止占用（防 admin@学生域 提权）
