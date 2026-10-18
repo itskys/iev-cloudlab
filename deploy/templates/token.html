@@ -68,7 +68,7 @@
     {% if api_tokens %}
       <div class="row" id="api-tokens-section">
         <div class="col">
-          <h2>API Tokens</h2>
+          <h2 data-i18n="token_list">API Tokens</h2>
           <p>
             These are tokens with access to the JupyterHub API.
             Permissions for each token may be viewed via the JupyterHub tokens API.
@@ -79,9 +79,9 @@
               <tr>
                 <th data-i18n="token_note">Note</th>
                 <th data-i18n="token_perms">Permissions</th>
-                <th>Last used</th>
-                <th>Created</th>
-                <th>Expires</th>
+                <th data-i18n="token_lastused">Last used</th>
+                <th data-i18n="token_created">Created</th>
+                <th data-i18n="token_expires_col">Expires</th>
               </tr>
             </thead>
             <tbody>
@@ -141,7 +141,7 @@
             <tr>
               <th>Application</th>
               <th data-i18n="token_perms">Permissions</th>
-              <th>Last used</th>
+              <th data-i18n="token_lastused">Last used</th>
               <th>First authorized</th>
             </tr>
           </thead>
