@@ -1,0 +1,111 @@
+{% extends "page.html" %}
+{% if announcement_home is string %}
+  {% set announcement = announcement_home %}
+{% endif %}
+{% block main %}
+  <style>
+    .iev-home-wrap {
+      max-width: 720px; margin: 0 auto; padding: 40px 20px;
+    }
+    .iev-welcome { text-align: center; margin-bottom: 28px; }
+    .iev-welcome h2 { font-size: 24px; font-weight: 700; color: #172b4d; margin: 0 0 6px; }
+    .iev-welcome h2 .iev-user { color: #1a73e8; }
+    .iev-status-card {
+      background: #fff; border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+      padding: 40px 36px; text-align: center;
+    }
+    .iev-status-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .iev-status-icon.idle { background: #e8f0fe; }
+    .iev-status-icon.running { background: #e6f4ea; }
+    .iev-status-icon svg { width: 36px; height: 36px; }
+    .iev-status-card h3 { font-size: 19px; font-weight: 700; color: #172b4d; margin: 0 0 8px; }
+    .iev-status-card p { font-size: 14px; color: #6b778c; margin: 0 0 24px; line-height: 1.6; }
+    .iev-btn-primary {
+      display: inline-block; padding: 13px 44px;
+      border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #1a73e8, #1558b0);
+      color: #fff; font-size: 16px; font-weight: 700; text-decoration: none;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
+      transition: box-shadow .15s, transform .1s;
+    }
+    .iev-btn-primary:hover { color: #fff; box-shadow: 0 6px 18px rgba(26, 115, 232, 0.40); text-decoration: none; }
+    .iev-btn-primary:active { transform: translateY(1px); }
+    .iev-btn-danger-outline {
+      display: inline-block; margin-top: 14px; padding: 8px 20px;
+      border: 1.5px solid #ff5630; border-radius: 10px;
+      background: #fff; color: #ff5630; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+    }
+    .iev-btn-danger-outline:hover { background: #ffebe6; color: #ff5630; text-decoration: none; }
+    .iev-pulse { animation: iev-pulse 2s infinite; }
+    @keyframes iev-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.35); }
+      70% { box-shadow: 0 0 0 12px rgba(52, 168, 83, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0); }
+    }
+  </style>
+
+  <div class="iev-home-wrap">
+    <div class="iev-welcome">
+      <h2><span data-i18n="home_welcome">欢迎回来</span>，<span class="iev-user">{{ user.name }}</span></h2>
+    </div>
+
+    <div class="iev-status-card">
+      {% if default_server.active %}
+        <div class="iev-status-icon running iev-pulse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <h3 data-i18n="home_running">实验环境运行中</h3>
+        <p data-i18n="home_running_desc">你的云端实验环境正在运行，点击进入开始工作。</p>
+        <a id="start" role="button" class="iev-btn-primary" href="{{ url }}" data-i18n="home_open">进入实验环境</a>
+        <br/>
+        <a id="stop" role="button" class="iev-btn-danger-outline" data-i18n="home_stop">停止环境</a>
+      {% else %}
+        <div class="iev-status-icon idle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h3 data-i18n="home_not_running">你的实验环境还没启动</h3>
+        <p data-i18n="home_not_running_desc">点击下方按钮，启动你的云端实验环境，开始今天的仿真实验。</p>
+        <a id="start" role="button" class="iev-btn-primary" href="{{ url }}" data-i18n="home_launch">启动实验环境</a>
+      {% endif %}
+    </div>
+
+    {% if allow_named_servers %}
+      {# 保留命名服务器（本项目未启用，仅作兼容） #}
+      <div style="margin-top: 32px;">
+        <h2>Named Servers</h2>
+        {% set named_spawners = user.all_spawners(include_default=False)|list %}
+        {% for spawner in named_spawners %}
+          <p>{{ spawner.name }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock main %}
+{% block script %}
+  {{ super() }}
+  <script type="text/javascript">
+    require(["home"]);
+    // 停止按钮二次确认
+    document.addEventListener("DOMContentLoaded", function() {
+      var stopBtn = document.getElementById("stop");
+      if (stopBtn) {
+        stopBtn.addEventListener("click", function(e) {
+          var msg = (window.ievT ? window.ievT("home_stop_confirm") : "Stop?");
+          if (!confirm(msg)) { e.preventDefault(); e.stopPropagation(); }
+        });
+      }
+    });
+  </script>
+{% endblock script %}
