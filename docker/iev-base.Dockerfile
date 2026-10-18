@@ -53,7 +53,8 @@ RUN pip install --no-cache-dir --ignore-installed \
       pybamm fmpy \
       matplotlib stable_baselines3 \
       "jupyterhub==5.5.3" ipykernel \
-      jupyter_server jupyterlab
+      jupyter_server jupyterlab \
+      jupyterlab-language-pack-zh-CN
 
 # f1tenth_gym（MIT）——暂时摘掉：
 #   它依赖 gym==0.19.0；gym 0.19.0 没有 Python 3.12 的 wheel，pip 回退到 sdist 构建，
