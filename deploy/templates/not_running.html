@@ -1,0 +1,63 @@
+{% extends "page.html" %}
+{% block main %}
+  <style>
+    .iev-nr-wrap { max-width: 560px; margin: 0 auto; padding: 48px 20px; }
+    .iev-nr-card {
+      background: #fff; border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+      padding: 44px 36px; text-align: center;
+    }
+    .iev-nr-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .iev-nr-icon.failed { background: #ffebe6; }
+    .iev-nr-icon.idle { background: #e8f0fe; }
+    .iev-nr-icon svg { width: 36px; height: 36px; }
+    .iev-nr-card h1 { font-size: 22px; font-weight: 700; color: #172b4d; margin: 0 0 10px; }
+    .iev-nr-card p { font-size: 14px; color: #6b778c; margin: 0 0 26px; line-height: 1.7; }
+    .iev-nr-card .alert { text-align: left; font-size: 13px; }
+  </style>
+  <div class="iev-nr-wrap">
+    <div class="iev-nr-card">
+      {% if failed %}
+        <div class="iev-nr-icon failed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#de350b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h1 data-i18n="nr_failed_title">启动失败</h1>
+        <p>
+          <span data-i18n="nr_failed_msg">最近一次启动实验环境的尝试失败了，要重试吗？</span>
+          {% if failed_message %}</p><p class="alert alert-danger">{{ failed_message }}</p><p>{% endif %}
+        </p>
+        <a id="start" role="button" class="iev-btn-primary" href="{{ spawn_url }}" data-i18n="nr_relaunch">重新启动</a>
+      {% else %}
+        <div class="iev-nr-icon idle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h1 data-i18n="nr_idle_title">实验环境未运行</h1>
+        <p data-i18n="nr_idle_msg">你的实验环境还没启动，要现在启动吗？</p>
+        <a id="start" role="button" class="iev-btn-primary" href="{{ spawn_url }}" data-i18n="nr_launch">启动实验环境</a>
+      {% endif %}
+    </div>
+  </div>
+  <style>
+    .iev-btn-primary {
+      display: inline-block; padding: 13px 44px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #1a73e8, #1558b0); color: #fff;
+      font-size: 16px; font-weight: 700; text-decoration: none;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
+    }
+    .iev-btn-primary:hover { color: #fff; text-decoration: none; box-shadow: 0 6px 18px rgba(26, 115, 232, 0.40); }
+  </style>
+{% endblock main %}
+{% block script %}
+  {{ super() }}
+  <script type="text/javascript">
+    require(["not_running"]);
+  </script>
+{% endblock script %}
