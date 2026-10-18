@@ -11,6 +11,30 @@ import ctypes
 import os
 
 
+class SE_ScenarioObjectState(ctypes.Structure):
+    """esmini SE_ScenarioObjectState 结构体（按头文件顺序）"""
+    _fields_ = [
+        ('id', ctypes.c_int),
+        ('model_id', ctypes.c_int),
+        ('ctrl_type', ctypes.c_int),
+        ('timestamp', ctypes.c_double),
+        ('x', ctypes.c_double),
+        ('y', ctypes.c_double),
+        ('z', ctypes.c_double),
+        ('h', ctypes.c_double),
+        ('p', ctypes.c_double),
+        ('r', ctypes.c_double),
+        ('roadId', ctypes.c_uint32),
+        ('junctionId', ctypes.c_uint32),
+        ('t', ctypes.c_double),
+        ('laneId', ctypes.c_int),
+        ('laneOffset', ctypes.c_double),
+        ('s', ctypes.c_double),
+        ('speed', ctypes.c_double),
+        # 后续字段省略（我们只需要前面的）
+    ]
+
+
 class KinematicBicycleModel:
     """离散化运动学单车模型。"""
 
@@ -86,6 +110,10 @@ class EsminiEnv:
         lib.SE_StepDT.argtypes = [ctypes.c_float]
         lib.SE_StepDT.restype = ctypes.c_int
         lib.SE_Close.restype = None
+        lib.SE_GetObjectState.argtypes = [ctypes.c_int,
+                                          ctypes.POINTER(SE_ScenarioObjectState)]
+        lib.SE_GetObjectState.restype = ctypes.c_int
+        lib.SE_GetNumberOfObjects.restype = ctypes.c_int
         # SE_ReportObjectPos(id, timestamp, x, y, z, h, p, r)
         lib.SE_ReportObjectPos.argtypes = [ctypes.c_int, ctypes.c_float,
                                            ctypes.c_float, ctypes.c_float,
@@ -129,12 +157,30 @@ class EsminiEnv:
         return self._get_obs()
 
     def _get_obs(self):
-        # 简化观测：实际应从 SE_GetObjectState 读取
-        # 这里返回自车状态 + 空目标列表，完整版按需扩展
+        """从真实 esmini 读取所有车辆状态。"""
+        # 自车状态（运动学模型积分，esmini 场景中的 Ego）
+        ego_state = {
+            'x': self.vehicle.x, 'y': self.vehicle.y,
+            'yaw': self.vehicle.yaw, 'v': self.vehicle.v, 'a': 0.0,
+        }
+        # 从 esmini 读取其他目标车（真实场景数据）
+        targets = []
+        try:
+            n = self._lib.SE_GetNumberOfObjects()
+            for i in range(n):
+                st = SE_ScenarioObjectState()
+                if self._lib.SE_GetObjectState(i, ctypes.byref(st)) == 0:
+                    # 跳过自车（id=0 为 Ego，由 SE_ReportObjectPos 控制）
+                    if i == 0:
+                        continue
+                    targets.append({
+                        'id': st.id, 'x': st.x, 'y': st.y, 'v': st.speed,
+                    })
+        except Exception:
+            pass  # esmini 未初始化时返回空
         return {
-            'ego': {'x': self.vehicle.x, 'y': self.vehicle.y,
-                    'yaw': self.vehicle.yaw, 'v': self.vehicle.v, 'a': 0.0},
-            'targets': [],
+            'ego': ego_state,
+            'targets': targets,
             'sim_time': self.sim_time,
             'dt': self.dt,
         }
