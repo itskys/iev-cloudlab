@@ -457,14 +457,7 @@
     padding-top: 28px;
     padding-bottom: 60px;
   }
-  /* 顶部工具栏 */
-  body.admin-page-force-light .admin-header-buttons {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-  }
+  /* 顶部工具栏：搜索框 */
   body.admin-page-force-light .admin-header-buttons .form-control {
     border-radius: 12px;
     border: 1px solid #d2d2d7;
@@ -475,6 +468,19 @@
   body.admin-page-force-light .admin-header-buttons .form-control:focus {
     border-color: #0071e3;
     box-shadow: 0 0 0 4px rgba(0,113,227,.12);
+  }
+  /* 批量操作按钮组：td 单元格，保持 text-align:right，按钮 inline-block 横排 */
+  body.admin-page-force-light td.admin-header-buttons {
+    text-align: right !important;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  body.admin-page-force-light td.admin-header-buttons .btn {
+    display: inline-block;
+    margin-left: 8px;
+    border-radius: 980px;
+    padding: 8px 20px;
+    font-size: 14px;
   }
   /* 用户表格 */
   body.admin-page-force-light table.table {
@@ -579,6 +585,17 @@
           node.textContent = node.textContent.replace(t, "显示 " + dm[2] + "，共 " + dm[3] + " 条");
           return;
         }
+        // 分散的 "of 2" 片段
+        var ofm = t.match(/^of\s+(\d+)$/);
+        if (ofm) {
+          node.textContent = node.textContent.replace(t, "共 " + ofm[1] + " 条");
+          return;
+        }
+        // 单独的 "Displaying"（后跟数字节点）
+        if (t === "Displaying") {
+          node.textContent = node.textContent.replace("Displaying", "显示");
+          return;
+        }
         // "N seconds/minutes/hours/days ago"
         var tm = t.match(/^(\d+)\s+(second|minute|hour|day)s?\s+ago$/);
         if (tm) {
@@ -588,6 +605,14 @@
         }
         if (MAP[t]) node.textContent = node.textContent.replace(t, MAP[t]);
       } else if (node.nodeType === 1) {
+        // 分页按钮：用 data-testid 精确定位
+        var testid = node.getAttribute && node.getAttribute("data-testid");
+        if (testid === "paginate-prev" && getLang() === "zh") {
+          if (node.textContent.trim() === "Previous") node.textContent = "上一页";
+        }
+        if (testid === "paginate-next" && getLang() === "zh") {
+          if (node.textContent.trim() === "Next") node.textContent = "下一页";
+        }
         // placeholder 属性
         if (node.placeholder && MAP[node.placeholder.trim()]) {
           node.placeholder = MAP[node.placeholder.trim()];
