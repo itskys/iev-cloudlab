@@ -67,3 +67,8 @@ c.JupyterHub.services = [
         ],
     }
 ]
+
+# ---------- spawn超时修复（2026-10-19）：镜像5GB启动慢 ----------
+c.Spawner.http_timeout = 120
+c.Spawner.start_timeout = 120
+c.JupyterHub.hub_connect_ip = 'jupyterhub'
