@@ -126,7 +126,7 @@
   <body>
   <style>
     /* ============================================================
-       IEV CloudLab 统一设计系统与主题变量规范 (v2.4)
+       IEV CloudLab 统一设计系统与主题变量规范 (v0.1)
        支持 Light / Dark 模式无缝自适应切换
        ============================================================ */
     :root, [data-bs-theme="light"] {
@@ -550,6 +550,32 @@
       color: #dc2626;
       text-decoration: none;
     }
+    #iev-lang-btn::after {
+      display: none !important;
+    }
+    #iev-lang-btn:hover {
+      border-color: #155eef !important;
+      color: #155eef !important;
+    }
+    [data-bs-theme="dark"] #iev-lang-btn:hover {
+      border-color: #00d4ff !important;
+      color: #00d4ff !important;
+    }
+    .iev-lang-opt:hover {
+      background: rgba(21, 94, 239, 0.08) !important;
+      color: #155eef !important;
+    }
+    [data-bs-theme="dark"] .iev-lang-opt:hover {
+      background: rgba(0, 212, 255, 0.12) !important;
+      color: #00d4ff !important;
+    }
+    .iev-lang-opt.active {
+      font-weight: 700 !important;
+      color: #155eef !important;
+    }
+    [data-bs-theme="dark"] .iev-lang-opt.active {
+      color: #00d4ff !important;
+    }
 
     /* 移动端菜单美化 */
     @media (max-width: 575.98px) {
@@ -639,7 +665,7 @@
               <span class="brand-title-wrap">
                 <span class="brand-title">
                   <span>IEV CloudLab</span>
-                  <span class="brand-tag">v2.4</span>
+                  <span class="brand-tag">v0.1</span>
                 </span>
                 <span class="brand-subtitle" data-i18n="brand_subtitle">智能电动汽车云仿真实验平台</span>
               </span>
@@ -700,21 +726,40 @@
             </ul>
             <ul class="nav navbar-nav me-2">
               {% block nav_bar_right_items %}
-                <li class="nav-item" style="display: flex; align-items: center; margin-right: 6px;">
-                  <div style="position: relative;">
-                    <button type="button" id="iev-lang-btn" title="Language / 语言"
-                            style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--iev-table-border); background: var(--iev-card-bg); color: var(--iev-text-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: currentColor;">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="2" y1="12" x2="22" y2="12"/>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                      </svg>
-                    </button>
-                    <div id="iev-lang-menu" style="position: fixed; background: var(--iev-card-bg); border-radius: 12px; box-shadow: var(--iev-card-shadow); border: 1px solid var(--iev-card-border); color: var(--iev-text-primary); overflow: hidden; display: none; min-width: 130px; z-index: 1050;">
-                      <div class="iev-lang-opt" data-lang="zh" style="padding: 10px 16px; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;">中文</div>
-                      <div class="iev-lang-opt" data-lang="en" style="padding: 10px 16px; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;">English</div>
-                    </div>
-                  </div>
+                <li class="nav-item dropdown" style="display: flex; align-items: center; margin-right: 6px; position: relative;">
+                  <button type="button"
+                          class="btn btn-sm dropdown-toggle"
+                          id="iev-lang-btn"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="true"
+                          aria-expanded="false"
+                          title="Language / 语言"
+                          style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--iev-table-border); background: var(--iev-card-bg); color: var(--iev-text-primary); display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: none; cursor: pointer; transition: all 0.2s ease;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: currentColor;">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow"
+                      id="iev-lang-menu"
+                      aria-labelledby="iev-lang-btn"
+                      style="min-width: 145px; border-radius: 12px; border: 1px solid var(--iev-card-border); background: var(--iev-card-bg); padding: 6px; margin-top: 8px;">
+                    <li>
+                      <button type="button" class="dropdown-item iev-lang-opt" data-lang="zh"
+                              style="display: flex; align-items: center; justify-content: space-between; border-radius: 8px; font-size: 13.5px; font-weight: 500; padding: 8px 12px; color: var(--iev-text-primary); background: transparent; width: 100%; border: none;">
+                        <span>🇨🇳 中文</span>
+                        <span class="lang-check" data-check-lang="zh" style="color: #155eef; font-weight: 700; margin-left: 8px;">✓</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" class="dropdown-item iev-lang-opt" data-lang="en"
+                              style="display: flex; align-items: center; justify-content: space-between; border-radius: 8px; font-size: 13.5px; font-weight: 500; padding: 8px 12px; color: var(--iev-text-primary); background: transparent; width: 100%; border: none;">
+                        <span>🇬🇧 English</span>
+                        <span class="lang-check" data-check-lang="en" style="color: #155eef; font-weight: 700; margin-left: 8px;">✓</span>
+                      </button>
+                    </li>
+                  </ul>
                 </li>
                 <li class="nav-item">
                   {% block theme_toggle %}
@@ -1148,39 +1193,66 @@
         if (typeof v === "string") el.setAttribute("title", v);
       });
       document.querySelectorAll(".iev-lang-opt").forEach(function(el) {
-        var active = el.getAttribute("data-lang") === lang;
+        var optLang = el.getAttribute("data-lang");
+        var active = optLang === lang;
         el.classList.toggle("active", active);
-        el.style.fontWeight = active ? "700" : "";
-        el.style.color = active ? "#155eef" : "";
+        var check = el.querySelector(".lang-check");
+        if (check) check.style.display = active ? "inline" : "none";
       });
       var sb = document.getElementById("send-code-btn");
       if (sb && !sb.disabled) sb.textContent = t("send_code");
       document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
     }
     window.ievApplyI18n = applyI18n;
-    document.addEventListener("DOMContentLoaded", function() {
+
+    function initLangSwitcher() {
       applyI18n();
       var btn = document.getElementById("iev-lang-btn");
       var menu = document.getElementById("iev-lang-menu");
       if (btn && menu) {
         btn.addEventListener("click", function(e) {
           e.stopPropagation();
-          if (menu.style.display === "block") { menu.style.display = "none"; return; }
-          var r = btn.getBoundingClientRect();
-          menu.style.display = "block";
-          var mw = menu.offsetWidth;
-          var left = Math.max(8, Math.min(r.right - mw, window.innerWidth - mw - 8));
-          menu.style.left = left + "px";
-          menu.style.top = (r.bottom + 6 + window.scrollY) + "px";
+          var isOpen = menu.classList.contains("show");
+          if (!isOpen) {
+            menu.classList.add("show");
+            btn.setAttribute("aria-expanded", "true");
+          } else {
+            menu.classList.remove("show");
+            btn.setAttribute("aria-expanded", "false");
+          }
         });
-        document.addEventListener("click", function() { menu.style.display = "none"; });
-        menu.querySelectorAll(".iev-lang-opt").forEach(function(el) {
-          el.addEventListener("click", function(e) {
-            e.stopPropagation();
-            window.ievSetLang(el.getAttribute("data-lang"));
-            menu.style.display = "none";
-          });
-        });
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initLangSwitcher);
+    } else {
+      initLangSwitcher();
+    }
+
+    // Delegated click on document for language options and closing dropdowns
+    document.addEventListener("click", function(e) {
+      var opt = e.target.closest(".iev-lang-opt");
+      if (opt) {
+        e.preventDefault();
+        e.stopPropagation();
+        var l = opt.getAttribute("data-lang");
+        if (l && window.ievSetLang) {
+          window.ievSetLang(l);
+        }
+        var m = document.getElementById("iev-lang-menu");
+        var b = document.getElementById("iev-lang-btn");
+        if (m) m.classList.remove("show");
+        if (b) b.setAttribute("aria-expanded", "false");
+        return;
+      }
+      var btn = document.getElementById("iev-lang-btn");
+      var menu = document.getElementById("iev-lang-menu");
+      if (menu && menu.classList.contains("show")) {
+        if (!btn || !btn.contains(e.target)) {
+          menu.classList.remove("show");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        }
       }
     });
   })();
@@ -1198,29 +1270,39 @@
     max-width: 100% !important;
     padding: 0 !important;
   }
-  /* 顶部搜索与筛选栏布局 */
-  #react-admin-hook .rows-cols-lg-auto,
-  #react-admin-hook .g-3 {
+  /* 顶部搜索与筛选栏布局：强制单行或自然换行，消除单元素独占一行居中缺陷 */
+  #react-admin-hook form,
+  #react-admin-hook .row-cols-lg-auto,
+  #react-admin-hook .row {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 14px !important;
+    gap: 12px 16px !important;
     margin-bottom: 22px !important;
   }
-  #react-admin-hook .admin-header-buttons .form-control {
+  #react-admin-hook .row-cols-lg-auto > .col-12,
+  #react-admin-hook .row > .col-12 {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+  }
+  #react-admin-hook .admin-header-buttons .form-control,
+  #react-admin-hook input[type="text"] {
     border-radius: 12px !important;
     border: 1.5px solid var(--iev-input-border) !important;
     background: var(--iev-input-bg) !important;
     color: var(--iev-input-text) !important;
-    padding: 10px 18px !important;
-    font-size: 14px !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
     min-width: 280px !important;
     box-shadow: none !important;
     transition: all 0.18s ease !important;
   }
-  #react-admin-hook .admin-header-buttons .form-control:focus {
-    border-color: var(--iev-input-focus-border) !important;
-    box-shadow: 0 0 0 3px var(--iev-input-focus-ring) !important;
+  #react-admin-hook .admin-header-buttons .form-control:focus,
+  #react-admin-hook input[type="text"]:focus {
+    border-color: #155eef !important;
+    box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.18) !important;
   }
   #react-admin-hook .form-check {
     display: inline-flex !important;
@@ -1231,8 +1313,11 @@
     font-size: 13.5px !important;
     font-weight: 500 !important;
     cursor: pointer !important;
+    padding-left: 0 !important;
   }
   #react-admin-hook .form-check-input {
+    float: none !important;
+    margin-left: 0 !important;
     width: 18px !important;
     height: 18px !important;
     margin-top: 0 !important;
@@ -1245,85 +1330,26 @@
     background-color: #155eef !important;
     border-color: #155eef !important;
   }
-  /* 管理分组次要按钮 */
+  /* 管理分组按钮 */
   #react-admin-hook .btn-light,
   #react-admin-hook button.btn-secondary {
     background: var(--iev-btn-secondary-bg) !important;
     border: 1.5px solid var(--iev-btn-secondary-border) !important;
     color: var(--iev-btn-secondary-text) !important;
-    border-radius: 12px !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    padding: 9px 18px !important;
-    transition: all 0.18s ease !important;
-  }
-  #react-admin-hook .btn-light:hover {
-    border-color: #155eef !important;
-    color: #155eef !important;
-  }
-  /* "添加用户" 主操作按钮：渐变主色 + 阴影 */
-  #react-admin-hook .add-users-button {
-    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
-    border: none !important;
-    color: #ffffff !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    padding: 9px 20px !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 14px rgba(21, 94, 239, 0.28) !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    transition: all 0.18s ease !important;
-  }
-  #react-admin-hook .add-users-button:hover {
-    box-shadow: 0 6px 20px rgba(21, 94, 239, 0.42) !important;
-    transform: translateY(-1px) !important;
-    color: #ffffff !important;
-  }
-  /* 批量操作按钮组：右对齐药丸风格 */
-  #react-admin-hook td.admin-header-buttons {
-    text-align: right !important;
-    white-space: nowrap !important;
-    vertical-align: middle !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 12px 0 !important;
-  }
-  #react-admin-hook td.admin-header-buttons .btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    margin-left: 10px !important;
-    padding: 7px 16px !important;
     border-radius: 10px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
-    transition: all 0.15s ease !important;
-    text-decoration: none !important;
-    box-shadow: none !important;
+    padding: 8px 16px !important;
+    transition: all 0.18s ease !important;
   }
-  #react-admin-hook td.admin-header-buttons .start-all,
-  #react-admin-hook td.admin-header-buttons .btn-primary {
-    background: rgba(16, 185, 129, 0.1) !important;
-    border: 1px solid rgba(16, 185, 129, 0.28) !important;
-    color: #10b981 !important;
+  #react-admin-hook .btn-light:hover,
+  #react-admin-hook button.btn-secondary:hover {
+    border-color: #155eef !important;
+    color: #155eef !important;
+    background: rgba(21, 94, 239, 0.08) !important;
   }
-  #react-admin-hook td.admin-header-buttons .start-all:hover,
-  #react-admin-hook td.admin-header-buttons .btn-primary:hover {
-    background: rgba(16, 185, 129, 0.2) !important;
-  }
-  #react-admin-hook td.admin-header-buttons .stop-all,
-  #react-admin-hook td.admin-header-buttons .btn-danger {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border: 1px solid rgba(239, 68, 68, 0.28) !important;
-    color: #ef4444 !important;
-  }
-  #react-admin-hook td.admin-header-buttons .stop-all:hover,
-  #react-admin-hook td.admin-header-buttons .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2) !important;
-  }
-  /* 用户数据表格整体 */
+
+  /* 表格整体美化 */
   #react-admin-hook table.table {
     background: var(--iev-table-bg) !important;
     color: var(--iev-text-primary) !important;
@@ -1346,112 +1372,236 @@
     padding: 14px 18px !important;
     border-bottom: 1.5px solid var(--iev-table-border) !important;
     border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
     white-space: nowrap !important;
     vertical-align: middle !important;
   }
-  #react-admin-hook table.table tbody td {
-    padding: 14px 18px !important;
-    font-size: 14px !important;
+
+  /* 首行全局操作行：去除难看的内边框与空白网格，呈现精美操作栏 */
+  #react-admin-hook table.table tbody tr:first-child {
+    background: var(--iev-card-subtle-bg) !important;
+  }
+  #react-admin-hook table.table tbody tr:first-child td {
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 1.5px solid var(--iev-table-border) !important;
+    padding: 12px 18px !important;
+    background: transparent !important;
+    vertical-align: middle !important;
+  }
+  /* "添加用户" 主操作按钮：渐变色 + 阴影 */
+  #react-admin-hook .add-users-button {
+    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 8px 18px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(21, 94, 239, 0.28) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.18s ease !important;
+  }
+  #react-admin-hook .add-users-button:hover {
+    box-shadow: 0 4px 14px rgba(21, 94, 239, 0.42) !important;
+    transform: translateY(-1px) !important;
+    color: #ffffff !important;
+  }
+  /* 批量操作按钮组：右对齐高质感胶囊按钮 */
+  #react-admin-hook td.admin-header-buttons,
+  #react-admin-hook table.table tbody tr:first-child td:last-child {
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+  #react-admin-hook td.admin-header-buttons .btn,
+  #react-admin-hook table.table tbody tr:first-child td:last-child .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-left: 8px !important;
+    padding: 7px 15px !important;
+    border-radius: 9px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    transition: all 0.18s ease !important;
+    text-decoration: none !important;
+  }
+  /* 全部启动：鲜活绿色 */
+  #react-admin-hook .start-all,
+  #react-admin-hook td.admin-header-buttons .btn-primary {
+    background: #10b981 !important;
+    border: 1px solid #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+  }
+  #react-admin-hook .start-all:hover,
+  #react-admin-hook td.admin-header-buttons .btn-primary:hover {
+    background: #059669 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+  }
+  /* 全部停止：鲜明红色 */
+  #react-admin-hook .stop-all,
+  #react-admin-hook td.admin-header-buttons .btn-danger:first-of-type {
+    background: #ef4444 !important;
+    border: 1px solid #dc2626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
+  }
+  #react-admin-hook .stop-all:hover,
+  #react-admin-hook td.admin-header-buttons .btn-danger:first-of-type:hover {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+  }
+  /* 关闭 Hub：琥珀黄色 */
+  #react-admin-hook .shutdown-hub,
+  #react-admin-hook td.admin-header-buttons .btn-danger:last-child {
+    background: #f59e0b !important;
+    border: 1px solid #d97706 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
+  }
+  #react-admin-hook .shutdown-hub:hover,
+  #react-admin-hook td.admin-header-buttons .btn-danger:last-child:hover {
+    background: #d97706 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* 用户数据数据行规范 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td {
+    padding: 13px 18px !important;
+    font-size: 13.5px !important;
     border-bottom: 1px solid var(--iev-table-border) !important;
     border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
     color: var(--iev-text-primary) !important;
     vertical-align: middle !important;
     background: transparent !important;
   }
-  #react-admin-hook table.table tbody tr:hover td {
+  #react-admin-hook table.table tbody tr:not(:first-child):hover td {
     background-color: var(--iev-table-hover) !important;
   }
-  #react-admin-hook table.table tr.noborder td {
-    border: none !important;
-    background: transparent !important;
-    padding: 8px 18px !important;
-  }
-  /* 用户名列加粗与高亮 */
-  #react-admin-hook table.table tbody td:first-child {
-    font-weight: 600 !important;
+  /* 用户名列加粗 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:first-child {
+    font-weight: 700 !important;
     color: var(--iev-text-primary) !important;
   }
-  #react-admin-hook table.table tbody td:first-child .btn {
+  #react-admin-hook table.table tbody tr:not(:first-child) td:first-child button {
+    width: 24px !important;
+    height: 24px !important;
     border-radius: 6px !important;
-    padding: 2px 7px !important;
-    font-size: 11px !important;
+    padding: 0 !important;
     margin-right: 8px !important;
     background: var(--iev-btn-secondary-bg) !important;
     border: 1px solid var(--iev-btn-secondary-border) !important;
     color: var(--iev-text-secondary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
   }
-  /* 行内操作项：转化为现代药丸操作按钮 */
-  #react-admin-hook table.table tbody td:last-child {
+  /* 操作栏按钮组：右对齐精致胶囊按钮 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child {
+    text-align: right !important;
     white-space: nowrap !important;
   }
-  #react-admin-hook table.table tbody td:last-child .btn {
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a.btn {
     display: inline-flex !important;
     align-items: center !important;
     gap: 4px !important;
     border-radius: 8px !important;
-    padding: 5px 13px !important;
+    padding: 5px 12px !important;
     font-size: 12.5px !important;
     font-weight: 600 !important;
     margin: 0 3px !important;
     text-decoration: none !important;
+    transition: all 0.16s ease !important;
     box-shadow: none !important;
-    transition: all 0.15s ease !important;
   }
-  /* 启动服务器：绿色药丸 */
-  #react-admin-hook table.table tbody td:last-child .btn[class*="start"],
-  #react-admin-hook table.table tbody td:last-child a[class*="start"] {
+  /* 启动服务器：轻绿底色药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"] {
     background: rgba(16, 185, 129, 0.1) !important;
-    border: 1px solid rgba(16, 185, 129, 0.28) !important;
-    color: #10b981 !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
+    color: #059669 !important;
   }
-  #react-admin-hook table.table tbody td:last-child .btn[class*="start"]:hover {
-    background: rgba(16, 185, 129, 0.2) !important;
+  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"] {
+    color: #34d399 !important;
   }
-  /* 进入服务器：蓝色药丸 */
-  #react-admin-hook table.table tbody td:last-child .btn-primary,
-  #react-admin-hook table.table tbody td:last-child a[class*="access"] {
-    background: rgba(21, 94, 239, 0.1) !important;
-    border: 1px solid rgba(21, 94, 239, 0.28) !important;
-    color: #155eef !important;
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"]:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
   }
-  #react-admin-hook table.table tbody td:last-child .btn-primary:hover {
-    background: rgba(21, 94, 239, 0.2) !important;
+  /* 进入服务器：蓝色主要药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-primary,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a[class*="access"] {
+    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(21, 94, 239, 0.28) !important;
   }
-  /* 停止服务器：红色药丸 */
-  #react-admin-hook table.table tbody td:last-child .btn-danger,
-  #react-admin-hook table.table tbody td:last-child a[class*="stop"] {
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-primary:hover,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a[class*="access"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 10px rgba(21, 94, 239, 0.4) !important;
+    color: #ffffff !important;
+  }
+  /* 停止服务器：轻红底色药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"] {
     background: rgba(239, 68, 68, 0.1) !important;
-    border: 1px solid rgba(239, 68, 68, 0.28) !important;
-    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    color: #dc2626 !important;
   }
-  #react-admin-hook table.table tbody td:last-child .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2) !important;
+  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger,
+  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"] {
+    color: #f87171 !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger:hover,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"]:hover {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
   }
   /* 编辑用户 / 启动页：灰色次要药丸 */
-  #react-admin-hook table.table tbody td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]) {
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]) {
     background: var(--iev-btn-secondary-bg) !important;
     border: 1px solid var(--iev-btn-secondary-border) !important;
     color: var(--iev-text-secondary) !important;
   }
-  #react-admin-hook table.table tbody td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]):hover {
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]):hover {
     border-color: #155eef !important;
     color: #155eef !important;
+    background: rgba(21, 94, 239, 0.08) !important;
   }
+
   /* 分页区域：左右对齐，彻底消除挤压与错位 */
-  #react-admin-hook .pagination-footer {
+  #react-admin-hook .pagination-footer,
+  #react-admin-hook div[class*="pagination"] {
     display: flex !important;
+    flex-direction: row !important;
     justify-content: space-between !important;
     align-items: center !important;
     flex-wrap: wrap !important;
     gap: 16px !important;
     margin-top: 22px !important;
-    padding-top: 18px !important;
+    padding: 18px 4px 0 !important;
     border-top: 1px solid var(--iev-table-border) !important;
     color: var(--iev-text-secondary) !important;
     font-size: 13.5px !important;
   }
   #react-admin-hook .pagination-footer > div,
-  #react-admin-hook .pagination-footer > span {
+  #react-admin-hook .pagination-footer > span,
+  #react-admin-hook div[class*="pagination"] > div {
     display: inline-flex !important;
     align-items: center !important;
     gap: 10px !important;
@@ -1479,19 +1629,33 @@
     border-color: var(--iev-btn-secondary-border) !important;
     color: var(--iev-text-muted) !important;
   }
-  #react-admin-hook .pagination-footer select {
-    margin: 0 8px !important;
-    padding: 5px 12px !important;
+  #react-admin-hook .pagination-footer select,
+  #react-admin-hook select[name*="page"],
+  #react-admin-hook .pagination-footer .form-control {
+    width: 78px !important;
+    max-width: 80px !important;
+    height: 36px !important;
+    margin: 0 6px !important;
+    padding: 4px 10px !important;
     border-radius: 8px !important;
-    border: 1px solid var(--iev-input-border) !important;
+    border: 1.5px solid var(--iev-input-border) !important;
     background: var(--iev-input-bg) !important;
     color: var(--iev-input-text) !important;
     font-size: 13px !important;
     cursor: pointer !important;
+    display: inline-block !important;
+  }
+  #react-admin-hook .pagination-footer label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    color: var(--iev-text-secondary) !important;
   }
   </style>
   <script>
-  /* Admin 管理页双向动态翻译（支持从中切英、从英切中，以及 DOM 实时增量渲染） */
+  /* Admin 管理页双向动态翻译与表格数据行美化 */
   (function() {
     if (!window.location.pathname.includes("/hub/admin")) return;
     var EN_TO_ZH = {
@@ -1504,8 +1668,8 @@
       "Shutdown Hub": "关闭 Hub",
       "Previous": "上一页",
       "Next": "下一页",
-      "Items per page:": "每页：",
-      "Items per page": "每页",
+      "Items per page:": "每页条数：",
+      "Items per page": "每页条数",
       "User": "用户",
       "Admin": "管理员",
       "Server": "服务器",
@@ -1530,6 +1694,8 @@
       "关闭 Hub": "Shutdown Hub",
       "上一页": "Previous",
       "下一页": "Next",
+      "每页条数：": "Items per page:",
+      "每页条数": "Items per page",
       "每页：": "Items per page:",
       "每页": "Items per page",
       "用户": "User",
@@ -1546,6 +1712,45 @@
       "启动页": "Spawn Page",
       "从不": "Never"
     };
+
+    function enhanceAdminRows() {
+      var isZh = (window.ievGetLang ? window.ievGetLang() : "zh") === "zh";
+      var rows = document.querySelectorAll("#react-admin-hook table.table tbody tr");
+      rows.forEach(function(row, idx) {
+        if (idx === 0) return; // 第一行是全局操作行
+        var cells = row.cells;
+        if (!cells || cells.length < 5) return;
+
+        var actionCell = cells[cells.length - 1];
+        var isRunning = !!actionCell.querySelector(".btn-danger, [class*='stop'], a[href*='stop']");
+
+        // 管理员列 (第 2 列)
+        var adminCell = cells[1];
+        if (adminCell) {
+          var rawAdmin = adminCell.getAttribute("data-raw-admin");
+          if (!rawAdmin) {
+            rawAdmin = adminCell.textContent.trim().toLowerCase();
+            adminCell.setAttribute("data-raw-admin", rawAdmin);
+          }
+          var isAdmin = (rawAdmin === "admin" || rawAdmin === "管理员" || rawAdmin === "yes" || rawAdmin === "true");
+          if (isAdmin) {
+            adminCell.innerHTML = '<span class="badge" style="background: rgba(21, 94, 239, 0.1); color: #155eef; border: 1px solid rgba(21, 94, 239, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600;">🛡️ ' + (isZh ? '管理员' : 'Admin') + '</span>';
+          } else {
+            adminCell.innerHTML = '<span class="badge" style="background: var(--iev-card-subtle-bg); color: var(--iev-text-muted); border: 1px solid var(--iev-table-border); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500;">' + (isZh ? '普通用户' : 'Standard') + '</span>';
+          }
+        }
+
+        // 服务器状态列 (第 3 列)
+        var serverCell = cells[2];
+        if (serverCell) {
+          if (isRunning) {
+            serverCell.innerHTML = '<span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>' + (isZh ? '运行中' : 'Running') + '</span>';
+          } else {
+            serverCell.innerHTML = '<span class="badge" style="background: var(--iev-card-subtle-bg); color: var(--iev-text-muted); border: 1px solid var(--iev-table-border); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>' + (isZh ? '未运行' : 'Stopped') + '</span>';
+          }
+        }
+      });
+    }
 
     function translateNode(node) {
       var isZh = (window.ievGetLang ? window.ievGetLang() : "zh") === "zh";
@@ -1611,6 +1816,7 @@
 
     function apply() {
       translateNode(document.body);
+      enhanceAdminRows();
     }
     window.ievAdminRefresh = apply;
 
@@ -1619,6 +1825,7 @@
         m.addedNodes.forEach(translateNode);
         if (m.type === "characterData") translateNode(m.target);
       });
+      enhanceAdminRows();
     });
 
     var tries = 0;
@@ -1637,7 +1844,7 @@
       }
     }, 250);
   })();
-  </script>  </script>
+  </script>
   <script>
   /* 导航栏高亮当前活动菜单项 (首页 / 令牌 / 管理) */
   (function() {
