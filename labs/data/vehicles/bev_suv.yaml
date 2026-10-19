@@ -1,0 +1,18 @@
+# BEV SUV参数
+id: bev_suv
+name: 纯电SUV
+mass_kg: 2200
+drag_coefficient: 0.32
+frontal_area_m2: 2.8
+rolling_resistance: 0.010
+wheel_radius_m: 0.36
+motor_peak_power_kw: 200
+motor_peak_torque_nm: 400
+battery_capacity_kwh: 80
+battery_file: ncm622_50ah.csv
+kinematic:
+  l_f: 1.5
+  l_r: 1.5
+  max_steer_deg: 28
+  max_accel_mss: 2.5
+  max_decel_mss: 7.5
