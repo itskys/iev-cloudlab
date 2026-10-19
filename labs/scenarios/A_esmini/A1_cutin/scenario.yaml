@@ -1,0 +1,21 @@
+# A1: Cut-in 紧急制动场景
+id: A1_cutin
+name: 高速Cut-in紧急制动
+engine: esmini
+version: "1.0"
+files:
+  xosc: cutin.xosc
+  xodr: cutin.xodr
+  generator: gen_cutin.py
+params:
+  ego_init: {x: 10.0, y: 0.0, v: 14.0}
+  target_init: {x: 30.0, y: -3.0, v: 12.0}
+  cutin_time: [5.0, 8.0]  # 变道时间窗口
+  dt: 0.05
+outputs:
+  - ttc_min_s
+  - min_gap_m
+  - collision_bool
+chain:
+  upstream: []  # 入口场景
+  downstream: [A2_follow]  # 可接A2
