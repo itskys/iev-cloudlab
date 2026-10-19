@@ -40,7 +40,7 @@
   </style>
 
   <div class="iev-page-container">
-    <!-- 页面标题头规范 -->
+    <!-- 统一页面标题头规范 (1140px) -->
     <div class="iev-page-header">
       <div class="iev-badge-chip">
         <span class="iev-status-dot"></span>
@@ -53,39 +53,41 @@
     <!-- 卡片 1：申请新的 API 令牌 -->
     <div class="iev-card">
       <h3 class="iev-section-title" data-i18n="token_title">申请新的 API 令牌</h3>
-      <p class="iev-section-sub">为自动化仿真评测脚本、VSCode 远程接入或外部系统申请独立访问令牌</p>
+      <p class="iev-section-sub" data-i18n="token_sub">为自动化仿真评测脚本、VSCode 远程接入或外部系统申请独立访问令牌</p>
 
       <form id="request-token-form">
         <div class="row g-3">
           <div class="col-md-7">
-            <label for="token-note" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_note">Note / 备注说明</label>
+            <label for="token-note" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_note">备注说明</label>
             <input id="token-note"
                    class="form-control iev-input"
+                   data-i18n-ph="token_note_ph"
                    placeholder="例如：自动化评测脚本 / VSCode 远程连接">
-            <small id="note-note" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;">为此令牌指定清晰的用途标识，便于后续追踪</small>
+            <small id="note-note" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;" data-i18n="token_note_help">为此令牌指定清晰的用途标识，便于后续追踪</small>
           </div>
 
           <div class="col-md-5">
-            <label for="token-expiration-seconds" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_expires">Token expires in / 有效期</label>
+            <label for="token-expiration-seconds" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_expires">有效期</label>
             {% block expiration_options %}
               <select id="token-expiration-seconds" class="form-select iev-input">{{ token_expires_in_options_html | safe }}</select>
             {% endblock expiration_options %}
-            <small id="note-expires-at" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;">设置令牌自动失效时长，到期后无法再发起请求</small>
+            <small id="note-expires-at" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;" data-i18n="token_expires_help">设置令牌自动失效时长，到期后无法再发起请求</small>
           </div>
 
           <div class="col-12 mt-2">
-            <label for="token-scopes" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_perms">Permissions / 权限范围 (Scopes)</label>
+            <label for="token-scopes" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_perms">权限范围 (Scopes)</label>
             <input id="token-scopes"
                    class="form-control iev-input"
+                   data-i18n-ph="token_perms_ph"
                    placeholder="留空则继承当前用户所有权限，多个权限用空格分隔">
-            <small id="note-token-scopes" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;">
-              可限制该令牌的权限范围。若留空，令牌将具备你当前账户的全部权限。详见 <a href="https://jupyterhub.readthedocs.io/en/stable/rbac/scopes.html#available-scopes" target="_blank" style="color: #155eef; text-decoration: none;">JupyterHub 官方 Scopes 规范</a>。
+            <small id="note-token-scopes" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;" data-i18n="token_perms_help">
+              可限制该令牌的权限范围。若留空，令牌将具备你当前账户的全部权限。
             </small>
           </div>
         </div>
 
         <div class="mt-4">
-          <button type="submit" class="iev-btn-primary" data-i18n="token_request">
+          <button type="submit" class="iev-btn-primary">
             <span>🔑</span> <span data-i18n="token_request">申请新令牌</span>
           </button>
         </div>
@@ -94,11 +96,11 @@
       <!-- 新生成的 Token 提示弹层/卡片 -->
       <div id="token-area" style="display: none; margin-top: 24px;">
         <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.28); border-radius: 14px; padding: 20px 24px;">
-          <div style="font-weight: 700; color: #047857; font-size: 15px; margin-bottom: 8px;" data-i18n="token_new">
+          <div style="font-weight: 700; color: #047857; font-size: 15px; margin-bottom: 8px;" data-i18n="token_new_title">
             ✓ 你的新 API 令牌已成功生成
           </div>
           <div style="background: var(--iev-card-bg); border: 1px solid var(--iev-card-border); border-radius: 10px; padding: 10px 14px; font-family: monospace; font-size: 15px; color: var(--iev-text-primary); word-break: break-all; user-select: all;" id="token-result"></div>
-          <p style="color: var(--iev-text-muted); font-size: 12.5px; margin: 10px 0 0;">
+          <p style="color: var(--iev-text-muted); font-size: 12.5px; margin: 10px 0 0;" data-i18n="token_new_warn">
             ⚠️ 请立即妥善复制并保存此令牌。页面刷新后将无法再次查看该完整密钥，若丢失可随时返回此页重新生成。
           </p>
         </div>
@@ -109,18 +111,18 @@
     {% if api_tokens %}
       <div class="iev-card" id="api-tokens-section">
         <h3 class="iev-section-title" data-i18n="token_list">已生成的 API 令牌</h3>
-        <p class="iev-section-sub">当前具有平台访问权限的 API 令牌清单。撤销正在运行的服务器的令牌需重启该服务器生效。</p>
+        <p class="iev-section-sub" data-i18n="token_list_sub">当前具有平台访问权限的 API 令牌清单。撤销正在运行的服务器的令牌需重启该服务器生效。</p>
 
         <div class="table-responsive">
           <table class="table" id="api-tokens-table">
             <thead>
               <tr>
-                <th style="width: 25%;" data-i18n="token_note">备注</th>
-                <th style="width: 20%;" data-i18n="token_perms">权限范围</th>
-                <th style="width: 15%;" data-i18n="token_lastused">上次使用</th>
-                <th style="width: 15%;" data-i18n="token_created">创建时间</th>
-                <th style="width: 15%;" data-i18n="token_expires_col">过期时间</th>
-                <th style="width: 10%; text-align: center;">操作</th>
+                <th style="width: 25%;" data-i18n="token_th_note">备注</th>
+                <th style="width: 20%;" data-i18n="token_th_perms">权限范围</th>
+                <th style="width: 15%;" data-i18n="token_th_lastused">上次使用</th>
+                <th style="width: 15%;" data-i18n="token_th_created">创建时间</th>
+                <th style="width: 15%;" data-i18n="token_th_expires">过期时间</th>
+                <th style="width: 10%; text-align: center;" data-i18n="token_th_action">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -128,7 +130,13 @@
                 <tr class="token-row" data-token-id="{{ token.api_id }}">
                   {% block token_row scoped %}
                     <td class="note-col">
-                      <span style="font-weight: 600; color: var(--iev-text-primary);">{{ token.note or "无备注说明" }}</span>
+                      <span style="font-weight: 600; color: var(--iev-text-primary);">
+                        {% if token.note %}
+                          {{ token.note }}
+                        {% else %}
+                          <span data-i18n="token_no_note">无备注说明</span>
+                        {% endif %}
+                      </span>
                     </td>
                     <td class="scope-col">
                       <details class="iev-scope-badge">
@@ -144,7 +152,7 @@
                       {%- if token.last_activity -%}
                         {{ token.last_activity.isoformat() + 'Z' }}
                       {%- else -%}
-                        从未
+                        <span data-i18n="token_never">从未</span>
                       {%- endif -%}
                     </td>
                     <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">
@@ -158,7 +166,7 @@
                       {%- if token.expires_at -%}
                         {{ token.expires_at.isoformat() + 'Z' }}
                       {%- else -%}
-                        永不过期
+                        <span data-i18n="token_no_expiry">永不过期</span>
                       {%- endif -%}
                     </td>
                     <td style="text-align: center;">
@@ -176,18 +184,18 @@
     <!-- 卡片 3：已授权的外部应用 -->
     {% if oauth_clients %}
       <div class="iev-card" id="oauth-clients-section">
-        <h3 class="iev-section-title">已授权的外部应用</h3>
-        <p class="iev-section-sub">通过 OAuth 协议接入 JupyterHub 的已授权客户端（例如 JupyterLab 单用户环境）。OAuth 令牌仅用于识别你的用户身份，不会越权执行敏感操作。</p>
+        <h3 class="iev-section-title" data-i18n="token_oauth_title">已授权的外部应用</h3>
+        <p class="iev-section-sub" data-i18n="token_oauth_sub">通过 OAuth 协议接入 JupyterHub 的已授权客户端（例如 JupyterLab 单用户环境）。OAuth 令牌仅用于识别你的用户身份，不会越权执行敏感操作。</p>
 
         <div class="table-responsive">
           <table class="table" id="oauth-tokens-table">
             <thead>
               <tr>
-                <th style="width: 35%;">应用名称 / 描述</th>
-                <th style="width: 20%;" data-i18n="token_perms">权限范围</th>
-                <th style="width: 18%;" data-i18n="token_lastused">上次使用</th>
-                <th style="width: 17%;">首次授权时间</th>
-                <th style="width: 10%; text-align: center;">操作</th>
+                <th style="width: 35%;" data-i18n="token_oauth_app">应用名称 / 描述</th>
+                <th style="width: 20%;" data-i18n="token_th_perms">权限范围</th>
+                <th style="width: 18%;" data-i18n="token_th_lastused">上次使用</th>
+                <th style="width: 17%;" data-i18n="token_oauth_first">首次授权时间</th>
+                <th style="width: 10%; text-align: center;" data-i18n="token_th_action">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -211,7 +219,7 @@
                       {%- if client['last_activity'] -%}
                         {{ client['last_activity'].isoformat() + 'Z' }}
                       {%- else -%}
-                        从未
+                        <span data-i18n="token_never">从未</span>
                       {%- endif -%}
                     </td>
                     <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">

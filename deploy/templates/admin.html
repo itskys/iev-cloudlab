@@ -1,6 +1,84 @@
 {% extends "page.html" %}
 {% block main %}
+  <style>
+    .iev-admin-stat-card {
+      background: var(--iev-card-bg);
+      border: 1px solid var(--iev-card-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: var(--iev-card-shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+    .iev-admin-stat-card:hover {
+      border-color: #155eef;
+      transform: translateY(-1px);
+    }
+    [data-bs-theme="dark"] .iev-admin-stat-card:hover {
+      border-color: #00d4ff;
+    }
+    .iev-admin-stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .iev-admin-stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--iev-text-muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .iev-admin-stat-val {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--iev-text-primary);
+      letter-spacing: -0.01em;
+    }
+    .iev-admin-hub-card {
+      background: var(--iev-card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 20px;
+      border: 1px solid var(--iev-card-border);
+      box-shadow: var(--iev-card-shadow);
+      padding: 28px 28px 32px;
+      position: relative;
+    }
+    .iev-admin-hub-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--iev-table-border);
+    }
+    .iev-admin-tip {
+      background: var(--iev-card-subtle-bg);
+      border: 1px solid var(--iev-table-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12.5px;
+      color: var(--iev-text-secondary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+
   <div class="iev-page-container">
+    <!-- 统一页面标题头规范 -->
     <div class="iev-page-header">
       <div class="iev-badge-chip">
         <span class="iev-status-dot"></span>
@@ -9,44 +87,38 @@
       <h1 class="iev-page-title" data-i18n="admin_title">用户与运行实例管理</h1>
       <p class="iev-page-sub" data-i18n="admin_sub">实时监控平台教学科研账户、DockerSpawner 容器沙箱运行状态及资源配置调度</p>
 
-      <!-- 节点算力与运维指标卡片 -->
-      <div class="row g-3 mt-2 mb-4">
+      <!-- 节点算力与运维指标卡片 (3 列自适应) -->
+      <div class="row g-3 mt-1 mb-4">
         <div class="col-md-4">
-          <div class="iev-card p-3 mb-0" style="background: var(--iev-card-bg);">
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(21, 94, 239, 0.1); border: 1px solid rgba(21, 94, 239, 0.2); display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                👥
-              </div>
-              <div>
-                <div style="font-size: 12px; color: var(--iev-text-muted); font-weight: 600;">平台授权用户</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--iev-text-primary);">高校师生账户</div>
-              </div>
+          <div class="iev-admin-stat-card">
+            <div class="iev-admin-stat-icon" style="background: rgba(21, 94, 239, 0.1); border: 1px solid rgba(21, 94, 239, 0.2); color: #155eef;">
+              👥
+            </div>
+            <div>
+              <div class="iev-admin-stat-label" data-i18n="admin_stat_users">平台授权用户</div>
+              <div class="iev-admin-stat-val" data-i18n="admin_stat_users_val">高校师生账户</div>
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="iev-card p-3 mb-0" style="background: var(--iev-card-bg);">
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                🚀
-              </div>
-              <div>
-                <div style="font-size: 12px; color: var(--iev-text-muted); font-weight: 600;">容器调度架构</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--iev-text-primary);">DockerSpawner 沙箱</div>
-              </div>
+          <div class="iev-admin-stat-card">
+            <div class="iev-admin-stat-icon" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981;">
+              🚀
+            </div>
+            <div>
+              <div class="iev-admin-stat-label" data-i18n="admin_stat_sched">容器调度架构</div>
+              <div class="iev-admin-stat-val" data-i18n="admin_stat_sched_val">DockerSpawner 沙箱</div>
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="iev-card p-3 mb-0" style="background: var(--iev-card-bg);">
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(2, 132, 199, 0.1); border: 1px solid rgba(2, 132, 199, 0.2); display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                ⚡
-              </div>
-              <div>
-                <div style="font-size: 12px; color: var(--iev-text-muted); font-weight: 600;">单实例配额</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--iev-text-primary);">1.0 vCPU · 2GB · 512MB shm</div>
-              </div>
+          <div class="iev-admin-stat-card">
+            <div class="iev-admin-stat-icon" style="background: rgba(2, 132, 199, 0.1); border: 1px solid rgba(2, 132, 199, 0.2); color: #0284c7;">
+              ⚡
+            </div>
+            <div>
+              <div class="iev-admin-stat-label" data-i18n="admin_stat_quota">单实例配额</div>
+              <div class="iev-admin-stat-val" data-i18n="admin_stat_quota_val">1.0 vCPU · 2GB · 512MB shm</div>
             </div>
           </div>
         </div>
@@ -54,7 +126,12 @@
     </div>
 
     <!-- 管理控制台主卡片 -->
-    <div class="iev-card p-4">
+    <div class="iev-admin-hub-card">
+      <div class="iev-admin-tip">
+        <span>💡</span>
+        <span data-i18n-html="admin_tip"><strong>运维小贴士：</strong>当高并发实验结束或需要回收算力时，可使用右侧 <strong>“全部停止”</strong> 按钮批量挂起学生容器，学生挂载的 <code>/home/jovyan</code> 实验进度及数据文件均安全保留在持久卷中。</span>
+      </div>
+
       <div id="react-admin-hook">
         <script id="jupyterhub-admin-config">
           window.api_page_limit = parseInt("{{ api_page_limit|safe }}")

@@ -496,6 +496,23 @@
       background: rgba(0, 212, 255, 0.15);
       font-weight: 700;
     }
+    .navbar-nav .nav-link.iev-nav-lab-link {
+      background: linear-gradient(135deg, rgba(21, 94, 239, 0.1) 0%, rgba(0, 212, 255, 0.12) 100%) !important;
+      border: 1px solid rgba(21, 94, 239, 0.25) !important;
+      color: #155eef !important;
+      font-weight: 700 !important;
+      margin-left: 6px;
+    }
+    .navbar-nav .nav-link.iev-nav-lab-link:hover {
+      background: linear-gradient(135deg, rgba(21, 94, 239, 0.2) 0%, rgba(0, 212, 255, 0.22) 100%) !important;
+      border-color: #155eef !important;
+      transform: translateY(-1px);
+    }
+    [data-bs-theme="dark"] .navbar-nav .nav-link.iev-nav-lab-link {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(21, 94, 239, 0.2) 100%) !important;
+      border-color: rgba(0, 212, 255, 0.35) !important;
+      color: #00d4ff !important;
+    }
 
     /* 用户徽标与退出按钮 */
     .user-pill {
@@ -654,6 +671,12 @@
                       <a class="nav-link" href="{{ base_url }}admin" data-i18n="nav_admin">Admin</a>
                     </li>
                   {% endif %}
+                  <li class="nav-item">
+                    <a class="nav-link iev-nav-lab-link" href="{{ base_url }}user/{{ user.name }}/lab" target="_blank" title="Launch JupyterLab">
+                      <span>🚀</span>
+                      <span data-i18n="nav_launch_lab">进入实验沙箱</span>
+                    </a>
+                  </li>
                   {% if services %}
                     <li class="nav-item dropdown">
                       <a href="#"
@@ -680,14 +703,14 @@
                 <li class="nav-item" style="display: flex; align-items: center; margin-right: 6px;">
                   <div style="position: relative;">
                     <button type="button" id="iev-lang-btn" title="Language / 语言"
-                            style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #e2e8f0; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: #475569;">
+                            style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--iev-table-border); background: var(--iev-card-bg); color: var(--iev-text-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: currentColor;">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="2" y1="12" x2="22" y2="12"/>
                         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                       </svg>
                     </button>
-                    <div id="iev-lang-menu" style="position: fixed; background: #ffffff; border-radius: 12px; box-shadow: 0 12px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.04); border: 1px solid #e2e8f0; overflow: hidden; display: none; min-width: 130px; z-index: 1050;">
+                    <div id="iev-lang-menu" style="position: fixed; background: var(--iev-card-bg); border-radius: 12px; box-shadow: var(--iev-card-shadow); border: 1px solid var(--iev-card-border); color: var(--iev-text-primary); overflow: hidden; display: none; min-width: 130px; z-index: 1050;">
                       <div class="iev-lang-opt" data-lang="zh" style="padding: 10px 16px; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;">中文</div>
                       <div class="iev-lang-opt" data-lang="en" style="padding: 10px 16px; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;">English</div>
                     </div>
@@ -699,7 +722,7 @@
                             id="dark-theme-toggle"
                             aria-label="Toggle dark mode"
                             title="Toggle dark mode"
-                            style="border-radius: 50%; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #e2e8f0; background: #fff; color: #475569; margin-right: 6px;">
+                            style="border-radius: 50%; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--iev-table-border); background: var(--iev-card-bg); color: var(--iev-text-primary); margin-right: 6px;">
                       <i aria-hidden="true" class="fa fa-circle-half-stroke"></i>
                     </button>
                   {% endblock theme_toggle %}
@@ -764,95 +787,330 @@
         brand_subtitle: "智能电动汽车云仿真实验平台",
         footer_status: "系统核心服务运行正常 · ROS 2 Jazzy Core",
         footer_platform: "IEV CloudLab · 智能电动汽车云仿真实验平台",
+        nav_home: "首页",
+        nav_token: "令牌",
+        nav_admin: "管理",
+        nav_launch_lab: "进入实验沙箱",
+        nav_logout: "退出登录",
+        nav_login: "登录",
+        nav_docs: "实验手册",
+
         login_pill: "高校智能电动汽车云仿真平台",
-        nav_home: "首页", nav_token: "令牌", nav_admin: "管理",
-        nav_logout: "退出登录", nav_login: "登录",
         card_subtitle: "智能电动汽车云仿真实验平台",
-        email_label: "邮箱地址", email_ph: "请输入你的邮箱",
+        email_label: "邮箱地址",
+        email_ph: "请输入你的邮箱",
+        email_hint: "支持高校机构邮箱",
         send_code: "发送验证码",
-        code_label: "验证码", code_ph: "6 位数字验证码",
+        code_label: "验证码",
+        code_ph: "6 位数字验证码",
+        code_hint: "6 位数字",
         signin: "登 录",
         hint: "验证码 10 分钟内有效，请勿转发给他人",
-        need_email: "请先输入邮箱地址", sending: "发送中…",
+        trust_badge: "🔒 专属独立 CPU 沙箱 · 仿真数据自动保存",
+        need_email: "请先输入邮箱地址",
+        sending: "发送中…",
         sent: "如果该邮箱已注册，验证码已发送",
         send_fail: "发送失败，请稍后重试",
+
+        home_chip: "学生仿真实验工作台 · ROS 2 Jazzy Core",
         home_welcome: "欢迎回来",
-        home_not_running: "你的实验环境还没启动",
-        home_not_running_desc: "点击下方按钮，启动你的云端实验环境，开始今天的仿真实验。",
-        home_launch: "启动实验环境",
+        home_sub: "智能电动汽车云仿真平台 · 独立容器算力沙箱与云端工作区",
+        home_badge_running: "计算沙箱运行中 · Active",
+        home_badge_idle: "沙箱就绪待启 · Standby",
         home_running: "实验环境运行中",
-        home_running_desc: "你的云端实验环境正在运行，点击进入开始工作。",
+        home_running_desc: "你的云端实验沙箱已就绪，所有代码、场景与数据集已自动挂载至工作区，点击进入即可开始实验。",
+        home_not_running: "你的实验环境还没启动",
+        home_not_running_desc: "点击下方按钮，启动你的专属云端实验容器。系统将自动分配独立算力并挂载持久化目录，预计 10~15 秒完成初始化。",
         home_open: "进入实验环境",
         home_stop: "停止环境",
+        home_launch: "启动实验环境",
         home_stop_confirm: "确定要停止实验环境吗？未保存的工作会丢失。",
+        home_spec_vcpu: "⚡ 1.0 vCPU 算力",
+        home_spec_ram: "🧠 2.0 GB 内存配额",
+        home_spec_shm: "💾 512 MB 共享内存",
+        home_spec_os: "🐧 Ubuntu 24.04 · ROS 2 Jazzy",
+        home_spec_single: "⚡ 专属单人容器配额",
+        home_spec_sync: "💾 /opt/ievlab 持久化同步",
+        home_spec_labs: "📦 预置 29 门实验 Notebooks",
+        home_curr_title: "课程实验体系与仿真工具",
+        home_curr_sub: "8 大专业实验模块 · 29 个仿真实验 · 3 条跨领域数据协同链路",
+        home_filter_all: "全部实验 (29)",
+        home_filter_chains: "🔗 3条数据协同链",
+        home_open_nb: "打开 Notebook",
+        home_kernel_default: "Python 3.12 默认",
+        home_kernel_fastsim: "py310-fastsim 内核",
+        home_diff_easy: "初级",
+        home_diff_mid: "中级",
+        home_diff_hard: "高级",
+        home_prereq_none: "无前置",
+        home_prereq: "前置: ",
+
+        chain_section_title: "🔗 三条跨领域数据协同链路 (Cross-Domain Data Chains)",
+        chain_section_sub: "打破单一仿真工具孤岛，通过统一标准化数据流贯通电池机理、整车能耗与自动驾驶控制闭环",
+        chain1_badge: "车型设计链 · D → C → A",
+        chain1_title: "电池标定 ➔ 整车能耗 ➔ 动力学闭环",
+        chain1_desc: "D3 PyBaMM 电池 OCV-SOC 标定导出 → FASTSim C1/C2 百公里电耗与整车参数拟合 → esmini A1/A2/A3 自动驾驶控制与制动验证闭环",
+        chain2_badge: "算法开发链 · Controller → 闭环 → 指标",
+        chain2_title: "通用控制器 ➔ 场景仿真步进 ➔ 指标归档",
+        chain2_desc: "BaseController 控制基类 → esmini / SUMO TraCI 双向物理状态步进闭环 → labs/data/results/*.json 综合评测指标自动归档",
+        chain3_badge: "能量管理链 · E → C → 成绩单",
+        chain3_title: "多目标/DP优化 ➔ EMS策略验证 ➔ 综合成绩单",
+        chain3_desc: "E2/E4 pymoo 多目标遗传与动态规划优化求解 → FASTSim C4 能量管理策略验证 → 输出综合节能与动力学成绩单",
+
+        mod_a_name: "A. 自动驾驶场景测试（esmini）",
+        mod_a_tag: "OpenSCENARIO · TraCI · 5 Labs",
+        mod_a_desc: "基于 OpenSCENARIO 与 esmini 动力学引擎的自动驾驶仿真，覆盖加塞避撞、自适应跟车、AEB 紧急制动及交叉口路权协同。",
+        mod_b_name: "B. 交通流与协同（SUMO）",
+        mod_b_tag: "SUMO · TraCI · 5 Labs",
+        mod_b_desc: "基于 SUMO 与 TraCI 接口的微观交通流协同仿真，包括 IDM 跟车标定、信号灯配时优化、CACC 车队编队及绿波通行。",
+        mod_c_name: "C. 整车能量与工况（FASTSim）",
+        mod_c_tag: "FASTSim 2.1.5 · py310 · 4 Labs",
+        mod_c_desc: "基于 NREL FASTSim 2.1.5 的纯电动与混动整车能耗仿真，毫秒级向量化求解 UDDS/HWFET 工况百公里电耗及动力匹配。",
+        mod_d_name: "D. 电池电化学机理（PyBaMM）",
+        mod_d_tag: "PyBaMM · SPM / DFN · 4 Labs",
+        mod_d_desc: "基于 PyBaMM 物理化学偏微分方程的多尺度电芯建模，求解 SPM/DFN 恒流充放电、容量衰减、OCV-SOC 曲线及析锂风险。",
+        mod_e_name: "E. 优化与先进控制",
+        mod_e_tag: "pymoo · MPC · DP · 4 Labs",
+        mod_e_desc: "运用 pymoo 遗传算法、模型预测控制 (MPC) 与动态规划 (DP)，求解整车能耗最优路径分配与自动驾驶舒适跟车最优控制律。",
+        mod_f_name: "F. 模型交换与协同仿真（FMI / FMU）",
+        mod_f_tag: "FMI 2.0 · FMPy · 3 Labs",
+        mod_f_desc: "基于 FMI 2.0/3.0 工业标准与 FMPy 工具链，实现跨平台模型黑盒导出、加载运行与多物理域模型协同仿真。",
+        mod_g_name: "G. ROS 2 机器人与车控基础",
+        mod_g_tag: "ROS 2 Jazzy · rclpy · 2 Labs",
+        mod_g_desc: "基于 ROS 2 Jazzy Core 机器人操作系统，掌握话题发布订阅 (Pub/Sub)、服务调用 (Client/Server) 与车载分布式节点架构。",
+        mod_h_name: "H. 场景生成与模糊测试",
+        mod_h_tag: "Scenario Fuzzing · 2 Labs",
+        mod_h_desc: "参数化 OpenSCENARIO 批量场景生成算法，结合动态变异与安全性通过判据矩阵，实现自动驾驶高维边界场景压力测试。",
+
+        token_chip: "访问授权 · 安全凭证",
+        token_page_title: "API 令牌与安全授权",
+        token_page_sub: "管理用于访问 JupyterHub API 的安全访问凭证及已授权的第三方客户端应用",
+        token_title: "申请新的 API 令牌",
+        token_sub: "为自动化仿真评测脚本、VSCode 远程接入或外部系统申请独立访问令牌",
+        token_note: "备注说明",
+        token_note_ph: "例如：自动化评测脚本 / VSCode 远程连接",
+        token_note_help: "为此令牌指定清晰的用途标识，便于后续追踪",
+        token_expires: "有效期",
+        token_expires_help: "设置令牌自动失效时长，到期后无法再发起请求",
+        token_perms: "权限范围 (Scopes)",
+        token_perms_ph: "留空则继承当前用户所有权限，多个权限用空格分隔",
+        token_perms_help: "可限制该令牌的权限范围。若留空，令牌将具备你当前账户的全部权限。",
+        token_request: "申请新令牌",
+        token_new: "你的新 API 令牌",
+        token_new_title: "✓ 你的新 API 令牌已成功生成",
+        token_new_warn: "⚠️ 请立即妥善复制并保存此令牌。页面刷新后将无法再次查看该完整密钥，若丢失可随时返回此页重新生成。",
+        token_list: "API 令牌列表",
+        token_list_sub: "当前具有平台访问权限的 API 令牌清单。撤销正在运行的服务器的令牌需重启该服务器生效。",
+        token_th_note: "备注",
+        token_th_perms: "权限范围",
+        token_th_lastused: "上次使用",
+        token_th_created: "创建时间",
+        token_th_expires: "过期时间",
+        token_th_action: "操作",
+        token_no_note: "无备注说明",
+        token_never: "从未",
+        token_no_expiry: "永不过期",
+        token_revoke: "撤销",
+        token_oauth_title: "已授权的外部应用",
+        token_oauth_sub: "通过 OAuth 协议接入 JupyterHub 的已授权客户端（例如 JupyterLab 单用户环境）。OAuth 令牌仅用于识别你的用户身份，不会越权执行敏感操作。",
+        token_oauth_app: "应用名称 / 描述",
+        token_oauth_first: "首次授权时间",
+
+        admin_chip: "系统控制台 · 集群运维",
+        admin_title: "用户与运行实例管理",
+        admin_sub: "实时监控平台教学科研账户、DockerSpawner 容器沙箱运行状态及资源配置调度",
+        admin_stat_users: "平台授权用户",
+        admin_stat_users_val: "高校师生账户",
+        admin_stat_sched: "容器调度架构",
+        admin_stat_sched_val: "DockerSpawner 沙箱",
+        admin_stat_quota: "单实例配额",
+        admin_stat_quota_val: "1.0 vCPU · 2GB · 512MB shm",
+        admin_role_admin: "管理员",
+        admin_role_user: "普通用户",
+        admin_status_active: "运行中",
+        admin_status_stopped: "已停止",
+        admin_tip: "<strong>运维小贴士：</strong>当高并发实验结束或需要回收算力时，可使用右侧 <strong>“全部停止”</strong> 按钮批量挂起学生容器，学生挂载的 <code>/home/jovyan</code> 实验进度及数据文件均安全保留在持久卷中。",
+
+        sp_starting: "正在启动实验环境…",
+        sp_redirect: "系统正在分配容器算力并加载镜像，就绪后会自动跳转，请稍候。",
+        sp_stage1: "1. 配额核验",
+        sp_stage2: "2. CPU 容器拉起",
+        sp_stage3: "3. 持久化挂载",
+        sp_stage4: "4. JupyterLab 就绪",
+        sp_log: "事件日志 (Event Logs)",
         nr_failed_title: "启动失败",
         nr_failed_msg: "最近一次启动实验环境的尝试失败了，要重试吗？",
         nr_relaunch: "重新启动",
         nr_idle_title: "实验环境未运行",
         nr_idle_msg: "你的实验环境还没启动，要现在启动吗？",
         nr_launch: "启动实验环境",
-        token_title: "申请新的 API 令牌",
-        token_note: "备注",
-        token_expires: "令牌有效期",
-        token_perms: "权限",
-        token_request: "申请新的 API 令牌",
-        token_new: "你的新 API 令牌",
-        token_revoke: "撤销",
-        token_list: "API 令牌列表",
-        token_lastused: "上次使用",
-        token_created: "创建时间",
-        token_expires_col: "过期时间",
-        sp_starting: "正在启动实验环境…",
-        sp_redirect: "就绪后会自动跳转，请稍候。",
-        sp_log: "事件日志"
+        err_back_home: "返回平台首页"
       },
       en: {
         brand_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
         footer_status: "All Systems Operational · ROS 2 Jazzy Core Ready",
         footer_platform: "IEV CloudLab · Intelligent Electric Vehicle Cloud Simulation Laboratory",
-        login_pill: "Intelligent EV Cloud Simulation Laboratory",
-        nav_home: "Home", nav_token: "Token", nav_admin: "Admin",
-        nav_logout: "Logout", nav_login: "Login",
+        nav_home: "Home",
+        nav_token: "Token",
+        nav_admin: "Admin",
+        nav_launch_lab: "Launch Lab",
+        nav_logout: "Logout",
+        nav_login: "Login",
+        nav_docs: "Lab Docs",
+
+        login_pill: "Academic Intelligent EV Cloud Simulation Laboratory",
         card_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
-        email_label: "Email address", email_ph: "Enter your email",
-        send_code: "Send code",
-        code_label: "Verification code", code_ph: "6-digit code",
-        signin: "Sign in",
-        hint: "Code valid for 10 minutes, do not share it",
-        need_email: "Please enter your email first", sending: "Sending…",
+        email_label: "Email address",
+        email_ph: "Enter your university email",
+        email_hint: "Academic email supported",
+        send_code: "Send Code",
+        code_label: "Verification Code",
+        code_ph: "6-digit code",
+        code_hint: "6-digit numeric",
+        signin: "Sign In",
+        hint: "Code valid for 10 minutes, do not share it with others",
+        trust_badge: "🔒 Dedicated CPU Sandbox · Auto-saved simulation data",
+        need_email: "Please enter your email first",
+        sending: "Sending…",
         sent: "If this email is registered, the code has been sent",
         send_fail: "Failed to send, please try again later",
+
+        home_chip: "Student Simulation Workbench · ROS 2 Jazzy Core",
         home_welcome: "Welcome back",
-        home_not_running: "Your lab environment is not running",
-        home_not_running_desc: "Click the button below to launch your cloud lab environment and start today's simulation.",
-        home_launch: "Launch lab environment",
-        home_running: "Lab environment is running",
-        home_running_desc: "Your cloud lab environment is running. Click to open and get to work.",
-        home_open: "Open lab environment",
-        home_stop: "Stop environment",
+        home_sub: "Intelligent EV Cloud Simulation · Dedicated Container Sandbox & Workspace",
+        home_badge_running: "Compute Sandbox Active",
+        home_badge_idle: "Sandbox Standby",
+        home_running: "Lab Environment Running",
+        home_running_desc: "Your cloud simulation sandbox is ready. All code, scenarios and datasets are mounted to your workspace. Click below to start.",
+        home_not_running: "Lab Environment Not Running",
+        home_not_running_desc: "Click below to start your dedicated container. The system allocates compute and mounts persistent storage (takes 10-15s).",
+        home_open: "Open Lab Environment",
+        home_stop: "Stop Environment",
+        home_launch: "Launch Lab Environment",
         home_stop_confirm: "Stop the lab environment? Unsaved work will be lost.",
-        nr_failed_title: "Launch failed",
-        nr_failed_msg: "The last attempt to launch your lab environment failed. Retry?",
-        nr_relaunch: "Relaunch",
-        nr_idle_title: "Lab environment not running",
-        nr_idle_msg: "Your lab environment is not running. Launch it now?",
-        nr_launch: "Launch lab environment",
-        token_title: "Request a new API token",
+        home_spec_vcpu: "⚡ 1.0 vCPU Compute",
+        home_spec_ram: "🧠 2.0 GB Memory",
+        home_spec_shm: "💾 512 MB Shared Mem",
+        home_spec_os: "🐧 Ubuntu 24.04 · ROS 2 Jazzy",
+        home_spec_single: "⚡ Dedicated Single-User Sandbox",
+        home_spec_sync: "💾 /opt/ievlab Persistent Sync",
+        home_spec_labs: "📦 29 Pre-installed Lab Notebooks",
+        home_curr_title: "Curriculum Labs & Simulation Toolkit",
+        home_curr_sub: "8 Core Academic Modules · 29 Simulation Labs · 3 Cross-Domain Data Chains",
+        home_filter_all: "All Labs (29)",
+        home_filter_chains: "🔗 3 Data Chains",
+        home_open_nb: "Open Notebook",
+        home_kernel_default: "Python 3.12 Default",
+        home_kernel_fastsim: "py310-fastsim Kernel",
+        home_diff_easy: "Introductory",
+        home_diff_mid: "Intermediate",
+        home_diff_hard: "Advanced",
+        home_prereq_none: "None",
+        home_prereq: "Prereq: ",
+
+        chain_section_title: "🔗 3 Cross-Domain Simulation Chains",
+        chain_section_sub: "Breaking multi-tool silos by connecting battery electrochemistry, vehicle energy consumption, and autonomous driving closed-loop control via standardized data flows.",
+        chain1_badge: "Vehicle Design Chain · D → C → A",
+        chain1_title: "Battery Calibration ➔ Vehicle Energy ➔ Dynamics Loop",
+        chain1_desc: "D3 PyBaMM battery OCV-SOC export → FASTSim C1/C2 energy & vehicle fitting → esmini A1/A2/A3 autonomous driving & braking verification closed-loop",
+        chain2_badge: "Algorithm Chain · Controller → Loop → Metrics",
+        chain2_title: "Base Controller ➔ Physics Step ➔ Benchmark Metrics",
+        chain2_desc: "BaseController common class → esmini / SUMO TraCI bidirectional physics step loop → labs/data/results/*.json benchmark metrics archiving",
+        chain3_badge: "Energy Management Chain · E → C → Report",
+        chain3_title: "Multi-objective / DP ➔ EMS Strategy ➔ Report Card",
+        chain3_desc: "E2/E4 pymoo multi-objective genetic & DP optimization → FASTSim C4 EMS strategy verification → comprehensive eco-driving report card",
+
+        mod_a_name: "A. Autonomous Driving Scenario Testing (esmini)",
+        mod_a_tag: "OpenSCENARIO · TraCI · 5 Labs",
+        mod_a_desc: "Autonomous driving simulation based on OpenSCENARIO and esmini dynamics engine, covering Cut-in collision avoidance, ACC, closed-loop AEB, and intersection yield.",
+        mod_b_name: "B. Traffic Flow & Coordination (SUMO)",
+        mod_b_tag: "SUMO · TraCI · 5 Labs",
+        mod_b_desc: "Microscopic traffic simulation based on SUMO and TraCI interface, including IDM car-following calibration, signal timing, CACC platooning, and green wave coordination.",
+        mod_c_name: "C. Vehicle Energy Consumption (FASTSim)",
+        mod_c_tag: "FASTSim 2.1.5 · py310 · 4 Labs",
+        mod_c_desc: "BEV and HEV energy simulation with NREL FASTSim 2.1.5, vectorized millisecond-level solving of UDDS/HWFET kWh/100km consumption and powertrain sizing.",
+        mod_d_name: "D. Battery Electrochemistry (PyBaMM)",
+        mod_d_tag: "PyBaMM · SPM / DFN · 4 Labs",
+        mod_d_desc: "Multi-scale cell modeling with PyBaMM PDE solvers, solving SPM/DFN constant-current curves, capacity degradation, OCV-SOC calibration, and lithium plating risk.",
+        mod_e_name: "E. Optimization & Control",
+        mod_e_tag: "pymoo · MPC · DP · 4 Labs",
+        mod_e_desc: "Employing pymoo genetic algorithms, Model Predictive Control (MPC), and Dynamic Programming (DP) for energy-optimal trajectory and comfortable car-following.",
+        mod_f_name: "F. Model Exchange & Co-Simulation (FMI / FMU)",
+        mod_f_tag: "FMI 2.0 · FMPy · 3 Labs",
+        mod_f_desc: "Industrial standard FMI 2.0/3.0 with FMPy toolchain, enabling black-box model export, execution, and multi-physics co-simulation across heterogeneous tools.",
+        mod_g_name: "G. ROS 2 Fundamentals",
+        mod_g_tag: "ROS 2 Jazzy · rclpy · 2 Labs",
+        mod_g_desc: "Robot Operating System 2 Jazzy Core, mastering topic Publish/Subscribe, service call Client/Server, and vehicle distributed node architecture.",
+        mod_h_name: "H. Scenario Generation & Fuzzing",
+        mod_h_tag: "Scenario Fuzzing · 2 Labs",
+        mod_h_desc: "Parameterized OpenSCENARIO generation, mutation algorithms, and safety passage criteria matrix for autonomous driving high-dimensional edge case stress testing.",
+
+        token_chip: "Access Authorization · Security Credentials",
+        token_page_title: "API Tokens & Security Authorization",
+        token_page_sub: "Manage API security access tokens and authorized third-party applications for JupyterHub",
+        token_title: "Request a New API Token",
+        token_sub: "Generate dedicated API tokens for automated evaluation scripts, VSCode remote access, or external systems",
         token_note: "Note",
-        token_expires: "Token expires in",
-        token_perms: "Permissions",
-        token_request: "Request new API token",
-        token_new: "Your new API Token",
+        token_note_ph: "e.g. Automated evaluation script / VSCode remote",
+        token_note_help: "Provide a clear note for tracking this token's purpose",
+        token_expires: "Expires In",
+        token_expires_help: "Set token expiration time, after which requests will be rejected",
+        token_perms: "Permissions (Scopes)",
+        token_perms_ph: "Leave blank for full user permissions, separated by spaces",
+        token_perms_help: "Restrict permissions for this token. If blank, inherits all your account permissions.",
+        token_request: "Request Token",
+        token_new: "Your New API Token",
+        token_new_title: "✓ Your new API token has been generated",
+        token_new_warn: "⚠️ Please copy and save this token now. It cannot be shown again after page refresh. If lost, generate a new one anytime.",
+        token_list: "Authorized API Tokens",
+        token_list_sub: "List of API tokens currently authorized. Revoking a token for a running server requires restarting the server.",
+        token_th_note: "Note",
+        token_th_perms: "Permissions",
+        token_th_lastused: "Last Used",
+        token_th_created: "Created",
+        token_th_expires: "Expires",
+        token_th_action: "Action",
+        token_no_note: "No note provided",
+        token_never: "Never",
+        token_no_expiry: "Never",
         token_revoke: "Revoke",
-        token_list: "API Tokens",
-        token_lastused: "Last used",
-        token_created: "Created",
-        token_expires_col: "Expires",
+        token_oauth_title: "Authorized Applications",
+        token_oauth_sub: "Authorized clients connected via OAuth protocol (such as your single-user JupyterLab). OAuth tokens identify user identity without unauthorized privilege escalation.",
+        token_oauth_app: "Application / Description",
+        token_oauth_first: "First Authorized",
+
+        admin_chip: "System Console · Cluster Operations",
+        admin_title: "User & Container Instance Management",
+        admin_sub: "Monitor platform academic accounts, DockerSpawner sandbox runtime states and resource quota scheduling",
+        admin_stat_users: "Authorized Users",
+        admin_stat_users_val: "Academic Accounts",
+        admin_stat_sched: "Container Scheduler",
+        admin_stat_sched_val: "DockerSpawner Sandbox",
+        admin_stat_quota: "Single Instance Quota",
+        admin_stat_quota_val: "1.0 vCPU · 2GB · 512MB shm",
+        admin_role_admin: "Admin",
+        admin_role_user: "User",
+        admin_status_active: "Running",
+        admin_status_stopped: "Stopped",
+        admin_tip: "<strong>Admin Tip:</strong> When labs conclude or compute reclamation is needed, click <strong>\\"Stop All\\"</strong> on the right to suspend student containers. Student workspaces at <code>/home/jovyan</code> remain securely saved in persistent volumes.",
+
         sp_starting: "Starting lab environment…",
-        sp_redirect: "You will be redirected automatically when ready.",
-        sp_log: "Event log"
+        sp_redirect: "Allocating container compute and loading image. Will redirect automatically when ready.",
+        sp_stage1: "1. Quota Check",
+        sp_stage2: "2. CPU Container Spawn",
+        sp_stage3: "3. Storage Mount",
+        sp_stage4: "4. JupyterLab Ready",
+        sp_log: "Event Logs",
+        nr_failed_title: "Launch Failed",
+        nr_failed_msg: "The last attempt to launch your lab environment failed. Would you like to retry?",
+        nr_relaunch: "Relaunch",
+        nr_idle_title: "Lab Environment Not Running",
+        nr_idle_msg: "Your lab environment is not running. Would you like to launch it now?",
+        nr_launch: "Launch Lab Environment",
+        err_back_home: "Back to Home"
       }
     };
+
     function getLang() {
       var l = localStorage.getItem("ievlab-lang");
       if (!l) l = (navigator.language || "en").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
@@ -865,9 +1123,11 @@
       return v;
     }
     window.ievT = t;
+    window.ievGetLang = getLang;
     window.ievSetLang = function(l) {
       localStorage.setItem("ievlab-lang", l);
       applyI18n();
+      if (window.ievAdminRefresh) window.ievAdminRefresh();
     };
     function applyI18n() {
       var lang = getLang();
@@ -875,15 +1135,23 @@
         var v = t(el.getAttribute("data-i18n"));
         if (typeof v === "string") el.textContent = v;
       });
+      document.querySelectorAll("[data-i18n-html]").forEach(function(el) {
+        var v = t(el.getAttribute("data-i18n-html"));
+        if (typeof v === "string") el.innerHTML = v;
+      });
       document.querySelectorAll("[data-i18n-ph]").forEach(function(el) {
         var v = t(el.getAttribute("data-i18n-ph"));
         if (typeof v === "string") el.setAttribute("placeholder", v);
+      });
+      document.querySelectorAll("[data-i18n-title]").forEach(function(el) {
+        var v = t(el.getAttribute("data-i18n-title"));
+        if (typeof v === "string") el.setAttribute("title", v);
       });
       document.querySelectorAll(".iev-lang-opt").forEach(function(el) {
         var active = el.getAttribute("data-lang") === lang;
         el.classList.toggle("active", active);
         el.style.fontWeight = active ? "700" : "";
-        el.style.color = active ? "#1a73e8" : "";
+        el.style.color = active ? "#155eef" : "";
       });
       var sb = document.getElementById("send-code-btn");
       if (sb && !sb.disabled) sb.textContent = t("send_code");
@@ -920,6 +1188,7 @@
   <style>
   /* ============================================================
      Admin 管理页统一设计规范 (支持 Light / Dark 模式)
+     对齐、表格、按钮与分页完整美化
      ============================================================ */
   #react-admin-hook {
     width: 100%;
@@ -929,24 +1198,25 @@
     max-width: 100% !important;
     padding: 0 !important;
   }
-  /* 顶部搜索与筛选栏 */
+  /* 顶部搜索与筛选栏布局 */
   #react-admin-hook .rows-cols-lg-auto,
   #react-admin-hook .g-3 {
     display: flex !important;
     align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 12px !important;
-    margin-bottom: 20px !important;
+    gap: 14px !important;
+    margin-bottom: 22px !important;
   }
   #react-admin-hook .admin-header-buttons .form-control {
     border-radius: 12px !important;
     border: 1.5px solid var(--iev-input-border) !important;
     background: var(--iev-input-bg) !important;
     color: var(--iev-input-text) !important;
-    padding: 9px 16px !important;
+    padding: 10px 18px !important;
     font-size: 14px !important;
-    min-width: 260px !important;
+    min-width: 280px !important;
     box-shadow: none !important;
+    transition: all 0.18s ease !important;
   }
   #react-admin-hook .admin-header-buttons .form-control:focus {
     border-color: var(--iev-input-focus-border) !important;
@@ -959,13 +1229,15 @@
     margin-bottom: 0 !important;
     color: var(--iev-text-secondary) !important;
     font-size: 13.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
   }
   #react-admin-hook .form-check-input {
-    width: 17px !important;
-    height: 17px !important;
+    width: 18px !important;
+    height: 18px !important;
     margin-top: 0 !important;
-    border-radius: 5px !important;
-    border-color: var(--iev-input-border) !important;
+    border-radius: 6px !important;
+    border: 1.5px solid var(--iev-input-border) !important;
     background-color: var(--iev-input-bg) !important;
     cursor: pointer !important;
   }
@@ -973,7 +1245,7 @@
     background-color: #155eef !important;
     border-color: #155eef !important;
   }
-  /* 管理分组按钮 */
+  /* 管理分组次要按钮 */
   #react-admin-hook .btn-light,
   #react-admin-hook button.btn-secondary {
     background: var(--iev-btn-secondary-bg) !important;
@@ -982,23 +1254,23 @@
     border-radius: 12px !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
-    padding: 8px 18px !important;
+    padding: 9px 18px !important;
     transition: all 0.18s ease !important;
   }
   #react-admin-hook .btn-light:hover {
     border-color: #155eef !important;
     color: #155eef !important;
   }
-  /* "添加用户" 按钮：现代主操作按键 */
+  /* "添加用户" 主操作按钮：渐变主色 + 阴影 */
   #react-admin-hook .add-users-button {
     background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
     border: none !important;
     color: #ffffff !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
-    padding: 7px 18px !important;
-    border-radius: 10px !important;
-    box-shadow: 0 3px 10px rgba(21, 94, 239, 0.25) !important;
+    padding: 9px 20px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px rgba(21, 94, 239, 0.28) !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -1006,25 +1278,25 @@
     transition: all 0.18s ease !important;
   }
   #react-admin-hook .add-users-button:hover {
-    box-shadow: 0 5px 16px rgba(21, 94, 239, 0.38) !important;
+    box-shadow: 0 6px 20px rgba(21, 94, 239, 0.42) !important;
     transform: translateY(-1px) !important;
     color: #ffffff !important;
   }
-  /* 批量操作按钮组：右对齐药丸按钮 */
+  /* 批量操作按钮组：右对齐药丸风格 */
   #react-admin-hook td.admin-header-buttons {
     text-align: right !important;
     white-space: nowrap !important;
     vertical-align: middle !important;
     background: transparent !important;
     border: none !important;
-    padding: 10px 0 !important;
+    padding: 12px 0 !important;
   }
   #react-admin-hook td.admin-header-buttons .btn {
     display: inline-flex !important;
     align-items: center !important;
     margin-left: 10px !important;
-    padding: 5px 14px !important;
-    border-radius: 8px !important;
+    padding: 7px 16px !important;
+    border-radius: 10px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     transition: all 0.15s ease !important;
@@ -1033,13 +1305,13 @@
   }
   #react-admin-hook td.admin-header-buttons .start-all,
   #react-admin-hook td.admin-header-buttons .btn-primary {
-    background: rgba(2, 132, 199, 0.1) !important;
-    border: 1px solid rgba(2, 132, 199, 0.28) !important;
-    color: #0284c7 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.28) !important;
+    color: #10b981 !important;
   }
   #react-admin-hook td.admin-header-buttons .start-all:hover,
   #react-admin-hook td.admin-header-buttons .btn-primary:hover {
-    background: rgba(2, 132, 199, 0.18) !important;
+    background: rgba(16, 185, 129, 0.2) !important;
   }
   #react-admin-hook td.admin-header-buttons .stop-all,
   #react-admin-hook td.admin-header-buttons .btn-danger {
@@ -1049,19 +1321,20 @@
   }
   #react-admin-hook td.admin-header-buttons .stop-all:hover,
   #react-admin-hook td.admin-header-buttons .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.18) !important;
+    background: rgba(239, 68, 68, 0.2) !important;
   }
-  /* 用户数据表格规范 */
+  /* 用户数据表格整体 */
   #react-admin-hook table.table {
     background: var(--iev-table-bg) !important;
     color: var(--iev-text-primary) !important;
     border: 1px solid var(--iev-table-border) !important;
-    border-radius: 14px !important;
+    border-radius: 16px !important;
     overflow: hidden !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
     width: 100% !important;
     margin-bottom: 0 !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
   }
   #react-admin-hook table.table thead th {
     background: var(--iev-table-head) !important;
@@ -1069,14 +1342,15 @@
     font-weight: 700 !important;
     font-size: 12.5px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.03em !important;
-    padding: 13px 18px !important;
+    letter-spacing: 0.04em !important;
+    padding: 14px 18px !important;
     border-bottom: 1.5px solid var(--iev-table-border) !important;
     border-top: none !important;
     white-space: nowrap !important;
+    vertical-align: middle !important;
   }
   #react-admin-hook table.table tbody td {
-    padding: 12px 18px !important;
+    padding: 14px 18px !important;
     font-size: 14px !important;
     border-bottom: 1px solid var(--iev-table-border) !important;
     border-top: none !important;
@@ -1092,7 +1366,7 @@
     background: transparent !important;
     padding: 8px 18px !important;
   }
-  /* 用户名加粗与展开折叠按钮 */
+  /* 用户名列加粗与高亮 */
   #react-admin-hook table.table tbody td:first-child {
     font-weight: 600 !important;
     color: var(--iev-text-primary) !important;
@@ -1107,14 +1381,18 @@
     color: var(--iev-text-secondary) !important;
   }
   /* 行内操作项：转化为现代药丸操作按钮 */
+  #react-admin-hook table.table tbody td:last-child {
+    white-space: nowrap !important;
+  }
   #react-admin-hook table.table tbody td:last-child .btn {
     display: inline-flex !important;
     align-items: center !important;
+    gap: 4px !important;
     border-radius: 8px !important;
-    padding: 4px 12px !important;
+    padding: 5px 13px !important;
     font-size: 12.5px !important;
     font-weight: 600 !important;
-    margin: 0 4px !important;
+    margin: 0 3px !important;
     text-decoration: none !important;
     box-shadow: none !important;
     transition: all 0.15s ease !important;
@@ -1127,7 +1405,7 @@
     color: #10b981 !important;
   }
   #react-admin-hook table.table tbody td:last-child .btn[class*="start"]:hover {
-    background: rgba(16, 185, 129, 0.18) !important;
+    background: rgba(16, 185, 129, 0.2) !important;
   }
   /* 进入服务器：蓝色药丸 */
   #react-admin-hook table.table tbody td:last-child .btn-primary,
@@ -1137,7 +1415,7 @@
     color: #155eef !important;
   }
   #react-admin-hook table.table tbody td:last-child .btn-primary:hover {
-    background: rgba(21, 94, 239, 0.18) !important;
+    background: rgba(21, 94, 239, 0.2) !important;
   }
   /* 停止服务器：红色药丸 */
   #react-admin-hook table.table tbody td:last-child .btn-danger,
@@ -1147,7 +1425,7 @@
     color: #ef4444 !important;
   }
   #react-admin-hook table.table tbody td:last-child .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.18) !important;
+    background: rgba(239, 68, 68, 0.2) !important;
   }
   /* 编辑用户 / 启动页：灰色次要药丸 */
   #react-admin-hook table.table tbody td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]) {
@@ -1159,14 +1437,14 @@
     border-color: #155eef !important;
     color: #155eef !important;
   }
-  /* 解决分页区域挤压与变形：修复 PreviousNextItems per page 错乱排版 */
+  /* 分页区域：左右对齐，彻底消除挤压与错位 */
   #react-admin-hook .pagination-footer {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     flex-wrap: wrap !important;
     gap: 16px !important;
-    margin-top: 20px !important;
+    margin-top: 22px !important;
     padding-top: 18px !important;
     border-top: 1px solid var(--iev-table-border) !important;
     color: var(--iev-text-secondary) !important;
@@ -1203,7 +1481,7 @@
   }
   #react-admin-hook .pagination-footer select {
     margin: 0 8px !important;
-    padding: 4px 10px !important;
+    padding: 5px 12px !important;
     border-radius: 8px !important;
     border: 1px solid var(--iev-input-border) !important;
     background: var(--iev-input-bg) !important;
@@ -1213,10 +1491,10 @@
   }
   </style>
   <script>
-  /* Admin 页（React 渲染）运行时翻译：MutationObserver 监听 DOM 变化替换英文 */
+  /* Admin 管理页双向动态翻译（支持从中切英、从英切中，以及 DOM 实时增量渲染） */
   (function() {
     if (!window.location.pathname.includes("/hub/admin")) return;
-    var MAP = {
+    var EN_TO_ZH = {
       "Search users": "搜索用户",
       "only active servers": "仅显示运行中的服务器",
       "Manage Groups": "管理分组",
@@ -1224,8 +1502,6 @@
       "Start All": "全部启动",
       "Stop All": "全部停止",
       "Shutdown Hub": "关闭 Hub",
-      "Displaying": "显示",
-      "of": "，共",
       "Previous": "上一页",
       "Next": "下一页",
       "Items per page:": "每页：",
@@ -1244,84 +1520,107 @@
       "Spawn Page": "启动页",
       "Never": "从不"
     };
+    var ZH_TO_EN = {
+      "搜索用户": "Search users",
+      "仅显示运行中的服务器": "only active servers",
+      "管理分组": "Manage Groups",
+      "添加用户": "Add Users",
+      "全部启动": "Start All",
+      "全部停止": "Stop All",
+      "关闭 Hub": "Shutdown Hub",
+      "上一页": "Previous",
+      "下一页": "Next",
+      "每页：": "Items per page:",
+      "每页": "Items per page",
+      "用户": "User",
+      "管理员": "Admin",
+      "服务器": "Server",
+      "最近活动": "Last Activity",
+      "编辑用户": "Edit User",
+      "删除用户": "Delete User",
+      "启动服务器": "Start Server",
+      "停止服务器": "Stop Server",
+      "进入服务器": "Access Server",
+      "操作": "Actions",
+      "服务器启动中": "Server is pending",
+      "启动页": "Spawn Page",
+      "从不": "Never"
+    };
+
     function translateNode(node) {
+      var isZh = (window.ievGetLang ? window.ievGetLang() : "zh") === "zh";
       if (node.nodeType === 3) {
         var t = node.textContent.trim();
-        // "Displaying 1-1 of 1" 这类组合（先处理，避免被简单替换破坏）
-        var dm = t.match(/^(Displaying|显示)\s+(\d+-\d+)\s+of\s+(\d+)$/);
-        if (dm) {
-          node.textContent = node.textContent.replace(t, "显示 " + dm[2] + "，共 " + dm[3] + " 条");
-          return;
+        if (!t) return;
+        if (isZh) {
+          var dm = t.match(/^(Displaying|显示)\s+(\d+-\d+)\s+of\s+(\d+)$/);
+          if (dm) { node.textContent = node.textContent.replace(t, "显示 " + dm[2] + "，共 " + dm[3] + " 条"); return; }
+          var ofm = t.match(/^of\s+(\d+)$/);
+          if (ofm) { node.textContent = node.textContent.replace(t, "共 " + ofm[1] + " 条"); return; }
+          if (t === "Displaying") { node.textContent = node.textContent.replace("Displaying", "显示"); return; }
+          var tm = t.match(/^(\d+)\s+(second|minute|hour|day)s?\s+ago$/);
+          if (tm) {
+            var unit = {"second": "秒", "minute": "分钟", "hour": "小时", "day": "天"}[tm[2]] || tm[2];
+            node.textContent = node.textContent.replace(t, tm[1] + " " + unit + "前");
+            return;
+          }
+          if (EN_TO_ZH[t]) node.textContent = node.textContent.replace(t, EN_TO_ZH[t]);
+        } else {
+          var dm_en = t.match(/^显示\s+(\d+-\d+)，共\s+(\d+)\s+条$/);
+          if (dm_en) { node.textContent = node.textContent.replace(t, "Displaying " + dm_en[1] + " of " + dm_en[2]); return; }
+          var ofm_en = t.match(/^共\s+(\d+)\s+条$/);
+          if (ofm_en) { node.textContent = node.textContent.replace(t, "of " + ofm_en[1]); return; }
+          if (t === "显示") { node.textContent = node.textContent.replace("显示", "Displaying"); return; }
+          var tm_en = t.match(/^(\d+)\s+(秒|分钟|小时|天)前$/);
+          if (tm_en) {
+            var unit_en = {"秒": "second", "分钟": "minute", "小时": "hour", "天": "day"}[tm_en[2]] || "minute";
+            node.textContent = node.textContent.replace(t, tm_en[1] + " " + unit_en + "s ago");
+            return;
+          }
+          if (ZH_TO_EN[t]) node.textContent = node.textContent.replace(t, ZH_TO_EN[t]);
         }
-        // 分散的 "of 2" 片段
-        var ofm = t.match(/^of\s+(\d+)$/);
-        if (ofm) {
-          node.textContent = node.textContent.replace(t, "共 " + ofm[1] + " 条");
-          return;
-        }
-        // 单独的 "Displaying"（后跟数字节点）
-        if (t === "Displaying") {
-          node.textContent = node.textContent.replace("Displaying", "显示");
-          return;
-        }
-        // "N seconds/minutes/hours/days ago"
-        var tm = t.match(/^(\d+)\s+(second|minute|hour|day)s?\s+ago$/);
-        if (tm) {
-          var unit = {"second": "秒", "minute": "分钟", "hour": "小时", "day": "天"}[tm[2]] || tm[2];
-          node.textContent = node.textContent.replace(t, tm[1] + " " + unit + "前");
-          return;
-        }
-        if (MAP[t]) node.textContent = node.textContent.replace(t, MAP[t]);
       } else if (node.nodeType === 1) {
-        // 分页按钮：用 data-testid 精确定位（处理首尾空格）
         var testid = node.getAttribute && node.getAttribute("data-testid");
-        if (getLang() === "zh") {
-          if (testid === "paginate-prev") node.textContent = "上一页";
-          if (testid === "paginate-next") node.textContent = "下一页";
-        }
-        // "Items per page:" label：直接找 label 元素
-        if (getLang() === "zh" && node.tagName === "LABEL") {
-          var labelText = node.textContent;
-          if (labelText.indexOf("Items per page") !== -1) {
-            // 只替换文字部分，保留 input
+        if (testid === "paginate-prev") node.textContent = isZh ? "上一页" : "Previous";
+        if (testid === "paginate-next") node.textContent = isZh ? "下一页" : "Next";
+
+        if (node.tagName === "LABEL") {
+          var lt = node.textContent;
+          if (isZh && lt.indexOf("Items per page") !== -1) {
             node.childNodes.forEach(function(cn) {
               if (cn.nodeType === 3 && cn.textContent.indexOf("Items per page") !== -1) {
                 cn.textContent = cn.textContent.replace(/Items per page:?/, "每页条数：");
               }
             });
+          } else if (!isZh && lt.indexOf("每页") !== -1) {
+            node.childNodes.forEach(function(cn) {
+              if (cn.nodeType === 3 && cn.textContent.indexOf("每页") !== -1) {
+                cn.textContent = cn.textContent.replace(/每页条数：?|每页：?/, "Items per page: ");
+              }
+            });
           }
         }
-        // placeholder 属性
-        if (node.placeholder && MAP[node.placeholder.trim()]) {
-          node.placeholder = MAP[node.placeholder.trim()];
-        }
-        // "Displaying 1-1 of 1" 可能分散在多个文本节点：整段替换
-        var full = node.textContent;
-        var dm2 = full.match(/(Displaying|显示)\s+(\d+-\d+)\s+of\s+(\d+)/);
-        if (dm2 && node.childNodes.length <= 3) {
-          node.textContent = full.replace(dm2[0], "显示 " + dm2[2] + "，共 " + dm2[3] + " 条");
-          return;
+        if (node.placeholder) {
+          var ph = node.placeholder.trim();
+          if (isZh && EN_TO_ZH[ph]) node.placeholder = EN_TO_ZH[ph];
+          else if (!isZh && ZH_TO_EN[ph]) node.placeholder = ZH_TO_EN[ph];
         }
         node.childNodes.forEach(translateNode);
       }
     }
-    function getLang() {
-      var l = localStorage.getItem("ievlab-lang");
-      if (!l) l = (navigator.language || "en").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
-      return l;
-    }
+
     function apply() {
-      if (getLang() !== "zh") return;
       translateNode(document.body);
     }
+    window.ievAdminRefresh = apply;
+
     var obs = new MutationObserver(function(muts) {
-      if (getLang() !== "zh") return;
       muts.forEach(function(m) {
         m.addedNodes.forEach(translateNode);
         if (m.type === "characterData") translateNode(m.target);
       });
     });
-    // React 渲染完成后开始观察
+
     var tries = 0;
     var timer = setInterval(function() {
       tries++;
@@ -1329,23 +1628,16 @@
         clearInterval(timer);
         apply();
         obs.observe(document.body, {childList: true, subtree: true, characterData: true});
-        // 兜底：React 异步加载数据，前 60 秒每 2 秒全量扫一遍
         var sweep = 0;
         var sweeper = setInterval(function() {
           sweep++;
-          if (getLang() === "zh") apply();
+          apply();
           if (sweep >= 30) clearInterval(sweeper);
-        }, 2000);
+        }, 1500);
       }
     }, 250);
-    // 语言切换时重新翻译
-    var origSet = window.ievSetLang;
-    window.ievSetLang = function(l) {
-      if (origSet) origSet(l);
-      setTimeout(apply, 300);
-    };
   })();
-  </script>
+  </script>  </script>
   <script>
   /* 导航栏高亮当前活动菜单项 (首页 / 令牌 / 管理) */
   (function() {
