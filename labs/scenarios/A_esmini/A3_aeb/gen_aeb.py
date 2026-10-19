@@ -1,0 +1,157 @@
+"""Generate A3 AEB emergency-braking scenario (pure XML, no scenariogeneration needed).
+
+Scenario: straight road, Target ahead brakes hard at t=3s.
+Ego (controlled by student's Python AEB via EsminiEnv) must avoid collision.
+
+Outputs: aeb_brake.xosc (references aeb.xodr, a straight road)
+"""
+import os
+
+OUT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+XOSC = """<?xml version="1.0" encoding="utf-8"?>
+<OpenSCENARIO xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="OpenScenario.xsd">
+    <FileHeader description="aeb_brake" author="IEV CloudLab" revMajor="1" revMinor="1" date="2026-10-19T00:00:00"/>
+    <ParameterDeclarations/>
+    <CatalogLocations/>
+    <RoadNetwork>
+        <LogicFile filepath="aeb.xodr"/>
+    </RoadNetwork>
+    <Entities>
+        <ScenarioObject name="Ego">
+            <Vehicle name="EgoCar" vehicleCategory="car">
+                <ParameterDeclarations/>
+                <BoundingBox>
+                    <Center x="1.4" y="0.0" z="0.9"/>
+                    <Dimensions width="2.0" length="4.8" height="1.8"/>
+                </BoundingBox>
+                <Performance maxSpeed="150.0" maxDeceleration="8.0" maxAcceleration="10.0"/>
+                <Axles>
+                    <FrontAxle maxSteering="2.5" wheelDiameter="2.5" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                    <RearAxle maxSteering="0.0" wheelDiameter="0.0" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                </Axles>
+                <Properties/>
+            </Vehicle>
+        </ScenarioObject>
+        <ScenarioObject name="Target">
+            <Vehicle name="TargetCar" vehicleCategory="car">
+                <ParameterDeclarations/>
+                <BoundingBox>
+                    <Center x="1.4" y="0.0" z="0.9"/>
+                    <Dimensions width="2.0" length="4.8" height="1.8"/>
+                </BoundingBox>
+                <Performance maxSpeed="150.0" maxDeceleration="8.0" maxAcceleration="10.0"/>
+                <Axles>
+                    <FrontAxle maxSteering="2.5" wheelDiameter="2.5" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                    <RearAxle maxSteering="0.0" wheelDiameter="0.0" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                </Axles>
+                <Properties/>
+            </Vehicle>
+        </ScenarioObject>
+    </Entities>
+    <Storyboard>
+        <Init>
+            <Actions>
+                <Private entityRef="Ego">
+                    <PrivateAction>
+                        <TeleportAction>
+                            <Position>
+                                <LanePosition roadId="0" laneId="-1" s="10.0" offset="0.0"/>
+                            </Position>
+                        </TeleportAction>
+                    </PrivateAction>
+                    <PrivateAction>
+                        <LongitudinalAction>
+                            <SpeedAction>
+                                <SpeedActionDynamics dynamicsShape="step" value="1.0" dynamicsDimension="rate"/>
+                                <SpeedActionTarget>
+                                    <AbsoluteTargetSpeed value="16.0"/>
+                                </SpeedActionTarget>
+                            </SpeedAction>
+                        </LongitudinalAction>
+                    </PrivateAction>
+                </Private>
+                <Private entityRef="Target">
+                    <PrivateAction>
+                        <TeleportAction>
+                            <Position>
+                                <LanePosition roadId="0" laneId="-1" s="40.0" offset="0.0"/>
+                            </Position>
+                        </TeleportAction>
+                    </PrivateAction>
+                    <PrivateAction>
+                        <LongitudinalAction>
+                            <SpeedAction>
+                                <SpeedActionDynamics dynamicsShape="step" value="1.0" dynamicsDimension="rate"/>
+                                <SpeedActionTarget>
+                                    <AbsoluteTargetSpeed value="14.0"/>
+                                </SpeedActionTarget>
+                            </SpeedAction>
+                        </LongitudinalAction>
+                    </PrivateAction>
+                </Private>
+            </Actions>
+        </Init>
+        <Story name="brake_story">
+            <ParameterDeclarations/>
+            <Act name="brake_act">
+                <ManeuverGroup name="brake_group" maximumExecutionCount="1">
+                    <Actors selectTriggeringEntities="false">
+                        <EntityRef entityRef="Target"/>
+                    </Actors>
+                    <Maneuver name="brake_maneuver">
+                        <Event name="brake_event" priority="overwrite" maximumExecutionCount="1">
+                            <Action name="hard_brake">
+                                <PrivateAction>
+                                    <LongitudinalAction>
+                                        <SpeedAction>
+                                            <SpeedActionDynamics dynamicsShape="linear" value="4.0" dynamicsDimension="rate"/>
+                                            <SpeedActionTarget>
+                                                <AbsoluteTargetSpeed value="5.0"/>
+                                            </SpeedActionTarget>
+                                        </SpeedAction>
+                                    </LongitudinalAction>
+                                </PrivateAction>
+                            </Action>
+                            <StartTrigger>
+                                <ConditionGroup>
+                                    <Condition name="brake_trigger" delay="0" conditionEdge="rising">
+                                        <ByValueCondition>
+                                            <SimulationTimeCondition value="3" rule="greaterThan"/>
+                                        </ByValueCondition>
+                                    </Condition>
+                                </ConditionGroup>
+                            </StartTrigger>
+                        </Event>
+                    </Maneuver>
+                </ManeuverGroup>
+                <StartTrigger>
+                    <ConditionGroup>
+                        <Condition name="act_start" delay="0" conditionEdge="rising">
+                            <ByValueCondition>
+                                <SimulationTimeCondition value="0" rule="greaterThan"/>
+                            </ByValueCondition>
+                        </Condition>
+                    </ConditionGroup>
+                </StartTrigger>
+                <StopTrigger/>
+            </Act>
+        </Story>
+        <StopTrigger>
+            <ConditionGroup>
+                <Condition name="sim_stop" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                        <SimulationTimeCondition value="30" rule="greaterThan"/>
+                    </ByValueCondition>
+                </Condition>
+            </ConditionGroup>
+        </StopTrigger>
+    </Storyboard>
+</OpenSCENARIO>
+"""
+
+if __name__ == '__main__':
+    out = os.path.join(OUT_DIR, 'aeb_brake.xosc')
+    with open(out, 'w') as f:
+        f.write(XOSC)
+    print(f'Generated {out}')
