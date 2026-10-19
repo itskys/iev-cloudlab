@@ -2,9 +2,16 @@
 # 落点：设计文档 §5 Step 3（6 条防坑铁律）
 import os
 import sys
+from tornado.web import StaticFileHandler
 
 # 自研认证模块与模板挂在 /srv/jupyterhub，需进 sys.path
 sys.path.insert(0, "/srv/jupyterhub")
+
+# ---------- 品牌资产：Logo/Favicon/OG 图片静态服务 ----------
+# 访问路径：/hub/assets/<文件名>（如 /hub/assets/logo-navbar.png）
+c.JupyterHub.extra_handlers = [
+    (r"/assets/(.*)", StaticFileHandler, {"path": "/srv/jupyterhub/assets"}),
+]
 
 # ---------- 认证：邮箱验证码（无密码登录） ----------
 # 登录页只显示空邮箱输入框，不预置任何地址（防垃圾邮件收割）；
