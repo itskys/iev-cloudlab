@@ -433,10 +433,105 @@
     });
   })();
   </script>
+  <style>
+  /* Admin 页：强制浅色 + Apple 设计语言（针对 JupyterHub React 实际 DOM） */
+  html[data-bs-theme="dark"] body.admin-page-force-light,
+  body.admin-page-force-light {
+    background: #f5f5f7 !important;
+    color: #1d1d1f !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  /* 主容器 */
+  body.admin-page-force-light #main .container {
+    max-width: 1160px;
+    padding-top: 28px;
+    padding-bottom: 60px;
+  }
+  /* 顶部工具栏 */
+  body.admin-page-force-light .admin-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  body.admin-page-force-light .admin-header-buttons .form-control {
+    border-radius: 12px;
+    border: 1px solid #d2d2d7;
+    padding: 9px 16px;
+    font-size: 15px;
+    max-width: 300px;
+  }
+  body.admin-page-force-light .admin-header-buttons .form-control:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0,113,227,.12);
+  }
+  /* 用户表格 */
+  body.admin-page-force-light table.table {
+    background: #fff !important;
+    color: #1d1d1f !important;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0,0,0,.06);
+    border: 1px solid #e8e8ed;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  body.admin-page-force-light table.table thead th {
+    background: #fbfbfd !important;
+    color: #6e6e73 !important;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 13px 18px;
+    border-bottom: 1px solid #e8e8ed;
+    border-top: none;
+  }
+  body.admin-page-force-light table.table tbody td {
+    padding: 14px 18px;
+    font-size: 15px;
+    border-bottom: 1px solid #f5f5f7;
+    background: #fff !important;
+    color: #1d1d1f !important;
+    vertical-align: middle;
+  }
+  body.admin-page-force-light table.table tbody tr:last-child td { border-bottom: none; }
+  body.admin-page-force-light table.table tbody tr:hover td { background: #f5f5f7 !important; }
+  /* 表格内按钮 */
+  body.admin-page-force-light table.table .btn {
+    border-radius: 980px;
+    padding: 6px 16px;
+    font-size: 13px;
+    margin: 2px 4px 2px 0;
+  }
+  /* 批量操作按钮 */
+  body.admin-page-force-light .btn-primary {
+    background: #0071e3 !important;
+    border-color: #0071e3 !important;
+    border-radius: 980px;
+    padding: 8px 22px;
+  }
+  body.admin-page-force-light .btn-danger, body.admin-page-force-light .btn-default {
+    border-radius: 980px;
+    padding: 8px 22px;
+  }
+  /* 分页 */
+  body.admin-page-force-light .pagination-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    color: #6e6e73;
+    font-size: 14px;
+  }
+  </style>
   <script>
   /* Admin 页（React 渲染）运行时翻译：MutationObserver 监听 DOM 变化替换英文 */
   (function() {
     if (!window.location.pathname.includes("/hub/admin")) return;
+    // 强制浅色：覆盖深色模式
+    document.body.classList.add("admin-page-force-light");
+    document.documentElement.setAttribute("data-bs-theme", "light");
     var MAP = {
       "Search users": "搜索用户",
       "only active servers": "仅显示运行中的服务器",
@@ -449,7 +544,8 @@
       "of": "，共",
       "Previous": "上一页",
       "Next": "下一页",
-      "Items per page:": "每页条数：",
+      "Items per page:": "每页：",
+      "Items per page": "每页",
       "User": "用户",
       "Admin": "管理员",
       "Server": "服务器",
@@ -458,6 +554,7 @@
       "Delete User": "删除用户",
       "Start Server": "启动服务器",
       "Stop Server": "停止服务器",
+      "Access Server": "进入服务器",
       "Actions": "操作",
       "Server is pending": "服务器启动中",
       "Spawn Page": "启动页",
