@@ -1,0 +1,19 @@
+# 标准BEV轿车参数（来源：C1 FASTSim测试车辆）
+id: bev_sedan
+name: 标准纯电轿车
+mass_kg: 1800
+drag_coefficient: 0.28
+frontal_area_m2: 2.4
+rolling_resistance: 0.008
+wheel_radius_m: 0.33
+motor_peak_power_kw: 150
+motor_peak_torque_nm: 300
+battery_capacity_kwh: 60
+battery_file: ncm622_50ah.csv  # 关联电池库
+# esmini/A场景用的运动学参数
+kinematic:
+  l_f: 1.4  # 前轴到质心
+  l_r: 1.4  # 后轴到质心
+  max_steer_deg: 30
+  max_accel_mss: 3.0
+  max_decel_mss: 8.0
