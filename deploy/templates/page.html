@@ -433,10 +433,132 @@
     });
   })();
   </script>
+  <style>
+  /* ============ Admin 页 Apple 设计语言 ============ */
+  body[data-admin-page] {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+  }
+  body[data-admin-page] #main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+  /* 顶部工具栏：搜索 + 分组管理 */
+  body[data-admin-page] #react-admin-hook > div > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  body[data-admin-page] input[type="text"][placeholder] {
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 15px;
+    background: #fff;
+    min-width: 280px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  body[data-admin-page] input[type="text"][placeholder]:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0,113,227,.15);
+  }
+  /* 批量操作按钮组 */
+  body[data-admin-page] .btn-group, body[data-admin-page] [class*="btn-group"] {
+    display: flex;
+    gap: 10px;
+  }
+  body[data-admin-page] .btn {
+    border-radius: 980px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s, background .2s;
+  }
+  body[data-admin-page] .btn:hover { transform: translateY(-1px); }
+  body[data-admin-page] .btn:active { transform: translateY(0); }
+  body[data-admin-page] .btn-primary {
+    background: #0071e3;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,113,227,.3);
+  }
+  body[data-admin-page] .btn-primary:hover { background: #0077ed; }
+  body[data-admin-page] .btn-danger {
+    background: #fff;
+    color: #d70015;
+    border: 1px solid #d2d2d7;
+  }
+  body[data-admin-page] .btn-danger:hover { background: #fbfbfd; border-color: #d70015; }
+  body[data-admin-page] .btn-default, body[data-admin-page] .btn:not(.btn-primary):not(.btn-danger) {
+    background: #fff;
+    color: #0071e3;
+    border: 1px solid #d2d2d7;
+  }
+  /* 用户表格卡片 */
+  body[data-admin-page] table {
+    width: 100%;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 8px;
+  }
+  body[data-admin-page] thead th {
+    background: #fbfbfd;
+    color: #6e6e73;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: .02em;
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid #e8e8ed;
+  }
+  body[data-admin-page] tbody td {
+    padding: 16px 20px;
+    font-size: 15px;
+    border-bottom: 1px solid #f5f5f7;
+    vertical-align: middle;
+  }
+  body[data-admin-page] tbody tr:last-child td { border-bottom: none; }
+  body[data-admin-page] tbody tr:hover { background: #fbfbfd; }
+  /* 操作列按钮 */
+  body[data-admin-page] tbody td:last-child .btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    margin-right: 6px;
+  }
+  /* 分页 */
+  body[data-admin-page] [class*="pagination"], body[data-admin-page] nav[aria-label] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    color: #6e6e73;
+    font-size: 14px;
+  }
+  /* 状态徽章 */
+  body[data-admin-page] .badge, body[data-admin-page] [class*="label-"] {
+    border-radius: 980px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  </style>
   <script>
   /* Admin 页（React 渲染）运行时翻译：MutationObserver 监听 DOM 变化替换英文 */
   (function() {
     if (!window.location.pathname.includes("/hub/admin")) return;
+    document.body.setAttribute("data-admin-page", "1");
     var MAP = {
       "Search users": "搜索用户",
       "only active servers": "仅显示运行中的服务器",
