@@ -4,45 +4,20 @@
 {% endif %}
 {% block main %}
   <style>
-    .iev-home-wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 36px 20px 60px;
-    }
-    .iev-welcome-header {
-      margin-bottom: 28px;
-    }
-    .iev-welcome-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: -0.01em;
-      margin: 0 0 6px;
-    }
-    .iev-welcome-title .iev-user {
-      color: #155eef;
-      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .iev-welcome-sub {
-      color: #64748b;
-      font-size: 14px;
-      margin: 0;
-    }
     /* 主状态卡片 */
     .iev-status-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--iev-card-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-radius: 22px;
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-      padding: 42px 36px;
+      border: 1px solid var(--iev-card-border);
+      box-shadow: var(--iev-card-shadow);
+      padding: 44px 36px;
       text-align: center;
       margin-bottom: 36px;
       position: relative;
       overflow: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .iev-status-card::before {
       content: "";
@@ -68,10 +43,15 @@
       border: 1px solid rgba(16, 185, 129, 0.25);
       color: #047857;
     }
+    [data-bs-theme="dark"] .iev-status-badge.running {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
     .iev-status-badge.idle {
-      background: rgba(21, 94, 239, 0.08);
-      border: 1px solid rgba(21, 94, 239, 0.2);
-      color: #155eef;
+      background: var(--iev-badge-chip-bg);
+      border: 1px solid var(--iev-badge-chip-border);
+      color: var(--iev-badge-chip-text);
     }
     .iev-status-icon-wrap {
       width: 76px;
@@ -84,14 +64,24 @@
       transition: transform 0.2s ease;
     }
     .iev-status-icon-wrap.running {
-      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      background: linear-gradient(135deg, rgba(220, 252, 231, 0.9) 0%, rgba(187, 247, 208, 0.9) 100%);
       color: #15803d;
       box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25);
     }
+    [data-bs-theme="dark"] .iev-status-icon-wrap.running {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.3) 100%);
+      color: #10b981;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    }
     .iev-status-icon-wrap.idle {
-      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      background: linear-gradient(135deg, rgba(239, 246, 255, 0.9) 0%, rgba(219, 234, 254, 0.9) 100%);
       color: #1d4ed8;
       box-shadow: 0 8px 24px rgba(21, 94, 239, 0.18);
+    }
+    [data-bs-theme="dark"] .iev-status-icon-wrap.idle {
+      background: linear-gradient(135deg, rgba(21, 94, 239, 0.25) 0%, rgba(0, 212, 255, 0.2) 100%);
+      color: #00d4ff;
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
     }
     .iev-status-icon-wrap svg {
       width: 38px;
@@ -100,16 +90,16 @@
     .iev-status-card h3 {
       font-size: 22px;
       font-weight: 800;
-      color: #0f172a;
+      color: var(--iev-text-primary);
       letter-spacing: -0.01em;
       margin: 0 0 8px;
     }
     .iev-status-card p.desc {
       font-size: 14.5px;
-      color: #64748b;
+      color: var(--iev-text-secondary);
       margin: 0 0 24px;
       line-height: 1.6;
-      max-width: 520px;
+      max-width: 540px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -125,37 +115,13 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+      background: var(--iev-card-subtle-bg);
+      border: 1px solid var(--iev-table-border);
       border-radius: 10px;
       padding: 5px 12px;
       font-size: 12px;
       font-weight: 600;
-      color: #475569;
-    }
-    .iev-btn-primary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 13px 40px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
-      color: #ffffff !important;
-      font-size: 16px;
-      font-weight: 700;
-      text-decoration: none !important;
-      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.35);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      letter-spacing: 0.01em;
-    }
-    .iev-btn-primary:hover {
-      box-shadow: 0 10px 28px rgba(21, 94, 239, 0.45);
-      transform: translateY(-2px);
-    }
-    .iev-btn-primary:active {
-      transform: translateY(1px);
+      color: var(--iev-text-secondary);
     }
     .iev-btn-danger-outline {
       display: inline-flex;
@@ -163,9 +129,9 @@
       gap: 6px;
       margin-top: 16px;
       padding: 8px 22px;
-      border: 1.5px solid #fee2e2;
+      border: 1.5px solid rgba(239, 68, 68, 0.25);
       border-radius: 10px;
-      background: #ffffff;
+      background: var(--iev-card-bg);
       color: #dc2626 !important;
       font-size: 13.5px;
       font-weight: 600;
@@ -174,76 +140,75 @@
       transition: all 0.15s ease;
     }
     .iev-btn-danger-outline:hover {
-      background: #fef2f2;
-      border-color: #fca5a5;
+      background: rgba(239, 68, 68, 0.08);
+      border-color: #dc2626;
     }
     /* 模块导览区 */
     .iev-modules-section {
       margin-top: 40px;
     }
-    .iev-section-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0 0 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
     .iev-module-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 20px;
     }
     .iev-module-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 22px 20px;
+      background: var(--iev-card-bg);
+      border: 1px solid var(--iev-card-border);
+      border-radius: 18px;
+      box-shadow: var(--iev-card-shadow);
+      padding: 24px 22px;
       transition: all 0.2s ease;
       display: flex;
       flex-direction: column;
     }
     .iev-module-card:hover {
-      border-color: #cbd5e1;
+      border-color: #155eef;
       transform: translateY(-2px);
-      box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.08);
+    }
+    [data-bs-theme="dark"] .iev-module-card:hover {
+      border-color: #00d4ff;
     }
     .iev-module-icon {
-      font-size: 26px;
+      font-size: 28px;
       margin-bottom: 12px;
     }
     .iev-module-card h4 {
-      font-size: 15.5px;
+      font-size: 16px;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--iev-text-primary);
       margin: 0 0 6px;
     }
     .iev-module-card p {
       font-size: 13px;
-      color: #64748b;
-      margin: 0;
+      color: var(--iev-text-secondary);
       line-height: 1.55;
+      margin: 0 0 16px;
+      flex: 1;
     }
     .iev-module-tag {
-      display: inline-block;
-      align-self: flex-start;
-      margin-top: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
-      font-weight: 700;
-      padding: 2px 8px;
+      font-weight: 600;
+      color: var(--iev-text-muted);
+      background: var(--iev-card-subtle-bg);
+      border: 1px solid var(--iev-table-border);
+      padding: 3px 8px;
       border-radius: 6px;
-      background: #f1f5f9;
-      color: #475569;
+      align-self: flex-start;
     }
   </style>
 
-  <div class="iev-home-wrap">
-    <div class="iev-welcome-header">
-      <h2 class="iev-welcome-title">
-        <span data-i18n="home_welcome">欢迎回来</span>，<span class="iev-user">{{ user.name }}</span> 👋
-      </h2>
-      <p class="iev-welcome-sub">智能电动汽车云仿真平台 · 学生专属实验工作台</p>
+  <div class="iev-page-container">
+    <div class="iev-page-header">
+      <div class="iev-badge-chip">
+        <span class="iev-status-dot"></span>
+        <span>学生仿真实验工作台 · ROS 2 Jazzy Core</span>
+      </div>
+      <h1 class="iev-page-title">
+        <span data-i18n="home_welcome">欢迎回来</span>，<span style="color: #155eef; background: linear-gradient(135deg, #155eef 0%, #00b4ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ user.name }}</span> 👋
+      </h1>
+      <p class="iev-page-sub">智能电动汽车云仿真平台 · 独立容器算力沙箱与云端工作区</p>
     </div>
 
     <div class="iev-status-card">
@@ -260,7 +225,7 @@
           </div>
         </div>
         <h3 data-i18n="home_running">实验环境运行中</h3>
-        <p class="desc" data-i18n="home_running_desc">你的云端实验沙箱已分配完毕，所有代码、场景与数据集已自动挂载至工作区，点击进入即可开始实验。</p>
+        <p class="desc" data-i18n="home_running_desc">你的云端实验沙箱已就绪，所有代码、场景与数据集已自动挂载至工作区，点击进入即可开始实验。</p>
         
         <div class="iev-spec-chips">
           <span class="iev-chip">⚡ 1.0 vCPU 算力</span>
@@ -341,7 +306,6 @@
     </div>
 
     {% if allow_named_servers %}
-      {# 保留命名服务器（本项目未启用，仅作兼容） #}
       <div style="margin-top: 32px;">
         <h2>Named Servers</h2>
         {% set named_spawners = user.all_spawners(include_default=False)|list %}

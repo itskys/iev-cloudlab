@@ -10,13 +10,14 @@
       text-align: center;
     }
     .iev-err-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--iev-card-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-radius: 22px;
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 20px 50px -15px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      border: 1px solid var(--iev-card-border);
+      box-shadow: var(--iev-card-shadow);
       padding: 48px 36px;
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .iev-err-badge {
       display: inline-flex;
@@ -25,22 +26,26 @@
       width: 64px;
       height: 64px;
       border-radius: 20px;
-      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      background: linear-gradient(135deg, rgba(254, 226, 226, 0.9) 0%, rgba(254, 202, 202, 0.9) 100%);
       color: #dc2626;
       font-size: 26px;
       margin-bottom: 20px;
       box-shadow: 0 8px 20px rgba(239, 68, 68, 0.18);
     }
+    [data-bs-theme="dark"] .iev-err-badge {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(185, 28, 28, 0.3) 100%);
+      color: #f87171;
+    }
     .iev-err-card h1 {
       font-size: 24px;
       font-weight: 800;
-      color: #0f172a;
+      color: var(--iev-text-primary);
       letter-spacing: -0.01em;
       margin: 0 0 12px;
     }
     .iev-err-card p {
       font-size: 14.5px;
-      color: #64748b;
+      color: var(--iev-text-secondary);
       margin: 0 0 24px;
       line-height: 1.6;
     }

@@ -60,10 +60,11 @@
               type="text/javascript"
               charset="utf-8"></script>
       <script>
-      /* IEV CloudLab：全站强制浅色模式（品牌为浅色体系，深浅混搭导致样式错乱） */
+      /* IEV CloudLab 主题初始化：自动同步 localStorage 或系统偏好 */
       (function() {
-        document.documentElement.setAttribute("data-bs-theme", "light");
-        try { localStorage.setItem("jupyterhub-bs-theme", "light"); } catch(e) {}
+        var stored = localStorage.getItem("jupyterhub-bs-theme");
+        var theme = stored || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-bs-theme", theme);
       })();
       </script>
     {% endblock scripts %}
@@ -124,29 +125,292 @@
   </head>
   <body>
   <style>
-    html, body { height: 100%; }
+    /* ============================================================
+       IEV CloudLab 统一设计系统与主题变量规范 (v2.4)
+       支持 Light / Dark 模式无缝自适应切换
+       ============================================================ */
+    :root, [data-bs-theme="light"] {
+      --iev-page-max-width: 1140px;
+      --iev-bg: #f8fafc;
+      --iev-bg-pattern: 
+        radial-gradient(at 50% 0%, rgba(224, 242, 254, 0.65) 0px, transparent 65%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.45) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.45) 1px, transparent 1px);
+      --iev-nav-bg: rgba(255, 255, 255, 0.88);
+      --iev-nav-border: rgba(226, 232, 240, 0.85);
+      --iev-card-bg: rgba(255, 255, 255, 0.96);
+      --iev-card-border: rgba(226, 232, 240, 0.95);
+      --iev-card-shadow: 0 16px 36px -12px rgba(15, 23, 42, 0.07), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      --iev-card-subtle-bg: #f8fafc;
+      --iev-text-primary: #0f172a;
+      --iev-text-secondary: #475569;
+      --iev-text-muted: #94a3b8;
+      --iev-input-bg: #ffffff;
+      --iev-input-border: #cbd5e1;
+      --iev-input-text: #0f172a;
+      --iev-input-focus-border: #155eef;
+      --iev-input-focus-ring: rgba(21, 94, 239, 0.12);
+      --iev-table-bg: #ffffff;
+      --iev-table-head: #f8fafc;
+      --iev-table-head-text: #475569;
+      --iev-table-border: #e2e8f0;
+      --iev-table-hover: #f1f5f9;
+      --iev-badge-chip-bg: rgba(21, 94, 239, 0.06);
+      --iev-badge-chip-border: rgba(21, 94, 239, 0.16);
+      --iev-badge-chip-text: #155eef;
+      --iev-btn-secondary-bg: #f8fafc;
+      --iev-btn-secondary-border: #cbd5e1;
+      --iev-btn-secondary-text: #334155;
+      --iev-footer-bg: rgba(255, 255, 255, 0.88);
+      --iev-footer-border: rgba(226, 232, 240, 0.85);
+      --iev-brand-title: #0f172a;
+      --iev-scope-badge-bg: #f1f5f9;
+      --iev-scope-badge-text: #334155;
+    }
+
+    [data-bs-theme="dark"] {
+      --iev-bg: #090d16;
+      --iev-bg-pattern: 
+        radial-gradient(at 50% 0%, rgba(0, 212, 255, 0.09) 0px, transparent 65%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      --iev-nav-bg: rgba(11, 15, 25, 0.88);
+      --iev-nav-border: rgba(255, 255, 255, 0.08);
+      --iev-card-bg: rgba(18, 24, 38, 0.92);
+      --iev-card-border: rgba(255, 255, 255, 0.09);
+      --iev-card-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      --iev-card-subtle-bg: rgba(255, 255, 255, 0.03);
+      --iev-text-primary: #f8fafc;
+      --iev-text-secondary: #cbd5e1;
+      --iev-text-muted: #64748b;
+      --iev-input-bg: rgba(11, 15, 25, 0.8);
+      --iev-input-border: rgba(255, 255, 255, 0.16);
+      --iev-input-text: #f8fafc;
+      --iev-input-focus-border: #00d4ff;
+      --iev-input-focus-ring: rgba(0, 212, 255, 0.2);
+      --iev-table-bg: rgba(18, 24, 38, 0.85);
+      --iev-table-head: rgba(30, 41, 59, 0.95);
+      --iev-table-head-text: #94a3b8;
+      --iev-table-border: rgba(255, 255, 255, 0.08);
+      --iev-table-hover: rgba(255, 255, 255, 0.04);
+      --iev-badge-chip-bg: rgba(0, 212, 255, 0.1);
+      --iev-badge-chip-border: rgba(0, 212, 255, 0.25);
+      --iev-badge-chip-text: #00d4ff;
+      --iev-btn-secondary-bg: rgba(30, 41, 59, 0.8);
+      --iev-btn-secondary-border: rgba(255, 255, 255, 0.12);
+      --iev-btn-secondary-text: #e2e8f0;
+      --iev-footer-bg: rgba(11, 15, 25, 0.88);
+      --iev-footer-border: rgba(255, 255, 255, 0.08);
+      --iev-brand-title: #f8fafc;
+      --iev-scope-badge-bg: rgba(255, 255, 255, 0.06);
+      --iev-scope-badge-text: #cbd5e1;
+    }
+
+    html, body {
+      height: 100%;
+    }
     body {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      background-color: #f8fafc;
+      background-color: var(--iev-bg) !important;
+      background-image: var(--iev-bg-pattern) !important;
+      background-size: 100% 100%, 36px 36px, 36px 36px !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      color: #0f172a;
+      color: var(--iev-text-primary) !important;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
+
+    /* ---- 统一容器宽度 (三个菜单宽度严格一致 1140px) ---- */
+    .iev-page-container {
+      max-width: var(--iev-page-max-width, 1140px);
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      box-sizing: border-box;
+    }
+
+    /* ---- 统一页面标题头规范 ---- */
+    .iev-page-header {
+      margin-bottom: 28px;
+    }
+    .iev-page-header .iev-badge-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: var(--iev-badge-chip-bg);
+      border: 1px solid var(--iev-badge-chip-border);
+      color: var(--iev-badge-chip-text);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 12px;
+    }
+    .iev-page-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--iev-text-primary);
+      letter-spacing: -0.015em;
+      margin: 0 0 6px;
+      line-height: 1.25;
+    }
+    .iev-page-sub {
+      color: var(--iev-text-secondary);
+      font-size: 14px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ---- 统一卡片设计规范 ---- */
+    .iev-card {
+      background: var(--iev-card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 20px;
+      border: 1px solid var(--iev-card-border);
+      box-shadow: var(--iev-card-shadow);
+      padding: 32px 32px;
+      margin-bottom: 24px;
+      position: relative;
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .iev-section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--iev-text-primary);
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+    .iev-section-sub {
+      color: var(--iev-text-muted);
+      font-size: 13px;
+      margin: 0 0 20px;
+      line-height: 1.45;
+    }
+
+    /* ---- 统一表单输入组件 ---- */
+    .iev-input, 
+    .form-control, 
+    .form-select {
+      background-color: var(--iev-input-bg) !important;
+      border: 1.5px solid var(--iev-input-border) !important;
+      color: var(--iev-input-text) !important;
+      border-radius: 12px !important;
+      padding: 10px 14px !important;
+      font-size: 14px !important;
+      transition: all 0.18s ease !important;
+    }
+    .iev-input:focus, 
+    .form-control:focus, 
+    .form-select:focus {
+      border-color: var(--iev-input-focus-border) !important;
+      box-shadow: 0 0 0 3.5px var(--iev-input-focus-ring) !important;
+      outline: none !important;
+    }
+    .iev-input::placeholder,
+    .form-control::placeholder {
+      color: var(--iev-text-muted) !important;
+      opacity: 0.8;
+    }
+
+    /* ---- 统一主按钮与操作按钮 ---- */
+    .iev-btn-primary, 
+    .btn-jupyter, 
+    .btn-primary {
+      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
+      border: none !important;
+      color: #ffffff !important;
+      border-radius: 12px !important;
+      padding: 10px 24px !important;
+      font-weight: 600 !important;
+      font-size: 14px !important;
+      letter-spacing: 0.01em !important;
+      box-shadow: 0 4px 14px rgba(21, 94, 239, 0.28) !important;
+      transition: all 0.18s ease !important;
+      text-decoration: none !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .iev-btn-primary:hover, 
+    .btn-jupyter:hover, 
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.4) !important;
+      transform: translateY(-1px);
+      color: #ffffff !important;
+    }
+    .iev-btn-danger-pill,
+    .btn-danger-pill {
+      background: rgba(239, 68, 68, 0.1) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+      color: #ef4444 !important;
+      border-radius: 8px !important;
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      padding: 4px 14px !important;
+      transition: all 0.18s ease !important;
+      text-decoration: none !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .iev-btn-danger-pill:hover,
+    .btn-danger-pill:hover {
+      background: rgba(239, 68, 68, 0.18) !important;
+      border-color: #ef4444 !important;
+      color: #dc2626 !important;
+    }
+
+    /* ---- 统一表格设计规范 ---- */
+    .table {
+      background-color: var(--iev-table-bg) !important;
+      color: var(--iev-text-primary) !important;
+      border-color: var(--iev-table-border) !important;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    .table thead th {
+      background-color: var(--iev-table-head) !important;
+      color: var(--iev-table-head-text) !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 12px 16px !important;
+      border-bottom: 1.5px solid var(--iev-table-border) !important;
+      vertical-align: middle;
+    }
+    .table tbody td {
+      padding: 14px 16px !important;
+      vertical-align: middle !important;
+      border-bottom: 1px solid var(--iev-table-border) !important;
+      color: var(--iev-text-primary) !important;
+      font-size: 13.5px !important;
+      background-color: transparent !important;
+    }
+    .table tbody tr:hover td {
+      background-color: var(--iev-table-hover) !important;
+    }
+
     /* ---- IEV 顶栏磨砂玻璃与品牌设计 ---- */
     .navbar {
       position: sticky;
       top: 0;
       z-index: 1030;
-      background: rgba(255, 255, 255, 0.92) !important;
+      background: var(--iev-nav-bg) !important;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+      border-bottom: 1px solid var(--iev-nav-border);
       box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
       padding: 10px 0;
       margin-bottom: 0 !important;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     .navbar-brand {
       padding: 0;
@@ -159,11 +423,11 @@
       object-fit: contain;
       margin-right: 12px;
       transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
-      filter: drop-shadow(0 2px 4px rgba(21, 94, 239, 0.12));
+      filter: drop-shadow(0 2px 4px rgba(21, 94, 239, 0.15));
     }
     .brand-logo:hover {
       transform: scale(1.03) translateY(-1px);
-      filter: drop-shadow(0 4px 8px rgba(21, 94, 239, 0.25));
+      filter: drop-shadow(0 4px 8px rgba(0, 212, 255, 0.3));
     }
     .brand-title-wrap {
       display: flex;
@@ -173,7 +437,7 @@
     .brand-title {
       font-weight: 800;
       font-size: 17.5px;
-      color: #0f172a;
+      color: var(--iev-brand-title);
       letter-spacing: -0.01em;
       line-height: 1.2;
       display: inline-flex;
@@ -185,48 +449,72 @@
       font-weight: 700;
       padding: 1.5px 6px;
       border-radius: 6px;
-      background: rgba(21, 94, 239, 0.08);
-      color: #155eef;
-      border: 1px solid rgba(21, 94, 239, 0.2);
+      background: var(--iev-badge-chip-bg);
+      color: var(--iev-badge-chip-text);
+      border: 1px solid var(--iev-badge-chip-border);
       letter-spacing: 0.02em;
     }
     .brand-subtitle {
       font-size: 11.5px;
-      color: #64748b;
+      color: var(--iev-text-muted);
       line-height: 1.3;
       margin-top: 1px;
       letter-spacing: 0.01em;
     }
-    /* 导航链接 */
+
+    /* 统一导航链接风格与高亮选中 */
     .navbar-nav .nav-link {
       font-size: 14.5px;
       font-weight: 600;
-      color: #334155 !important;
-      padding: 7px 14px !important;
-      border-radius: 8px;
+      color: var(--iev-text-secondary) !important;
+      padding: 7px 16px !important;
+      border-radius: 10px;
       transition: all 0.18s ease;
-      margin: 0 2px;
+      margin: 0 3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .navbar-nav .nav-link:hover {
       color: #155eef !important;
-      background: #f1f5f9;
+      background: rgba(21, 94, 239, 0.06);
     }
-    .navbar-nav .nav-link:active {
-      transform: scale(0.98);
+    .navbar-nav .nav-link.active {
+      color: #155eef !important;
+      background: rgba(21, 94, 239, 0.1);
+      font-weight: 700;
     }
+    [data-bs-theme="dark"] .navbar-nav .nav-link {
+      color: #cbd5e1 !important;
+    }
+    [data-bs-theme="dark"] .navbar-nav .nav-link:hover {
+      color: #00d4ff !important;
+      background: rgba(0, 212, 255, 0.08);
+    }
+    [data-bs-theme="dark"] .navbar-nav .nav-link.active {
+      color: #00d4ff !important;
+      background: rgba(0, 212, 255, 0.15);
+      font-weight: 700;
+    }
+
     /* 用户徽标与退出按钮 */
     .user-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #dbeafe;
+      background: rgba(21, 94, 239, 0.08);
+      color: #155eef;
+      border: 1px solid rgba(21, 94, 239, 0.18);
       border-radius: 20px;
       padding: 4px 12px;
       font-size: 13px;
       font-weight: 600;
       margin-right: 6px;
+    }
+    [data-bs-theme="dark"] .user-pill {
+      background: rgba(0, 212, 255, 0.1);
+      color: #00d4ff;
+      border-color: rgba(0, 212, 255, 0.25);
     }
     .btn-logout {
       font-size: 13px;
@@ -234,22 +522,23 @@
       padding: 5px 12px;
       border-radius: 8px;
       color: #dc2626;
-      border: 1px solid #fee2e2;
-      background: #fff;
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      background: var(--iev-card-bg);
       transition: all 0.15s ease;
       text-decoration: none;
     }
     .btn-logout:hover {
-      background: #fef2f2;
-      border-color: #fca5a5;
-      color: #b91c1c;
+      background: rgba(220, 38, 38, 0.08);
+      border-color: #dc2626;
+      color: #dc2626;
       text-decoration: none;
     }
+
     /* 移动端菜单美化 */
     @media (max-width: 575.98px) {
       .navbar-collapse {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background: var(--iev-card-bg);
+        border: 1px solid var(--iev-card-border);
         border-radius: 16px;
         margin-top: 12px;
         padding: 12px 16px 16px;
@@ -264,7 +553,7 @@
         flex-direction: row;
         align-items: center;
         gap: 10px;
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid var(--iev-table-border);
         margin-top: 10px;
         padding-top: 12px;
       }
@@ -273,14 +562,15 @@
     @media (min-width: 576px) {
       .navbar-nav.me-2 { align-items: center; }
     }
+
     /* 底部通用 Footer */
     .iev-footer {
       margin-top: auto;
       padding: 24px 16px;
       text-align: center;
-      background: #ffffff;
-      border-top: 1px solid #e2e8f0;
-      color: #64748b;
+      background: var(--iev-footer-bg);
+      border-top: 1px solid var(--iev-footer-border);
+      color: var(--iev-text-muted);
       font-size: 12.5px;
     }
     .iev-footer-status {
@@ -295,6 +585,11 @@
       font-size: 12px;
       font-weight: 600;
       margin-bottom: 8px;
+    }
+    [data-bs-theme="dark"] .iev-footer-status {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #10b981;
     }
     .iev-status-dot {
       width: 7px;
@@ -319,7 +614,7 @@
     </noscript>
     {% block nav_bar %}
       <nav class="navbar navbar-expand-sm mb-4">
-        <div class="container-fluid" style="max-width: 1200px; padding: 0 20px;">
+        <div class="container-fluid" style="max-width: var(--iev-page-max-width, 1140px); padding: 0 24px;">
           {# IEV CloudLab 品牌：官方 Logo #}
           <span id="ievlab-logo" class="navbar-brand">
             <a href="{{ logo_url or base_url }}" style="text-decoration: none; display: flex; align-items: center;" title="IEV CloudLab">
@@ -623,180 +918,304 @@
   })();
   </script>
   <style>
-  /* Admin 页：Apple HIG 真正规范 — 克制、清晰、内容优先 */
-  body.admin-page-force-light {
-    background: #f2f2f7 !important;  /* Apple grouped background */
-    color: #1d1d1f !important;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  body.admin-page-force-light #main .container {
-    max-width: 1024px;
-    padding-top: 24px;
-    padding-bottom: 48px;
-  }
-  /* 搜索框：Apple 风格圆角，无重边框 */
-  body.admin-page-force-light .admin-header-buttons .form-control {
-    border-radius: 10px;
-    border: none;
-    background: #e8e8ed;
-    padding: 8px 14px;
-    font-size: 15px;
-    max-width: 280px;
-  }
-  body.admin-page-force-light .admin-header-buttons .form-control:focus {
-    background: #fff;
-    box-shadow: 0 0 0 2px #007aff;
-    outline: none;
-  }
-  /* 批量操作：td 保持右对齐，按钮用 Apple 文字链风格 */
-  body.admin-page-force-light td.admin-header-buttons {
-    text-align: right !important;
-    white-space: nowrap;
-    vertical-align: middle;
-    background: transparent !important;
-    border: none !important;
-  }
-  body.admin-page-force-light td.admin-header-buttons .btn {
-    display: inline-block;
-    margin-left: 16px;
-    padding: 0;
-    border: none;
-    background: none !important;
-    font-size: 15px;
-    font-weight: 400;
-    border-radius: 0;
-    box-shadow: none !important;
-  }
-  body.admin-page-force-light td.admin-header-buttons .btn-primary { color: #007aff !important; }
-  body.admin-page-force-light td.admin-header-buttons .btn-danger { color: #ff3b30 !important; }
-  body.admin-page-force-light td.admin-header-buttons .btn:hover { opacity: .7; transform: none; }
-  /* "添加用户"：Apple 风格蓝色文字按钮 */
-  body.admin-page-force-light .add-users-button {
-    background: none !important;
-    border: none !important;
-    color: #007aff !important;
-    font-size: 15px;
-    padding: 8px 0;
-    border-radius: 0;
-    box-shadow: none !important;
-  }
-  /* 用户表格：Apple grouped table — 固定布局防变形 */
-  body.admin-page-force-light table.table {
-    background: #fff !important;
-    color: #1d1d1f !important;
-    border: none !important;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: none;
-    border-collapse: separate;
-    border-spacing: 0;
-    table-layout: fixed;  /* 关键：固定列宽，内容再长也不变形 */
+  /* ============================================================
+     Admin 管理页统一设计规范 (支持 Light / Dark 模式)
+     ============================================================ */
+  #react-admin-hook {
     width: 100%;
   }
-  body.admin-page-force-light table.table thead th,
-  body.admin-page-force-light table.table tbody td,
-  body.admin-page-force-light table.table tfoot td {
-    border-left: none !important;
-    border-right: none !important;
+  #react-admin-hook .container,
+  #react-admin-hook .container-fluid {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  /* 顶部搜索与筛选栏 */
+  #react-admin-hook .rows-cols-lg-auto,
+  #react-admin-hook .g-3 {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  #react-admin-hook .admin-header-buttons .form-control {
+    border-radius: 12px !important;
+    border: 1.5px solid var(--iev-input-border) !important;
+    background: var(--iev-input-bg) !important;
+    color: var(--iev-input-text) !important;
+    padding: 9px 16px !important;
+    font-size: 14px !important;
+    min-width: 260px !important;
+    box-shadow: none !important;
+  }
+  #react-admin-hook .admin-header-buttons .form-control:focus {
+    border-color: var(--iev-input-focus-border) !important;
+    box-shadow: 0 0 0 3px var(--iev-input-focus-ring) !important;
+  }
+  #react-admin-hook .form-check {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+    color: var(--iev-text-secondary) !important;
+    font-size: 13.5px !important;
+  }
+  #react-admin-hook .form-check-input {
+    width: 17px !important;
+    height: 17px !important;
+    margin-top: 0 !important;
+    border-radius: 5px !important;
+    border-color: var(--iev-input-border) !important;
+    background-color: var(--iev-input-bg) !important;
+    cursor: pointer !important;
+  }
+  #react-admin-hook .form-check-input:checked {
+    background-color: #155eef !important;
+    border-color: #155eef !important;
+  }
+  /* 管理分组按钮 */
+  #react-admin-hook .btn-light,
+  #react-admin-hook button.btn-secondary {
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1.5px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-btn-secondary-text) !important;
+    border-radius: 12px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    padding: 8px 18px !important;
+    transition: all 0.18s ease !important;
+  }
+  #react-admin-hook .btn-light:hover {
+    border-color: #155eef !important;
+    color: #155eef !important;
+  }
+  /* "添加用户" 按钮：现代主操作按键 */
+  #react-admin-hook .add-users-button {
+    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    padding: 7px 18px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 3px 10px rgba(21, 94, 239, 0.25) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.18s ease !important;
+  }
+  #react-admin-hook .add-users-button:hover {
+    box-shadow: 0 5px 16px rgba(21, 94, 239, 0.38) !important;
+    transform: translateY(-1px) !important;
+    color: #ffffff !important;
+  }
+  /* 批量操作按钮组：右对齐药丸按钮 */
+  #react-admin-hook td.admin-header-buttons {
+    text-align: right !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 10px 0 !important;
+  }
+  #react-admin-hook td.admin-header-buttons .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-left: 10px !important;
+    padding: 5px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+  }
+  #react-admin-hook td.admin-header-buttons .start-all,
+  #react-admin-hook td.admin-header-buttons .btn-primary {
+    background: rgba(2, 132, 199, 0.1) !important;
+    border: 1px solid rgba(2, 132, 199, 0.28) !important;
+    color: #0284c7 !important;
+  }
+  #react-admin-hook td.admin-header-buttons .start-all:hover,
+  #react-admin-hook td.admin-header-buttons .btn-primary:hover {
+    background: rgba(2, 132, 199, 0.18) !important;
+  }
+  #react-admin-hook td.admin-header-buttons .stop-all,
+  #react-admin-hook td.admin-header-buttons .btn-danger {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.28) !important;
+    color: #ef4444 !important;
+  }
+  #react-admin-hook td.admin-header-buttons .stop-all:hover,
+  #react-admin-hook td.admin-header-buttons .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.18) !important;
+  }
+  /* 用户数据表格规范 */
+  #react-admin-hook table.table {
+    background: var(--iev-table-bg) !important;
+    color: var(--iev-text-primary) !important;
+    border: 1px solid var(--iev-table-border) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    margin-bottom: 0 !important;
+  }
+  #react-admin-hook table.table thead th {
+    background: var(--iev-table-head) !important;
+    color: var(--iev-table-head-text) !important;
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    padding: 13px 18px !important;
+    border-bottom: 1.5px solid var(--iev-table-border) !important;
     border-top: none !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: nowrap !important;
   }
-  /* 列宽：用 colgroup 思路，直接定 th 宽度（不受 tbody 首行 colspan 影响） */
-  body.admin-page-force-light table.table thead th:nth-child(1) { width: 24%; }
-  body.admin-page-force-light table.table thead th:nth-child(2) { width: 14%; text-align: center; }
-  body.admin-page-force-light table.table thead th:nth-child(3) { width: 14%; }
-  body.admin-page-force-light table.table thead th:nth-child(4) { width: 18%; }
-  body.admin-page-force-light table.table thead th:nth-child(5) { width: 30%; }
-  /* 管理员列：内容短，取消省略号，保证 "管理员"/"admin" 完整显示 */
-  body.admin-page-force-light table.table thead th:nth-child(2),
-  body.admin-page-force-light table.table tbody td:nth-child(2) {
-    white-space: nowrap;
-    overflow: visible;
+  #react-admin-hook table.table tbody td {
+    padding: 12px 18px !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid var(--iev-table-border) !important;
+    border-top: none !important;
+    color: var(--iev-text-primary) !important;
+    vertical-align: middle !important;
+    background: transparent !important;
   }
-  body.admin-page-force-light table.table thead th {
-    background: #fff !important;
-    color: #8e8e93 !important;
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    padding: 12px 16px;
-    border-bottom: 1px solid #d1d1d6;
-    white-space: nowrap;
+  #react-admin-hook table.table tbody tr:hover td {
+    background-color: var(--iev-table-hover) !important;
   }
-  body.admin-page-force-light table.table tbody td {
-    padding: 0 16px;
-    height: 56px;  /* 固定行高，动态内容不撑开 */
-    font-size: 15px;
-    border-bottom: 0.5px solid #e8e8ed;  /* 行间暗线 */
-    background: #fff !important;
-    color: #1d1d1f !important;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-  body.admin-page-force-light table.table tbody tr:last-child td { border-bottom: none !important; }
-  /* "添加用户/批量操作"行：固定高度，无边框 */
-  body.admin-page-force-light table.table tr.noborder td {
+  #react-admin-hook table.table tr.noborder td {
     border: none !important;
-    background: #fff !important;
-    height: 52px;
-    vertical-align: middle;
+    background: transparent !important;
+    padding: 8px 18px !important;
   }
-  /* 用户名下拉按钮：与文字基线对齐 */
-  body.admin-page-force-light table.table tbody td:first-child .btn {
-    vertical-align: middle;
-    margin-right: 8px;
+  /* 用户名加粗与展开折叠按钮 */
+  #react-admin-hook table.table tbody td:first-child {
+    font-weight: 600 !important;
+    color: var(--iev-text-primary) !important;
   }
-  /* 行内操作：蓝色文字链，危险操作红色文字 */
-  body.admin-page-force-light table.table tbody td:last-child .btn {
-    background: none !important;
-    border: none !important;
-    padding: 4px 8px;
-    font-size: 15px;
-    border-radius: 0;
+  #react-admin-hook table.table tbody td:first-child .btn {
+    border-radius: 6px !important;
+    padding: 2px 7px !important;
+    font-size: 11px !important;
+    margin-right: 8px !important;
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-secondary) !important;
+  }
+  /* 行内操作项：转化为现代药丸操作按钮 */
+  #react-admin-hook table.table tbody td:last-child .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 8px !important;
+    padding: 4px 12px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    margin: 0 4px !important;
+    text-decoration: none !important;
     box-shadow: none !important;
-    margin: 0 4px 0 0;
-    color: #007aff !important;
+    transition: all 0.15s ease !important;
   }
-  body.admin-page-force-light table.table tbody td:last-child .btn-danger,
-  body.admin-page-force-light table.table tbody td:last-child .btn[class*="stop"] {
-    color: #ff3b30 !important;
+  /* 启动服务器：绿色药丸 */
+  #react-admin-hook table.table tbody td:last-child .btn[class*="start"],
+  #react-admin-hook table.table tbody td:last-child a[class*="start"] {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.28) !important;
+    color: #10b981 !important;
   }
-  body.admin-page-force-light table.table tbody td:last-child .btn:hover { opacity: .6; transform: none; }
-  /* 用户名：加粗 */
-  body.admin-page-force-light table.table tbody td:first-child { font-weight: 600; }
-  /* 时间：灰色次要文字 */
-  body.admin-page-force-light table.table tbody td:nth-child(4) { color: #8e8e93 !important; font-size: 14px; }
-  /* 分页：右对齐灰色小字 */
-  body.admin-page-force-light .pagination-footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 12px;
-    margin-top: 16px;
-    color: #8e8e93;
-    font-size: 13px;
+  #react-admin-hook table.table tbody td:last-child .btn[class*="start"]:hover {
+    background: rgba(16, 185, 129, 0.18) !important;
   }
-  body.admin-page-force-light .pagination-footer .btn {
-    background: none !important;
-    border: none !important;
-    color: #007aff !important;
-    font-size: 13px;
-    padding: 4px 8px;
-    border-radius: 0;
+  /* 进入服务器：蓝色药丸 */
+  #react-admin-hook table.table tbody td:last-child .btn-primary,
+  #react-admin-hook table.table tbody td:last-child a[class*="access"] {
+    background: rgba(21, 94, 239, 0.1) !important;
+    border: 1px solid rgba(21, 94, 239, 0.28) !important;
+    color: #155eef !important;
+  }
+  #react-admin-hook table.table tbody td:last-child .btn-primary:hover {
+    background: rgba(21, 94, 239, 0.18) !important;
+  }
+  /* 停止服务器：红色药丸 */
+  #react-admin-hook table.table tbody td:last-child .btn-danger,
+  #react-admin-hook table.table tbody td:last-child a[class*="stop"] {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.28) !important;
+    color: #ef4444 !important;
+  }
+  #react-admin-hook table.table tbody td:last-child .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.18) !important;
+  }
+  /* 编辑用户 / 启动页：灰色次要药丸 */
+  #react-admin-hook table.table tbody td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]) {
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-secondary) !important;
+  }
+  #react-admin-hook table.table tbody td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]):hover {
+    border-color: #155eef !important;
+    color: #155eef !important;
+  }
+  /* 解决分页区域挤压与变形：修复 PreviousNextItems per page 错乱排版 */
+  #react-admin-hook .pagination-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    margin-top: 20px !important;
+    padding-top: 18px !important;
+    border-top: 1px solid var(--iev-table-border) !important;
+    color: var(--iev-text-secondary) !important;
+    font-size: 13.5px !important;
+  }
+  #react-admin-hook .pagination-footer > div,
+  #react-admin-hook .pagination-footer > span {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  #react-admin-hook .pagination-footer .btn {
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-primary) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    margin: 0 4px !important;
     box-shadow: none !important;
+    transition: all 0.15s ease !important;
   }
-  body.admin-page-force-light .pagination-footer .btn:disabled { color: #c6c6c8 !important; }
+  #react-admin-hook .pagination-footer .btn:hover:not(:disabled) {
+    border-color: #155eef !important;
+    color: #155eef !important;
+    background: rgba(21, 94, 239, 0.08) !important;
+  }
+  #react-admin-hook .pagination-footer .btn:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    border-color: var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-muted) !important;
+  }
+  #react-admin-hook .pagination-footer select {
+    margin: 0 8px !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--iev-input-border) !important;
+    background: var(--iev-input-bg) !important;
+    color: var(--iev-input-text) !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+  }
   </style>
   <script>
   /* Admin 页（React 渲染）运行时翻译：MutationObserver 监听 DOM 变化替换英文 */
   (function() {
     if (!window.location.pathname.includes("/hub/admin")) return;
-    // 强制浅色：覆盖深色模式
-    document.body.classList.add("admin-page-force-light");
-    document.documentElement.setAttribute("data-bs-theme", "light");
     var MAP = {
       "Search users": "搜索用户",
       "only active servers": "仅显示运行中的服务器",
@@ -925,6 +1344,20 @@
       if (origSet) origSet(l);
       setTimeout(apply, 300);
     };
+  })();
+  </script>
+  <script>
+  /* 导航栏高亮当前活动菜单项 (首页 / 令牌 / 管理) */
+  (function() {
+    var p = window.location.pathname;
+    document.querySelectorAll('.navbar-nav .nav-link').forEach(function(el) {
+      var h = el.getAttribute('href');
+      if (!h) return;
+      var clean = h.split('?')[0];
+      if (p === clean || (clean.length > 5 && p.indexOf(clean) === 0)) {
+        el.classList.add('active');
+      }
+    });
   })();
   </script>
 </body>

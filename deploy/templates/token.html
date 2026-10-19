@@ -1,179 +1,168 @@
 {% extends "page.html" %}
 {% block main %}
   <style>
-    .iev-token-wrap {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 36px 20px 60px;
-    }
-    .iev-token-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 22px;
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 20px 50px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-      padding: 36px 32px;
-      margin-bottom: 28px;
-    }
-    .iev-token-card h2 {
-      font-size: 20px;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: -0.01em;
-      margin: 0 0 20px;
-    }
-    .iev-token-card .form-label {
+    .iev-scope-badge summary {
+      cursor: pointer;
       font-weight: 600;
-      color: #334155;
-      font-size: 13.5px;
-      margin-bottom: 6px;
+      color: #155eef;
+      font-size: 13px;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    .iev-token-card .form-control, .iev-token-card .form-select {
-      border-radius: 12px;
-      border: 1.5px solid #e2e8f0;
-      padding: 10px 14px;
-      font-size: 14px;
-      transition: all 0.18s ease;
+    [data-bs-theme="dark"] .iev-scope-badge summary {
+      color: #00d4ff;
     }
-    .iev-token-card .form-control:focus, .iev-token-card .form-select:focus {
-      border-color: #155eef;
-      box-shadow: 0 0 0 3.5px rgba(21, 94, 239, 0.12);
+    .iev-scope-badge summary::-webkit-details-marker {
+      display: none;
     }
-    .iev-token-card .btn-jupyter {
-      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
-      color: #ffffff;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 36px;
-      font-weight: 700;
-      font-size: 15px;
-      box-shadow: 0 4px 14px rgba(21, 94, 239, 0.3);
-      transition: all 0.18s ease;
+    .iev-scope-badge summary::before {
+      content: "▶";
+      font-size: 10px;
+      transition: transform 0.15s ease;
+      display: inline-block;
     }
-    .iev-token-card .btn-jupyter:hover {
-      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.42);
-      transform: translateY(-1px);
-      color: #fff;
+    .iev-scope-badge[open] summary::before {
+      transform: rotate(90deg);
     }
-    .iev-token-card table {
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #e2e8f0;
-    }
-    .iev-token-card table thead th {
-      background: #f8fafc;
-      color: #475569;
-      font-weight: 600;
-      font-size: 12.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-      border-bottom: 1px solid #e2e8f0;
+    .iev-scope-tag {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--iev-scope-badge-bg);
+      color: var(--iev-scope-badge-text);
+      border: 1px solid var(--iev-table-border);
+      margin: 2px 4px 2px 0;
     }
   </style>
-  <div class="iev-token-wrap">
-    <div class="iev-token-card">
-      <h2 data-i18n="token_title">申请新的 API 令牌</h2>
-    <h1 class="visually-hidden">Manage JupyterHub Tokens</h1>
-    <div class="row justify-content-center">
-      <form id="request-token-form" class="col-lg-6">
-        <div class="form-group">
-          <label for="token-note" class="form-label" data-i18n="token_note">Note</label>
-          <input id="token-note"
-                 class="form-control"
-                 placeholder="note to identify your new token">
-          <small id="note-note" class="form-text">This note will help you keep track of what your tokens are for.</small>
-          <br />
-          <label for="token-expiration-seconds" class="form-label" data-i18n="token_expires">Token expires in</label>
-          {% block expiration_options %}
-            <select id="token-expiration-seconds" class="form-select">{{ token_expires_in_options_html | safe }}</select>
-          {% endblock expiration_options %}
-          <small id="note-expires-at" class="form-text">You can configure when your token will expire.</small>
-          <br />
-          <label for="token-scopes" class="form-label" data-i18n="token_perms">Permissions</label>
-          <input id="token-scopes"
-                 class="form-control"
-                 placeholder="list of scopes for the token to have, separated by space">
-          <small id="note-token-scopes" class="form-text">
-            You can limit the permissions of the token so it can only do what you want it to.
-            If none are specified, the token will have permission to do everything you can do.
-            See the <a href="https://jupyterhub.readthedocs.io/en/stable/rbac/scopes.html#available-scopes">JupyterHub documentation for a list of available scopes</a>.
-          </small>
+
+  <div class="iev-page-container">
+    <!-- 页面标题头规范 -->
+    <div class="iev-page-header">
+      <div class="iev-badge-chip">
+        <span class="iev-status-dot"></span>
+        <span data-i18n="token_chip">访问授权 · 安全凭证</span>
+      </div>
+      <h1 class="iev-page-title" data-i18n="token_page_title">API 令牌与安全授权</h1>
+      <p class="iev-page-sub" data-i18n="token_page_sub">管理用于访问 JupyterHub API 的安全访问凭证及已授权的第三方客户端应用</p>
+    </div>
+
+    <!-- 卡片 1：申请新的 API 令牌 -->
+    <div class="iev-card">
+      <h3 class="iev-section-title" data-i18n="token_title">申请新的 API 令牌</h3>
+      <p class="iev-section-sub">为自动化仿真评测脚本、VSCode 远程接入或外部系统申请独立访问令牌</p>
+
+      <form id="request-token-form">
+        <div class="row g-3">
+          <div class="col-md-7">
+            <label for="token-note" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_note">Note / 备注说明</label>
+            <input id="token-note"
+                   class="form-control iev-input"
+                   placeholder="例如：自动化评测脚本 / VSCode 远程连接">
+            <small id="note-note" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;">为此令牌指定清晰的用途标识，便于后续追踪</small>
+          </div>
+
+          <div class="col-md-5">
+            <label for="token-expiration-seconds" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_expires">Token expires in / 有效期</label>
+            {% block expiration_options %}
+              <select id="token-expiration-seconds" class="form-select iev-input">{{ token_expires_in_options_html | safe }}</select>
+            {% endblock expiration_options %}
+            <small id="note-expires-at" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;">设置令牌自动失效时长，到期后无法再发起请求</small>
+          </div>
+
+          <div class="col-12 mt-2">
+            <label for="token-scopes" class="form-label" style="font-weight: 600; font-size: 13.5px; color: var(--iev-text-primary);" data-i18n="token_perms">Permissions / 权限范围 (Scopes)</label>
+            <input id="token-scopes"
+                   class="form-control iev-input"
+                   placeholder="留空则继承当前用户所有权限，多个权限用空格分隔">
+            <small id="note-token-scopes" class="form-text" style="color: var(--iev-text-muted); font-size: 12px;">
+              可限制该令牌的权限范围。若留空，令牌将具备你当前账户的全部权限。详见 <a href="https://jupyterhub.readthedocs.io/en/stable/rbac/scopes.html#available-scopes" target="_blank" style="color: #155eef; text-decoration: none;">JupyterHub 官方 Scopes 规范</a>。
+            </small>
+          </div>
         </div>
-        <div class="text-center m-4">
-          <button type="submit" class="btn btn-lg btn-jupyter" data-i18n="token_request">Request new API token</button>
+
+        <div class="mt-4">
+          <button type="submit" class="iev-btn-primary" data-i18n="token_request">
+            <span>🔑</span> <span data-i18n="token_request">申请新令牌</span>
+          </button>
         </div>
       </form>
-    </div>
-    <div class="row justify-content-center">
-      <div id="token-area" class="col-lg-6" style="display: none;">
-        <div class="card">
-          <div class="card-header" data-i18n="token_new">Your new API Token</div>
-          <div class="card-body">
-            <p class="card-title text-center">
-              <span id="token-result"></span>
-            </p>
-            <p class="card-text">
-              Copy this token. You won't be able to see it again,
-              but you can always come back here to get a new one.
-            </p>
+
+      <!-- 新生成的 Token 提示弹层/卡片 -->
+      <div id="token-area" style="display: none; margin-top: 24px;">
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.28); border-radius: 14px; padding: 20px 24px;">
+          <div style="font-weight: 700; color: #047857; font-size: 15px; margin-bottom: 8px;" data-i18n="token_new">
+            ✓ 你的新 API 令牌已成功生成
           </div>
+          <div style="background: var(--iev-card-bg); border: 1px solid var(--iev-card-border); border-radius: 10px; padding: 10px 14px; font-family: monospace; font-size: 15px; color: var(--iev-text-primary); word-break: break-all; user-select: all;" id="token-result"></div>
+          <p style="color: var(--iev-text-muted); font-size: 12.5px; margin: 10px 0 0;">
+            ⚠️ 请立即妥善复制并保存此令牌。页面刷新后将无法再次查看该完整密钥，若丢失可随时返回此页重新生成。
+          </p>
         </div>
       </div>
     </div>
+
+    <!-- 卡片 2：活跃 API 令牌列表 -->
     {% if api_tokens %}
-      <div class="row" id="api-tokens-section">
-        <div class="col">
-          <h2 data-i18n="token_list">API Tokens</h2>
-          <p>
-            These are tokens with access to the JupyterHub API.
-            Permissions for each token may be viewed via the JupyterHub tokens API.
-            Revoking the API token for a running server will require restarting that server.
-          </p>
-          <table class="table table-striped" id="api-tokens-table">
+      <div class="iev-card" id="api-tokens-section">
+        <h3 class="iev-section-title" data-i18n="token_list">已生成的 API 令牌</h3>
+        <p class="iev-section-sub">当前具有平台访问权限的 API 令牌清单。撤销正在运行的服务器的令牌需重启该服务器生效。</p>
+
+        <div class="table-responsive">
+          <table class="table" id="api-tokens-table">
             <thead>
               <tr>
-                <th data-i18n="token_note">Note</th>
-                <th data-i18n="token_perms">Permissions</th>
-                <th data-i18n="token_lastused">Last used</th>
-                <th data-i18n="token_created">Created</th>
-                <th data-i18n="token_expires_col">Expires</th>
+                <th style="width: 25%;" data-i18n="token_note">备注</th>
+                <th style="width: 20%;" data-i18n="token_perms">权限范围</th>
+                <th style="width: 15%;" data-i18n="token_lastused">上次使用</th>
+                <th style="width: 15%;" data-i18n="token_created">创建时间</th>
+                <th style="width: 15%;" data-i18n="token_expires_col">过期时间</th>
+                <th style="width: 10%; text-align: center;">操作</th>
               </tr>
             </thead>
             <tbody>
               {% for token in api_tokens %}
-                <tr class="token-row container" data-token-id="{{ token.api_id }}">
+                <tr class="token-row" data-token-id="{{ token.api_id }}">
                   {% block token_row scoped %}
-                    <td class="note-col col">{{ token.note }}</td>
-                    <td class="scope-col col">
-                      <details>
-                        <summary>scopes</summary>
-                        {% for scope in token.scopes %}<pre class="token-scope">{{ scope }}</pre>{% endfor %}
+                    <td class="note-col">
+                      <span style="font-weight: 600; color: var(--iev-text-primary);">{{ token.note or "无备注说明" }}</span>
+                    </td>
+                    <td class="scope-col">
+                      <details class="iev-scope-badge">
+                        <summary>scopes ({{ token.scopes|length }})</summary>
+                        <div style="margin-top: 6px;">
+                          {% for scope in token.scopes %}
+                            <span class="iev-scope-tag">{{ scope }}</span>
+                          {% endfor %}
+                        </div>
                       </details>
                     </td>
-                    <td class="time-col col">
+                    <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">
                       {%- if token.last_activity -%}
                         {{ token.last_activity.isoformat() + 'Z' }}
                       {%- else -%}
-                        Never
+                        从未
                       {%- endif -%}
                     </td>
-                    <td class="time-col col">
+                    <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">
                       {%- if token.created -%}
                         {{ token.created.isoformat() + 'Z' }}
                       {%- else -%}
                         N/A
                       {%- endif -%}
                     </td>
-                    <td class="time-col col">
+                    <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">
                       {%- if token.expires_at -%}
                         {{ token.expires_at.isoformat() + 'Z' }}
                       {%- else -%}
-                        Never
+                        永不过期
                       {%- endif -%}
                     </td>
-                    <td class="col text-center">
-                      <button class="revoke-token-btn btn btn-xs btn-danger" data-i18n="token_revoke">revoke</button>
+                    <td style="text-align: center;">
+                      <button class="revoke-token-btn iev-btn-danger-pill" data-i18n="token_revoke">撤销</button>
                     </td>
                   {% endblock token_row %}
                 </tr>
@@ -183,62 +172,64 @@
         </div>
       </div>
     {% endif %}
+
+    <!-- 卡片 3：已授权的外部应用 -->
     {% if oauth_clients %}
-      <div class="row" id="oauth-clients-section">
-        <h2>Authorized Applications</h2>
-        <p>
-          These are applications that use OAuth with JupyterHub
-          to identify users (mostly notebook servers).
-          OAuth tokens can generally only be used to identify you,
-          not take actions on your behalf.
-        </p>
-        <table class="table table-striped" id="oauth-tokens-table">
-          <thead>
-            <tr>
-              <th>Application</th>
-              <th data-i18n="token_perms">Permissions</th>
-              <th data-i18n="token_lastused">Last used</th>
-              <th>First authorized</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for client in oauth_clients %}
-              <tr class="token-row" data-token-id="{{ client['token_id'] }}">
-                {% block client_row scoped %}
-                  <td class="note-col col-sm-4">{{ client['description'] }}</td>
-                  <td class="scope-col col-sm-1">
-                    <details>
-                      <summary>scopes</summary>
-                      {# create  set of scopes on all tokens -#}
-                      {# sum concatenates all token.scopes into a single list -#}
-                      {# then filter to unique set and sort -#}
-                      {% for scope in client.tokens | sum(attribute="scopes", start=[]) | unique | sort %}
-                        <pre class="token-scope">{{ scope }}</pre>
-                      {% endfor %}
-                    </details>
-                  </td>
-                  <td class="time-col col-sm-3">
-                    {%- if client['last_activity'] -%}
-                      {{ client['last_activity'].isoformat() + 'Z' }}
-                    {%- else -%}
-                      Never
-                    {%- endif -%}
-                  </td>
-                  <td class="time-col col-sm-3">
-                    {%- if client['created'] -%}
-                      {{ client['created'].isoformat() + 'Z' }}
-                    {%- else -%}
-                      N/A
-                    {%- endif -%}
-                  </td>
-                  <td class="col-sm-1 text-center">
-                    <button class="revoke-token-btn btn btn-xs btn-danger" data-i18n="token_revoke">revoke</button>
-                  </td>
-                {% endblock client_row %}
+      <div class="iev-card" id="oauth-clients-section">
+        <h3 class="iev-section-title">已授权的外部应用</h3>
+        <p class="iev-section-sub">通过 OAuth 协议接入 JupyterHub 的已授权客户端（例如 JupyterLab 单用户环境）。OAuth 令牌仅用于识别你的用户身份，不会越权执行敏感操作。</p>
+
+        <div class="table-responsive">
+          <table class="table" id="oauth-tokens-table">
+            <thead>
+              <tr>
+                <th style="width: 35%;">应用名称 / 描述</th>
+                <th style="width: 20%;" data-i18n="token_perms">权限范围</th>
+                <th style="width: 18%;" data-i18n="token_lastused">上次使用</th>
+                <th style="width: 17%;">首次授权时间</th>
+                <th style="width: 10%; text-align: center;">操作</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for client in oauth_clients %}
+                <tr class="token-row" data-token-id="{{ client['token_id'] }}">
+                  {% block client_row scoped %}
+                    <td class="note-col">
+                      <span style="font-weight: 600; color: var(--iev-text-primary);">{{ client['description'] }}</span>
+                    </td>
+                    <td class="scope-col">
+                      <details class="iev-scope-badge">
+                        <summary>scopes</summary>
+                        <div style="margin-top: 6px;">
+                          {% for scope in client.tokens | sum(attribute="scopes", start=[]) | unique | sort %}
+                            <span class="iev-scope-tag">{{ scope }}</span>
+                          {% endfor %}
+                        </div>
+                      </details>
+                    </td>
+                    <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">
+                      {%- if client['last_activity'] -%}
+                        {{ client['last_activity'].isoformat() + 'Z' }}
+                      {%- else -%}
+                        从未
+                      {%- endif -%}
+                    </td>
+                    <td class="time-col" style="color: var(--iev-text-muted); font-size: 13px;">
+                      {%- if client['created'] -%}
+                        {{ client['created'].isoformat() + 'Z' }}
+                      {%- else -%}
+                        N/A
+                      {%- endif -%}
+                    </td>
+                    <td style="text-align: center;">
+                      <button class="revoke-token-btn iev-btn-danger-pill" data-i18n="token_revoke">撤销</button>
+                    </td>
+                  {% endblock client_row %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     {% endif %}
   </div>
