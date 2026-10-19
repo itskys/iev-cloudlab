@@ -59,6 +59,13 @@
       <script src="{{static_url("js/darkmode.js") }}"
               type="text/javascript"
               charset="utf-8"></script>
+      <script>
+      /* IEV CloudLab：全站强制浅色模式（品牌为浅色体系，深浅混搭导致样式错乱） */
+      (function() {
+        document.documentElement.setAttribute("data-bs-theme", "light");
+        try { localStorage.setItem("jupyterhub-bs-theme", "light"); } catch(e) {}
+      })();
+      </script>
     {% endblock scripts %}
     {# djlint js formatting doesn't handle template blocks in js #}
     {# djlint: off #}
@@ -102,13 +109,16 @@
     {% block meta %}
       <meta name="description" content="IEV CloudLab - 智能电动汽车云仿真实验平台">
       <meta name="keywords" content="IEV CloudLab, 电动汽车, 云仿真, 自动驾驶, JupyterHub">
-      <!-- 品牌资产：Gemini 第十一章规范 -->
+      <!-- 品牌资产：官方 Logo 全套（IEV_CloudLab_Logo_Pack） -->
+      <link rel="icon" type="image/x-icon" href="{{ base_url }}assets/favicon.ico">
+      <link rel="icon" type="image/png" sizes="16x16" href="{{ base_url }}assets/favicon-16x16.png">
       <link rel="icon" type="image/png" sizes="32x32" href="{{ base_url }}assets/favicon-32x32.png">
       <link rel="apple-touch-icon" sizes="180x180" href="{{ base_url }}assets/apple-touch-icon.png">
+      <link rel="manifest" href="{{ base_url }}assets/site.webmanifest">
       <!-- OpenGraph 社交分享卡片 -->
       <meta property="og:title" content="IEV CloudLab - 智能电动汽车云仿真实验平台">
       <meta property="og:description" content="任一模块进，全链路出：涵盖自动驾驶、电池机理、整车能耗与交通流协同的云仿真平台。">
-      <meta property="og:image" content="https://ievlab.aisai.cc/hub/assets/og-preview.jpg">
+      <meta property="og:image" content="https://ievlab.aisai.cc/hub/assets/og-preview.png">
       <meta property="og:url" content="https://ievlab.aisai.cc/">
     {% endblock meta %}
   </head>
@@ -159,7 +169,7 @@
           {# IEV CloudLab 品牌：官方 Logo（Gemini 第十一章规范） #}
           <span id="ievlab-logo" class="navbar-brand" style="display: flex; align-items: center;">
             <a href="{{ logo_url or base_url }}" style="text-decoration: none; display: flex; align-items: center;" title="Home">
-              <img src="{{ base_url }}assets/logo-navbar.png" alt="IEV CloudLab" class="brand-logo"
+              <img src="{{ base_url }}assets/logo-navbar.svg?v=20261019b" alt="IEV CloudLab" class="brand-logo"
                    style="height: 38px; width: auto; object-fit: contain; margin-right: 10px; transition: transform .2s;"
                    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"/>
               <span>
@@ -524,17 +534,18 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* 列宽分配：用户 22% | 管理员 12% | 服务器 18% | 最近活动 18% | 操作 30% */
-  body.admin-page-force-light table.table thead th:nth-child(1),
-  body.admin-page-force-light table.table tbody td:nth-child(1) { width: 22%; }
+  /* 列宽：用 colgroup 思路，直接定 th 宽度（不受 tbody 首行 colspan 影响） */
+  body.admin-page-force-light table.table thead th:nth-child(1) { width: 24%; }
+  body.admin-page-force-light table.table thead th:nth-child(2) { width: 14%; text-align: center; }
+  body.admin-page-force-light table.table thead th:nth-child(3) { width: 14%; }
+  body.admin-page-force-light table.table thead th:nth-child(4) { width: 18%; }
+  body.admin-page-force-light table.table thead th:nth-child(5) { width: 30%; }
+  /* 管理员列：内容短，取消省略号，保证 "管理员"/"admin" 完整显示 */
   body.admin-page-force-light table.table thead th:nth-child(2),
-  body.admin-page-force-light table.table tbody td:nth-child(2) { width: 12%; text-align: center; }
-  body.admin-page-force-light table.table thead th:nth-child(3),
-  body.admin-page-force-light table.table tbody td:nth-child(3) { width: 18%; }
-  body.admin-page-force-light table.table thead th:nth-child(4),
-  body.admin-page-force-light table.table tbody td:nth-child(4) { width: 18%; }
-  body.admin-page-force-light table.table thead th:nth-child(5),
-  body.admin-page-force-light table.table tbody td:nth-child(5) { width: 30%; }
+  body.admin-page-force-light table.table tbody td:nth-child(2) {
+    white-space: nowrap;
+    overflow: visible;
+  }
   body.admin-page-force-light table.table thead th {
     background: #fff !important;
     color: #8e8e93 !important;
