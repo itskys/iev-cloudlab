@@ -502,7 +502,7 @@
     border-radius: 0;
     box-shadow: none !important;
   }
-  /* 用户表格：Apple grouped table — 白底、发丝线、无卡片阴影 */
+  /* 用户表格：Apple grouped table — 固定布局防变形 */
   body.admin-page-force-light table.table {
     background: #fff !important;
     color: #1d1d1f !important;
@@ -512,27 +512,63 @@
     box-shadow: none;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;  /* 关键：固定列宽，内容再长也不变形 */
+    width: 100%;
   }
+  body.admin-page-force-light table.table thead th,
+  body.admin-page-force-light table.table tbody td,
+  body.admin-page-force-light table.table tfoot td {
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* 列宽分配：用户 22% | 管理员 12% | 服务器 18% | 最近活动 18% | 操作 30% */
+  body.admin-page-force-light table.table thead th:nth-child(1),
+  body.admin-page-force-light table.table tbody td:nth-child(1) { width: 22%; }
+  body.admin-page-force-light table.table thead th:nth-child(2),
+  body.admin-page-force-light table.table tbody td:nth-child(2) { width: 12%; text-align: center; }
+  body.admin-page-force-light table.table thead th:nth-child(3),
+  body.admin-page-force-light table.table tbody td:nth-child(3) { width: 18%; }
+  body.admin-page-force-light table.table thead th:nth-child(4),
+  body.admin-page-force-light table.table tbody td:nth-child(4) { width: 18%; }
+  body.admin-page-force-light table.table thead th:nth-child(5),
+  body.admin-page-force-light table.table tbody td:nth-child(5) { width: 30%; }
   body.admin-page-force-light table.table thead th {
     background: #fff !important;
-    color: #8e8e93 !important;  /* Apple secondary gray */
+    color: #8e8e93 !important;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: .02em;
-    padding: 10px 16px;
-    border-bottom: 0.5px solid #c6c6c8;
-    border-top: none;
+    letter-spacing: .04em;
+    padding: 12px 16px;
+    border-bottom: 1px solid #d1d1d6;
+    white-space: nowrap;
   }
   body.admin-page-force-light table.table tbody td {
-    padding: 12px 16px;
-    font-size: 16px;  /* Apple body text */
-    border-bottom: 0.5px solid #e5e5ea;  /* hairline */
+    padding: 0 16px;
+    height: 56px;  /* 固定行高，动态内容不撑开 */
+    font-size: 15px;
+    border-bottom: 0.5px solid #e8e8ed;  /* 行间暗线 */
     background: #fff !important;
     color: #1d1d1f !important;
     vertical-align: middle;
+    white-space: nowrap;
   }
-  body.admin-page-force-light table.table tbody tr:last-child td { border-bottom: none; }
+  body.admin-page-force-light table.table tbody tr:last-child td { border-bottom: none !important; }
+  /* "添加用户/批量操作"行：固定高度，无边框 */
+  body.admin-page-force-light table.table tr.noborder td {
+    border: none !important;
+    background: #fff !important;
+    height: 52px;
+    vertical-align: middle;
+  }
+  /* 用户名下拉按钮：与文字基线对齐 */
+  body.admin-page-force-light table.table tbody td:first-child .btn {
+    vertical-align: middle;
+    margin-right: 8px;
+  }
   /* 行内操作：蓝色文字链，危险操作红色文字 */
   body.admin-page-force-light table.table tbody td:last-child .btn {
     background: none !important;
@@ -638,13 +674,23 @@
         }
         if (MAP[t]) node.textContent = node.textContent.replace(t, MAP[t]);
       } else if (node.nodeType === 1) {
-        // 分页按钮：用 data-testid 精确定位
+        // 分页按钮：用 data-testid 精确定位（处理首尾空格）
         var testid = node.getAttribute && node.getAttribute("data-testid");
-        if (testid === "paginate-prev" && getLang() === "zh") {
-          if (node.textContent.trim() === "Previous") node.textContent = "上一页";
+        if (getLang() === "zh") {
+          if (testid === "paginate-prev") node.textContent = "上一页";
+          if (testid === "paginate-next") node.textContent = "下一页";
         }
-        if (testid === "paginate-next" && getLang() === "zh") {
-          if (node.textContent.trim() === "Next") node.textContent = "下一页";
+        // "Items per page:" label：直接找 label 元素
+        if (getLang() === "zh" && node.tagName === "LABEL") {
+          var labelText = node.textContent;
+          if (labelText.indexOf("Items per page") !== -1) {
+            // 只替换文字部分，保留 input
+            node.childNodes.forEach(function(cn) {
+              if (cn.nodeType === 3 && cn.textContent.indexOf("Items per page") !== -1) {
+                cn.textContent = cn.textContent.replace(/Items per page:?/, "每页条数：");
+              }
+            });
+          }
         }
         // placeholder 属性
         if (node.placeholder && MAP[node.placeholder.trim()]) {
