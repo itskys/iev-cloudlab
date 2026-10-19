@@ -1,0 +1,27 @@
+# F3: 多FMU协仿真
+id: F3_multifmu
+name: 车辆+电池双FMU协仿真
+engine: fmpy
+version: "1.0"
+files:
+  vehicle_fmu: fmu/VehicleLongitudinal.fmu
+  battery_fmu: fmu/BatterySimple.fmu
+  sources: src/
+description: |
+  两个手写FMI 2.0 Co-Simulation FMU（C语言）：
+  - VehicleLongitudinal：纵向动力学，输入F_motor，输出v/x
+  - BatterySimple：SOC模型，输入P_elec，输出SOC/V_term
+  耦合：车辆功率需求 -> 电池电流 -> SOC/电压
+  主算法：Jacobi / Gauss-Seidel，通信步长H可调
+params:
+  F_cmd: 3000.0  # N，恒定电机力指令
+  t_end: 10.0    # s
+  H_values: [0.01, 0.1, 0.5]
+outputs:
+  - v_end_ms
+  - x_end_m
+  - soc_end
+  - err_vs_reference_pct
+chain:
+  upstream: [F1_fmu_load]
+  downstream: []
