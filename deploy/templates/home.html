@@ -5,80 +5,339 @@
 {% block main %}
   <style>
     .iev-home-wrap {
-      max-width: 720px; margin: 0 auto; padding: 40px 20px;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
     }
-    .iev-welcome { text-align: center; margin-bottom: 28px; }
-    .iev-welcome h2 { font-size: 24px; font-weight: 700; color: #172b4d; margin: 0 0 6px; }
-    .iev-welcome h2 .iev-user { color: #1a73e8; }
+    .iev-welcome-header {
+      margin-bottom: 28px;
+    }
+    .iev-welcome-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin: 0 0 6px;
+    }
+    .iev-welcome-title .iev-user {
+      color: #155eef;
+      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .iev-welcome-sub {
+      color: #64748b;
+      font-size: 14px;
+      margin: 0;
+    }
+    /* 主状态卡片 */
     .iev-status-card {
-      background: #fff; border-radius: 18px;
-      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
-      padding: 40px 36px; text-align: center;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 22px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      padding: 42px 36px;
+      text-align: center;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
     }
-    .iev-status-icon {
-      width: 72px; height: 72px; border-radius: 50%;
-      display: inline-flex; align-items: center; justify-content: center;
+    .iev-status-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #155eef, #00d4ff, #10b981);
+    }
+    .iev-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .iev-status-badge.running {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #047857;
+    }
+    .iev-status-badge.idle {
+      background: rgba(21, 94, 239, 0.08);
+      border: 1px solid rgba(21, 94, 239, 0.2);
+      color: #155eef;
+    }
+    .iev-status-icon-wrap {
+      width: 76px;
+      height: 76px;
+      border-radius: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 18px;
+      transition: transform 0.2s ease;
     }
-    .iev-status-icon.idle { background: #e8f0fe; }
-    .iev-status-icon.running { background: #e6f4ea; }
-    .iev-status-icon svg { width: 36px; height: 36px; }
-    .iev-status-card h3 { font-size: 19px; font-weight: 700; color: #172b4d; margin: 0 0 8px; }
-    .iev-status-card p { font-size: 14px; color: #6b778c; margin: 0 0 24px; line-height: 1.6; }
+    .iev-status-icon-wrap.running {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      color: #15803d;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25);
+    }
+    .iev-status-icon-wrap.idle {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      color: #1d4ed8;
+      box-shadow: 0 8px 24px rgba(21, 94, 239, 0.18);
+    }
+    .iev-status-icon-wrap svg {
+      width: 38px;
+      height: 38px;
+    }
+    .iev-status-card h3 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin: 0 0 8px;
+    }
+    .iev-status-card p.desc {
+      font-size: 14.5px;
+      color: #64748b;
+      margin: 0 0 24px;
+      line-height: 1.6;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    /* 容器规格标签群 */
+    .iev-spec-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .iev-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
     .iev-btn-primary {
-      display: inline-block; padding: 13px 44px;
-      border: none; border-radius: 12px;
-      background: linear-gradient(135deg, #1a73e8, #1558b0);
-      color: #fff; font-size: 16px; font-weight: 700; text-decoration: none;
-      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
-      transition: box-shadow .15s, transform .1s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 40px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
+      color: #ffffff !important;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none !important;
+      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      letter-spacing: 0.01em;
     }
-    .iev-btn-primary:hover { color: #fff; box-shadow: 0 6px 18px rgba(26, 115, 232, 0.40); text-decoration: none; }
-    .iev-btn-primary:active { transform: translateY(1px); }
+    .iev-btn-primary:hover {
+      box-shadow: 0 10px 28px rgba(21, 94, 239, 0.45);
+      transform: translateY(-2px);
+    }
+    .iev-btn-primary:active {
+      transform: translateY(1px);
+    }
     .iev-btn-danger-outline {
-      display: inline-block; margin-top: 14px; padding: 8px 20px;
-      border: 1.5px solid #ff5630; border-radius: 10px;
-      background: #fff; color: #ff5630; font-size: 13px; font-weight: 600;
-      cursor: pointer; text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 8px 22px;
+      border: 1.5px solid #fee2e2;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #dc2626 !important;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none !important;
+      transition: all 0.15s ease;
     }
-    .iev-btn-danger-outline:hover { background: #ffebe6; color: #ff5630; text-decoration: none; }
-    .iev-pulse { animation: iev-pulse 2s infinite; }
-    @keyframes iev-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.35); }
-      70% { box-shadow: 0 0 0 12px rgba(52, 168, 83, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0); }
+    .iev-btn-danger-outline:hover {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+    /* 模块导览区 */
+    .iev-modules-section {
+      margin-top: 40px;
+    }
+    .iev-section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .iev-module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .iev-module-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 22px 20px;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .iev-module-card:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.08);
+    }
+    .iev-module-icon {
+      font-size: 26px;
+      margin-bottom: 12px;
+    }
+    .iev-module-card h4 {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 6px;
+    }
+    .iev-module-card p {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.55;
+    }
+    .iev-module-tag {
+      display: inline-block;
+      align-self: flex-start;
+      margin-top: 14px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #475569;
     }
   </style>
 
   <div class="iev-home-wrap">
-    <div class="iev-welcome">
-      <h2><span data-i18n="home_welcome">欢迎回来</span>，<span class="iev-user">{{ user.name }}</span></h2>
+    <div class="iev-welcome-header">
+      <h2 class="iev-welcome-title">
+        <span data-i18n="home_welcome">欢迎回来</span>，<span class="iev-user">{{ user.name }}</span> 👋
+      </h2>
+      <p class="iev-welcome-sub">智能电动汽车云仿真平台 · 学生专属实验工作台</p>
     </div>
 
     <div class="iev-status-card">
       {% if default_server.active %}
-        <div class="iev-status-icon running iev-pulse">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
+        <div class="iev-status-badge running">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+          <span>计算沙箱运行中 · Active</span>
+        </div>
+        <div>
+          <div class="iev-status-icon-wrap running">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
         </div>
         <h3 data-i18n="home_running">实验环境运行中</h3>
-        <p data-i18n="home_running_desc">你的云端实验环境正在运行，点击进入开始工作。</p>
-        <a id="start" role="button" class="iev-btn-primary" href="{{ url }}" data-i18n="home_open">进入实验环境</a>
-        <br/>
-        <a id="stop" role="button" class="iev-btn-danger-outline" data-i18n="home_stop">停止环境</a>
+        <p class="desc" data-i18n="home_running_desc">你的云端实验沙箱已分配完毕，所有代码、场景与数据集已自动挂载至工作区，点击进入即可开始实验。</p>
+        
+        <div class="iev-spec-chips">
+          <span class="iev-chip">⚡ 1.0 vCPU 算力</span>
+          <span class="iev-chip">🧠 2.0 GB 内存配额</span>
+          <span class="iev-chip">💾 512 MB 共享内存</span>
+          <span class="iev-chip">🐧 Ubuntu 24.04 · ROS 2 Jazzy</span>
+        </div>
+
+        <div>
+          <a id="start" role="button" class="iev-btn-primary" href="{{ url }}">
+            <span data-i18n="home_open">进入实验环境</span>
+            <span>→</span>
+          </a>
+        </div>
+        <div>
+          <a id="stop" role="button" class="iev-btn-danger-outline">
+            <span data-i18n="home_stop">停止环境</span>
+          </a>
+        </div>
       {% else %}
-        <div class="iev-status-icon idle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-            <line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
+        <div class="iev-status-badge idle">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #155eef;"></span>
+          <span>沙箱就绪待启 · Standby</span>
+        </div>
+        <div>
+          <div class="iev-status-icon-wrap idle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
         </div>
         <h3 data-i18n="home_not_running">你的实验环境还没启动</h3>
-        <p data-i18n="home_not_running_desc">点击下方按钮，启动你的云端实验环境，开始今天的仿真实验。</p>
-        <a id="start" role="button" class="iev-btn-primary" href="{{ url }}" data-i18n="home_launch">启动实验环境</a>
+        <p class="desc" data-i18n="home_not_running_desc">点击下方按钮，启动你的专属云端实验容器。系统将自动分配独立算力并挂载持久化目录，预计 10~15 秒完成初始化。</p>
+
+        <div class="iev-spec-chips">
+          <span class="iev-chip">⚡ 专属单人容器配额</span>
+          <span class="iev-chip">💾 /opt/ievlab 持久化同步</span>
+          <span class="iev-chip">📦 预置 10+ 门实验 Notebooks</span>
+        </div>
+
+        <div>
+          <a id="start" role="button" class="iev-btn-primary" href="{{ url }}">
+            <span>🚀</span>
+            <span data-i18n="home_launch">启动实验环境</span>
+          </a>
+        </div>
       {% endif %}
+    </div>
+
+    {# 课程实验导览区 #}
+    <div class="iev-modules-section">
+      <div class="iev-section-title">
+        <span>📚</span>
+        <span>课程实验体系与仿真工具</span>
+      </div>
+      <div class="iev-module-grid">
+        <div class="iev-module-card">
+          <div class="iev-module-icon">🏎️</div>
+          <h4>自动驾驶控制闭环 (Module A/B)</h4>
+          <p>基于 esmini 与 SUMO 的交通流与车辆动力学闭环，涵盖 Cut-in 避撞、ACC 自适应跟车与单车运动学积分。</p>
+          <span class="iev-module-tag">OpenSCENARIO 1.x · TraCI</span>
+        </div>
+        <div class="iev-module-card">
+          <div class="iev-module-icon">⚡</div>
+          <h4>整车能量与工况能耗 (Module C)</h4>
+          <p>FASTSim 2.1.5 车辆模型，支持 UDDS / HWFET / US06 标准循环工况，毫秒级向量化求解百公里耗电量。</p>
+          <span class="iev-module-tag">FASTSim · Python 3.10 Kernel</span>
+        </div>
+        <div class="iev-module-card">
+          <div class="iev-module-icon">🔋</div>
+          <h4>动力电池机理与仿真 (Module D)</h4>
+          <p>PyBaMM 物理化学电芯模型，单颗粒模型 (SPM) 充放电曲线求解与 OCV-SOC 梯形数值积分参数拟合。</p>
+          <span class="iev-module-tag">PyBaMM · CasADi Solver</span>
+        </div>
+      </div>
     </div>
 
     {% if allow_named_servers %}

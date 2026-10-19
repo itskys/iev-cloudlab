@@ -1,18 +1,74 @@
 {% extends "page.html" %}
 {% block main %}
   <style>
-    .iev-token-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px; }
-    .iev-token-card {
-      background: #fff; border-radius: 18px;
-      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
-      padding: 32px 30px; margin-bottom: 24px;
+    .iev-token-wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
     }
-    .iev-token-card h2 { font-size: 19px; font-weight: 700; color: #172b4d; margin: 0 0 20px; }
-    .iev-token-card .form-label { font-weight: 600; color: #42526e; font-size: 14px; }
-    .iev-token-card .form-control, .iev-token-card .form-select { border-radius: 10px; }
+    .iev-token-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 22px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 20px 50px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      padding: 36px 32px;
+      margin-bottom: 28px;
+    }
+    .iev-token-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin: 0 0 20px;
+    }
+    .iev-token-card .form-label {
+      font-weight: 600;
+      color: #334155;
+      font-size: 13.5px;
+      margin-bottom: 6px;
+    }
+    .iev-token-card .form-control, .iev-token-card .form-select {
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      padding: 10px 14px;
+      font-size: 14px;
+      transition: all 0.18s ease;
+    }
+    .iev-token-card .form-control:focus, .iev-token-card .form-select:focus {
+      border-color: #155eef;
+      box-shadow: 0 0 0 3.5px rgba(21, 94, 239, 0.12);
+    }
     .iev-token-card .btn-jupyter {
-      background: linear-gradient(135deg, #1a73e8, #1558b0); border: none;
-      border-radius: 10px; padding: 10px 32px; font-weight: 700;
+      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 36px;
+      font-weight: 700;
+      font-size: 15px;
+      box-shadow: 0 4px 14px rgba(21, 94, 239, 0.3);
+      transition: all 0.18s ease;
+    }
+    .iev-token-card .btn-jupyter:hover {
+      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.42);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+    .iev-token-card table {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    .iev-token-card table thead th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+      font-size: 12.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #e2e8f0;
     }
   </style>
   <div class="iev-token-wrap">

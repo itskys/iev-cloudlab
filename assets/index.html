@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>IEV CloudLab - V3 视觉资产实装校验中心（已修复字体转曲与白底对比度）</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif; background: #0B111E; color: #E2E8F0; padding: 36px 24px; }
+    .container { max-width: 1180px; margin: 0 auto; }
+    h1 { font-size: 28px; font-weight: 800; color: #FFF; margin-bottom: 6px; }
+    h1 span { color: #00E5FF; }
+    .subtitle { color: #94A3B8; font-size: 14px; margin-bottom: 28px; }
+    .section-title { font-size: 18px; font-weight: 700; color: #00E5FF; margin: 28px 0 14px; border-left: 4px solid #00FFA3; padding-left: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .card { background: #111827; border: 1px solid rgba(0, 229, 255, 0.18); border-radius: 14px; padding: 20px; }
+    .card h3 { font-size: 14px; color: #F8FAFC; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .badge { font-size: 11px; background: rgba(0, 229, 255, 0.15); color: #00FFA3; padding: 3px 8px; border-radius: 12px; }
+    .preview { border-radius: 10px; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 140px; margin-bottom: 12px; }
+    .bg-obsidian { background: radial-gradient(circle at center, #0F1A2E 0%, #070B14 100%); border: 1px solid rgba(255,255,255,0.08); }
+    .bg-slate { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid rgba(255,255,255,0.1); }
+    .bg-light { background: #FFFFFF; border: 1px solid #E2E8F0; }
+    .desc { font-size: 12.5px; color: #94A3B8; line-height: 1.5; }
+    code { color: #38BDF8; background: rgba(0,0,0,0.35); padding: 2px 5px; border-radius: 4px; font-size: 12px; }
+
+    /* Live Website Mockup Styles (matching https://ievlab.aisai.cc/) */
+    .web-sim { background: #F4F7FB; border-radius: 12px; overflow: hidden; border: 1px solid #CBD5E1; color: #0F172A; margin-bottom: 12px; }
+    .web-header { background: #FFFFFF; height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #E2E8F0; }
+    .web-brand { display: flex; align-items: center; gap: 12px; }
+    .web-brand-text h4 { font-size: 16px; font-weight: 800; color: #0F172A; line-height: 1.2; }
+    .web-brand-text p { font-size: 11px; color: #64748B; }
+    .web-body { padding: 32px 20px; display: flex; justify-content: center; }
+    .login-box { background: #FFFFFF; width: 340px; border-radius: 14px; padding: 28px 24px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06); text-align: center; }
+    .login-box h3 { font-size: 19px; font-weight: 800; color: #0F172A; margin: 10px 0 4px; display: block; }
+    .login-box p.sub { font-size: 12px; color: #64748B; margin-bottom: 18px; }
+    .login-btn { background: #155EEF; color: #FFF; font-weight: 700; font-size: 14px; padding: 10px; border-radius: 8px; width: 100%; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><span>IEV</span> CloudLab 视觉资产 V3 实装校验中心</h1>
+    <p class="subtitle">针对网站截图问题已完成：1. 全部文字转曲为纯矢量路径 &lt;path&gt;（彻底根除 IEV 与 CloudLab 间距过大、字母 b 裁切及渐变失效变黑问题） 2. 针对白底登录页校准皇家科技蓝高对比度配色</p>
+
+    <div class="section-title">一、 网站真实白底界面 1:1 实装模拟对比（强烈推荐方案 A）</div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>方案 A（最推荐）：使用纯图形标 (logo-mark-light) 配合网页原有文字 <span class="badge">无重复文字 · 图标更醒目</span></h3>
+        <div class="web-sim">
+          <div class="web-header">
+            <div class="web-brand">
+              <img src="logo-mark-light.svg" style="height: 40px; width: auto;" />
+              <div class="web-brand-text">
+                <h4>IEV CloudLab</h4>
+                <p>智能电动汽车云仿真实验平台</p>
+              </div>
+            </div>
+            <div style="color:#64748B; font-size:14px;">🌐 &nbsp; ◐</div>
+          </div>
+          <div class="web-body">
+            <div class="login-box">
+              <img src="logo-mark-light.svg" style="height: 64px; width: auto;" />
+              <h3>IEV CloudLab</h3>
+              <p class="sub">智能电动汽车云仿真实验平台</p>
+              <div class="login-btn">登 录</div>
+            </div>
+          </div>
+        </div>
+        <p class="desc">由于网页 HTML 自身已有 <strong>IEV CloudLab</strong> 文字，图片仅用纯图形标 <code>logo-mark-light.svg</code>，彻底消除重复文字！</p>
+      </div>
+
+      <div class="card">
+        <h3>方案 B：使用转曲修复后的完整横标 (logo-navbar-light) <span class="badge">已修复间距·防裁切·真渐变</span></h3>
+        <div class="web-sim">
+          <div class="web-header">
+            <div class="web-brand">
+              <img src="logo-navbar-light.svg" style="height: 44px; width: auto;" />
+            </div>
+            <div style="color:#64748B; font-size:14px;">🌐 &nbsp; ◐</div>
+          </div>
+          <div class="web-body">
+            <div class="login-box">
+              <img src="logo-navbar-light.svg" style="height: 58px; width: auto; margin-bottom: 6px;" />
+              <div class="login-btn" style="margin-top: 24px;">登 录</div>
+            </div>
+          </div>
+        </div>
+        <p class="desc">若隐藏网页 HTML 文字、单用一张图片，请用已全部转曲为 <code>&lt;path&gt;</code> 的 <code>logo-navbar-light.svg</code>，间距紧凑、字母 b 完整、CloudLab 呈科技蓝渐变。</p>
+      </div>
+    </div>
+
+    <div class="section-title">二、 浅色白底 vs 深空黑底 横向组合标实拍校验（100% 矢量转曲路径）</div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>1. 白昼高对比度横标 (Light Mode Full Lockup) <span class="badge">#003EB3 皇家蓝 + #0F172A 深海军黑</span></h3>
+        <div class="preview bg-light">
+          <img src="logo-navbar-light.svg" style="max-width: 100%; height: 86px;" />
+        </div>
+        <p class="desc">文件：<code>03_PNG_Transparent_For_Light_BG/logo-navbar-full-lightmode-transparent-1600x400.png</code></p>
+      </div>
+      <div class="card">
+        <h3>2. 深空流光横标 (Dark Mode Full Lockup) <span class="badge">#00E5FF 极光青 + 纯白字</span></h3>
+        <div class="preview bg-obsidian">
+          <img src="logo-navbar.svg" style="max-width: 100%; height: 86px;" />
+        </div>
+        <p class="desc">文件：<code>02_PNG_Transparent_For_Dark_BG/logo-navbar-full-transparent-1600x400.png</code></p>
+      </div>
+    </div>
+
+    <div class="section-title">三、 紧凑一体横标 ([iEV 图形] | CloudLab) 与 3 种背景立式标</div>
+    <div class="grid-3">
+      <div class="card">
+        <h3>白底紧凑横标 (Light Compact) <span class="badge">无重复 IEV</span></h3>
+        <div class="preview bg-light">
+          <img src="logo-navbar-compact-light.svg" style="max-width: 100%; height: 74px;" />
+        </div>
+        <p class="desc">左侧图形已含 iEV，右侧直接接渐变 CloudLab。</p>
+      </div>
+      <div class="card">
+        <h3>深底立式标 (Obsidian Vertical) <span class="badge">1024×1024</span></h3>
+        <div class="preview bg-obsidian">
+          <img src="logo-vertical-dark.svg" style="width: 200px; height: 200px;" />
+        </div>
+        <p class="desc">中英文双副标题全转曲居中对齐。</p>
+      </div>
+      <div class="card">
+        <h3>白底立式标 (Daylight Vertical) <span class="badge">1024×1024</span></h3>
+        <div class="preview bg-light">
+          <img src="logo-vertical-light.svg" style="width: 200px; height: 200px;" />
+        </div>
+        <p class="desc">高饱和度深海蓝配深黑字，白底清晰锐利。</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

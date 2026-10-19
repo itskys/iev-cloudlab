@@ -8,83 +8,246 @@
   {% block login %}
   <style>
     .iev-login-wrap {
-      min-height: 62vh;
+      min-height: calc(100vh - 160px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px 16px;
-      background: radial-gradient(1200px 600px at 50% -10%, #e8f0fe 0%, #f7f9fc 55%, #f7f9fc 100%);
+      padding: 40px 16px;
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(at 50% 0%, rgba(224, 242, 254, 0.75) 0px, transparent 65%),
+        radial-gradient(at 100% 100%, rgba(240, 249, 255, 0.6) 0px, transparent 50%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.4) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
       margin: -24px -15px 0;
     }
     .iev-card {
       width: 100%;
-      max-width: 430px;
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 12px 40px rgba(26, 115, 232, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
-      padding: 36px 34px 30px;
+      max-width: 440px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 22px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      padding: 38px 34px 30px;
+      position: relative;
     }
-    .iev-brand { text-align: center; margin-bottom: 26px; }
-    .iev-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 56px; height: 56px; border-radius: 16px;
-      background: linear-gradient(135deg, #1a73e8, #0d47a1);
-      color: #fff; font-weight: 800; font-size: 22px;
-      box-shadow: 0 6px 16px rgba(26, 115, 232, 0.35);
+    .iev-brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .iev-lab-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      background: rgba(21, 94, 239, 0.06);
+      border: 1px solid rgba(21, 94, 239, 0.16);
+      color: #155eef;
+      font-size: 11.5px;
+      font-weight: 600;
       margin-bottom: 14px;
+      letter-spacing: 0.02em;
     }
-    .iev-title { font-size: 22px; font-weight: 700; color: #172b4d; margin: 0 0 4px; }
-    .iev-subtitle { font-size: 13px; color: #6b778c; margin: 0; }
-    .iev-field { margin-bottom: 14px; }
-    .iev-field label { display: block; font-size: 13px; font-weight: 600; color: #42526e; margin-bottom: 6px; }
+    .iev-lab-pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00d4ff;
+      box-shadow: 0 0 6px #00d4ff;
+    }
+    .iev-login-logo {
+      height: 64px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 10px rgba(21, 94, 239, 0.15));
+      transition: transform 0.25s ease;
+    }
+    .iev-login-logo:hover {
+      transform: scale(1.03);
+    }
+    .iev-title {
+      font-size: 23px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin: 0 0 4px;
+    }
+    .iev-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .iev-field {
+      margin-bottom: 16px;
+    }
+    .iev-field label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 7px;
+    }
     .iev-input {
-      width: 100%; padding: 11px 14px; font-size: 15px;
-      border: 1.5px solid #dfe1e6; border-radius: 10px;
-      transition: border-color .15s, box-shadow .15s;
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 14.5px;
+      color: #0f172a;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.18s ease;
       box-sizing: border-box;
     }
-    .iev-input:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15); }
-    .iev-email-row { display: flex; gap: 8px; }
-    .iev-email-row .iev-input { flex: 1; }
+    .iev-input:focus {
+      outline: none;
+      border-color: #155eef;
+      background: #ffffff;
+      box-shadow: 0 0 0 3.5px rgba(21, 94, 239, 0.12);
+    }
+    .iev-code-input {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 0.25em;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .iev-code-input::placeholder {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      letter-spacing: normal;
+      font-weight: 400;
+      font-size: 13.5px;
+    }
+    .iev-email-row {
+      display: flex;
+      gap: 8px;
+    }
+    .iev-email-row .iev-input {
+      flex: 1;
+    }
     .iev-send-btn {
-      white-space: nowrap; padding: 0 16px;
-      border: 1.5px solid #1a73e8; border-radius: 10px;
-      background: #fff; color: #1a73e8; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: background .15s;
+      white-space: nowrap;
+      padding: 0 16px;
+      border: 1.5px solid #155eef;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #155eef;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
     }
-    .iev-send-btn:hover:not(:disabled) { background: #e8f0fe; }
-    .iev-send-btn:disabled { opacity: .55; cursor: default; }
-    .iev-msg { font-size: 12.5px; color: #6b778c; margin-top: 6px; min-height: 18px; }
+    .iev-send-btn:hover:not(:disabled) {
+      background: #eff6ff;
+      border-color: #003eb3;
+      color: #003eb3;
+    }
+    .iev-send-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      border-color: #cbd5e1;
+      color: #64748b;
+    }
+    .iev-msg {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 6px;
+      min-height: 18px;
+      line-height: 1.4;
+    }
     .iev-login-btn {
-      width: 100%; padding: 12px; margin-top: 6px;
-      border: none; border-radius: 10px;
-      background: linear-gradient(135deg, #1a73e8, #1558b0);
-      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.30);
-      transition: transform .1s, box-shadow .15s;
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
+      color: #ffffff;
+      font-size: 15.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(21, 94, 239, 0.32);
+      transition: all 0.18s ease;
+      letter-spacing: 0.02em;
     }
-    .iev-login-btn:hover { box-shadow: 0 6px 18px rgba(26, 115, 232, 0.40); }
-    .iev-login-btn:active { transform: translateY(1px); }
-    .iev-hint { text-align: center; font-size: 12px; color: #97a0af; margin-top: 16px; }
-    .iev-error { color: #de350b !important; }
+    .iev-login-btn:hover {
+      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.42);
+      transform: translateY(-1px);
+    }
+    .iev-login-btn:active {
+      transform: translateY(1px);
+    }
+    .iev-trust-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #f1f5f9;
+      color: #64748b;
+      font-size: 11.5px;
+    }
+    .iev-hint {
+      text-align: center;
+      font-size: 11.5px;
+      color: #94a3b8;
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+    .iev-error {
+      color: #dc2626 !important;
+      font-weight: 500;
+    }
+    .login_error_box {
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+      color: #dc2626;
+      font-size: 13px;
+      text-align: center;
+    }
   </style>
 
   <div class="iev-login-wrap">
     <div class="iev-card">
       <div class="iev-brand">
-        <img src="{{ base_url }}assets/logo-login.png?v=20261019b" alt="IEV CloudLab"
-             style="height: 64px; width: auto; margin-bottom: 12px;" />
+        <div class="iev-lab-pill">
+          <span class="iev-lab-pill-dot"></span>
+          <span data-i18n="login_pill">高校智能电动汽车云仿真平台</span>
+        </div>
+        <div>
+          <img src="{{ base_url }}assets/logo-mark.svg?v=20261019c" alt="IEV CloudLab"
+               class="iev-login-logo"
+               onerror="this.src='{{ base_url }}assets/logo-mark.png?v=20261019c'" />
+        </div>
         <p class="iev-title">IEV CloudLab</p>
         <p class="iev-subtitle" data-i18n="card_subtitle">智能电动汽车云仿真实验平台</p>
       </div>
 
-      {% if login_error %}<p class="login_error iev-error" style="text-align:center;">{{ login_error }}</p>{% endif %}
+      {% if login_error %}
+        <div class="login_error_box">
+          {{ login_error }}
+        </div>
+      {% endif %}
 
       <form action="{{ authenticator_login_url }}" method="post" role="form" id="otp-login-form">
         <input type="hidden" name="_xsrf" value="{{ xsrf }}" />
 
         <div class="iev-field">
-          <label for="email_input" data-i18n="email_label">邮箱地址</label>
+          <label for="email_input">
+            <span data-i18n="email_label">邮箱地址</span>
+            <span style="font-weight: normal; color: #94a3b8; font-size: 11.5px;">支持高校机构邮箱</span>
+          </label>
           <div class="iev-email-row">
             <input id="email_input" type="email" class="iev-input"
                    autocapitalize="off" autocorrect="off" autocomplete="email"
@@ -95,15 +258,21 @@
         </div>
 
         <div class="iev-field">
-          <label for="code_input" data-i18n="code_label">验证码</label>
-          <input id="code_input" type="text" class="iev-input"
+          <label for="code_input">
+            <span data-i18n="code_label">验证码</span>
+            <span style="font-weight: normal; color: #94a3b8; font-size: 11.5px;">6 位数字</span>
+          </label>
+          <input id="code_input" type="text" class="iev-input iev-code-input"
                  inputmode="numeric" autocomplete="one-time-code"
-                 name="code" data-i18n-ph="code_ph" placeholder="6 位数字验证码" maxlength="6" />
+                 name="code" data-i18n-ph="code_ph" placeholder="••••••" maxlength="6" />
         </div>
 
         <button type="submit" class="iev-login-btn" data-i18n="signin">登 录</button>
       </form>
 
+      <div class="iev-trust-badge">
+        <span>🔒 专属独立 CPU 沙箱 · 仿真数据自动保存</span>
+      </div>
       <p class="iev-hint" data-i18n="hint">验证码 10 分钟内有效，请勿转发给他人</p>
     </div>
   </div>

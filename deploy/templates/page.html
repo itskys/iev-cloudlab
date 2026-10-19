@@ -125,35 +125,189 @@
   <body>
   <style>
     html, body { height: 100%; }
-    body { display: flex; flex-direction: column; min-height: 100vh; }
-    /* ---- IEV 导航栏美化 ---- */
-    .navbar { box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-    /* 移动端展开菜单：卡片化 + 分区 */
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: #0f172a;
+    }
+    /* ---- IEV 顶栏磨砂玻璃与品牌设计 ---- */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+      background: rgba(255, 255, 255, 0.92) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+      padding: 10px 0;
+      margin-bottom: 0 !important;
+    }
+    .navbar-brand {
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+    }
+    .brand-logo {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      margin-right: 12px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+      filter: drop-shadow(0 2px 4px rgba(21, 94, 239, 0.12));
+    }
+    .brand-logo:hover {
+      transform: scale(1.03) translateY(-1px);
+      filter: drop-shadow(0 4px 8px rgba(21, 94, 239, 0.25));
+    }
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .brand-title {
+      font-weight: 800;
+      font-size: 17.5px;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1.5px 6px;
+      border-radius: 6px;
+      background: rgba(21, 94, 239, 0.08);
+      color: #155eef;
+      border: 1px solid rgba(21, 94, 239, 0.2);
+      letter-spacing: 0.02em;
+    }
+    .brand-subtitle {
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.3;
+      margin-top: 1px;
+      letter-spacing: 0.01em;
+    }
+    /* 导航链接 */
+    .navbar-nav .nav-link {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #334155 !important;
+      padding: 7px 14px !important;
+      border-radius: 8px;
+      transition: all 0.18s ease;
+      margin: 0 2px;
+    }
+    .navbar-nav .nav-link:hover {
+      color: #155eef !important;
+      background: #f1f5f9;
+    }
+    .navbar-nav .nav-link:active {
+      transform: scale(0.98);
+    }
+    /* 用户徽标与退出按钮 */
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #dbeafe;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .btn-logout {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 8px;
+      color: #dc2626;
+      border: 1px solid #fee2e2;
+      background: #fff;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-logout:hover {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+      text-decoration: none;
+    }
+    /* 移动端菜单美化 */
     @media (max-width: 575.98px) {
       .navbar-collapse {
-        background: #fff;
-        border: 1px solid #eef0f3;
-        border-radius: 14px;
-        margin-top: 10px;
-        padding: 8px 14px 14px;
-        box-shadow: 0 10px 30px rgba(0,0,0,.10);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        margin-top: 12px;
+        padding: 12px 16px 16px;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15);
       }
-      .navbar-collapse .navbar-nav .nav-item { padding: 2px 0; }
+      .navbar-collapse .navbar-nav .nav-item { padding: 3px 0; }
       .navbar-collapse .navbar-nav .nav-link {
-        font-size: 16px; padding: 10px 6px; border-radius: 8px; color: #172b4d;
+        font-size: 15px;
+        padding: 10px 12px !important;
       }
-      .navbar-collapse .navbar-nav .nav-link:active { background: #f4f5f7; }
-      /* 右侧工具区：顶部分隔 + 横向排列 */
       .navbar-collapse ul.nav.navbar-nav.me-2 {
-        flex-direction: row; align-items: center; gap: 10px;
-        border-top: 1px solid #eef0f3; margin-top: 8px; padding-top: 12px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        border-top: 1px solid #f1f5f9;
+        margin-top: 10px;
+        padding-top: 12px;
       }
-      .navbar-collapse ul.nav.navbar-nav.me-2 .nav-item { padding: 0; }
-      #login_widget { display: flex; align-items: center; gap: 10px; }
+      #login_widget { display: flex; align-items: center; gap: 8px; }
     }
-    /* 桌面端：工具图标垂直居中 */
     @media (min-width: 576px) {
       .navbar-nav.me-2 { align-items: center; }
+    }
+    /* 底部通用 Footer */
+    .iev-footer {
+      margin-top: auto;
+      padding: 24px 16px;
+      text-align: center;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 12.5px;
+    }
+    .iev-footer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      color: #047857;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .iev-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: iev-pulse-dot 2s infinite;
+    }
+    @keyframes iev-pulse-dot {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
     }
   </style>
     <noscript>
@@ -164,17 +318,18 @@
       </div>
     </noscript>
     {% block nav_bar %}
-      <nav class="navbar navbar-expand-sm bg-body-tertiary mb-4">
-        <div class="container-fluid">
-          {# IEV CloudLab 品牌：官方 Logo（Gemini 第十一章规范） #}
-          <span id="ievlab-logo" class="navbar-brand" style="display: flex; align-items: center;">
-            <a href="{{ logo_url or base_url }}" style="text-decoration: none; display: flex; align-items: center;" title="Home">
-              <img src="{{ base_url }}assets/logo-navbar.svg?v=20261019b" alt="IEV CloudLab" class="brand-logo"
-                   style="height: 38px; width: auto; object-fit: contain; margin-right: 10px; transition: transform .2s;"
-                   onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"/>
-              <span>
-                <span style="font-weight: 700; font-size: 17px; color: #1a1a1a;">IEV CloudLab</span><br/>
-                <span data-i18n="brand_subtitle" style="font-size: 11px; color: #666; line-height: 1;">智能电动汽车云仿真实验平台</span>
+      <nav class="navbar navbar-expand-sm mb-4">
+        <div class="container-fluid" style="max-width: 1200px; padding: 0 20px;">
+          {# IEV CloudLab 品牌：官方 Logo #}
+          <span id="ievlab-logo" class="navbar-brand">
+            <a href="{{ logo_url or base_url }}" style="text-decoration: none; display: flex; align-items: center;" title="IEV CloudLab">
+              <img src="{{ base_url }}assets/logo-mark.svg?v=20261019c" alt="IEV CloudLab" class="brand-logo" />
+              <span class="brand-title-wrap">
+                <span class="brand-title">
+                  <span>IEV CloudLab</span>
+                  <span class="brand-tag">v2.4</span>
+                </span>
+                <span class="brand-subtitle" data-i18n="brand_subtitle">智能电动汽车云仿真实验平台</span>
               </span>
             </a>
           </span>
@@ -227,19 +382,19 @@
             </ul>
             <ul class="nav navbar-nav me-2">
               {% block nav_bar_right_items %}
-                <li class="nav-item" style="display: flex; align-items: center; margin-right: 4px;">
-                  <div>
+                <li class="nav-item" style="display: flex; align-items: center; margin-right: 6px;">
+                  <div style="position: relative;">
                     <button type="button" id="iev-lang-btn" title="Language / 语言"
-                            style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #dfe1e6; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: #42526e;">
+                            style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #e2e8f0; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: #475569;">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="2" y1="12" x2="22" y2="12"/>
                         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                       </svg>
                     </button>
-                    <div id="iev-lang-menu" style="position: fixed; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.14); border: 1px solid #dfe1e6; overflow: hidden; display: none; min-width: 120px; z-index: 1000;">
-                      <div class="iev-lang-opt" data-lang="zh" style="padding: 10px 16px; font-size: 14px; cursor: pointer;">中文</div>
-                      <div class="iev-lang-opt" data-lang="en" style="padding: 10px 16px; font-size: 14px; cursor: pointer;">English</div>
+                    <div id="iev-lang-menu" style="position: fixed; background: #ffffff; border-radius: 12px; box-shadow: 0 12px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.04); border: 1px solid #e2e8f0; overflow: hidden; display: none; min-width: 130px; z-index: 1050;">
+                      <div class="iev-lang-opt" data-lang="zh" style="padding: 10px 16px; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;">中文</div>
+                      <div class="iev-lang-opt" data-lang="en" style="padding: 10px 16px; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;">English</div>
                     </div>
                   </div>
                 </li>
@@ -248,7 +403,8 @@
                     <button class="btn btn-sm"
                             id="dark-theme-toggle"
                             aria-label="Toggle dark mode"
-                            title="Toggle dark mode">
+                            title="Toggle dark mode"
+                            style="border-radius: 50%; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #e2e8f0; background: #fff; color: #475569; margin-right: 6px;">
                       <i aria-hidden="true" class="fa fa-circle-half-stroke"></i>
                     </button>
                   {% endblock theme_toggle %}
@@ -257,15 +413,16 @@
                   {% block login_widget %}
                     <span id="login_widget">
                       {% if user %}
-                        <span class="me-1">{{ user.name }}</span>
+                        <span class="user-pill"><span style="opacity: 0.85;">👤</span> {{ user.name }}</span>
                         <a id="logout"
                            role="button"
-                           class="btn btn-sm btn-outline-contrast"
-                           href="{{ logout_url }}"> <i aria-hidden="true" class="fa fa-sign-out"></i><span data-i18n="nav_logout">Logout</span></a>
+                           class="btn-logout"
+                           href="{{ logout_url }}"><i aria-hidden="true" class="fa fa-sign-out" style="margin-right: 4px;"></i><span data-i18n="nav_logout">Logout</span></a>
                       {% else %}
                         <a id="login"
                            role="button"
-                           class="btn btn-sm btn-outline-contrast"
+                           class="btn btn-sm btn-primary"
+                           style="background: #155eef; border-color: #155eef; font-weight: 600; padding: 6px 16px; border-radius: 8px;"
                            href="{{ login_url }}"><span data-i18n="nav_login">Login</span></a>
                       {% endif %}
                     </span>
@@ -281,14 +438,22 @@
     {% endblock nav_bar %}
     {% block announcement %}
       {% if announcement %}
-        <div class="container text-center announcement alert alert-warning">{{ announcement | safe }}</div>
+        <div class="container text-center announcement alert alert-warning" style="border-radius: 12px; margin-top: 16px; max-width: 1200px;">{{ announcement | safe }}</div>
       {% endif %}
     {% endblock announcement %}
     {% block main %}
     {% endblock main %}
-    <footer style="margin-top: auto; padding: 16px 0; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; background: #fff;">
-      <span data-i18n="footer_platform">IEV CloudLab · 智能电动汽车云仿真实验平台</span><br/>
-      <span style="color: #aaa;">Powered by <a href="https://jupyter.org/hub" target="_blank" style="color: #888;">JupyterHub</a></span>
+    <footer class="iev-footer">
+      <div class="iev-footer-status">
+        <span class="iev-status-dot"></span>
+        <span data-i18n="footer_status">系统核心服务运行正常 · ROS 2 Jazzy Core</span>
+      </div>
+      <div>
+        <span data-i18n="footer_platform" style="font-weight: 600; color: #334155;">IEV CloudLab · 智能电动汽车云仿真实验平台</span>
+      </div>
+      <div style="color: #94a3b8; font-size: 11.5px; margin-top: 4px;">
+        <span>高校教学科研云端一体化平台 · Powered by <a href="https://jupyter.org/hub" target="_blank" style="color: #64748b; text-decoration: none;">JupyterHub 5.5.3</a></span>
+      </div>
     </footer>
     {% call modal('Error', btn_label='OK') %}
       <div class="ajax-error alert-danger">The error</div>
@@ -302,7 +467,9 @@
     var I18N = {
       zh: {
         brand_subtitle: "智能电动汽车云仿真实验平台",
+        footer_status: "系统核心服务运行正常 · ROS 2 Jazzy Core",
         footer_platform: "IEV CloudLab · 智能电动汽车云仿真实验平台",
+        login_pill: "高校智能电动汽车云仿真平台",
         nav_home: "首页", nav_token: "令牌", nav_admin: "管理",
         nav_logout: "退出登录", nav_login: "登录",
         card_subtitle: "智能电动汽车云仿真实验平台",
@@ -346,7 +513,9 @@
       },
       en: {
         brand_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
+        footer_status: "All Systems Operational · ROS 2 Jazzy Core Ready",
         footer_platform: "IEV CloudLab · Intelligent Electric Vehicle Cloud Simulation Laboratory",
+        login_pill: "Intelligent EV Cloud Simulation Laboratory",
         nav_home: "Home", nav_token: "Token", nav_admin: "Admin",
         nav_logout: "Logout", nav_login: "Login",
         card_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
