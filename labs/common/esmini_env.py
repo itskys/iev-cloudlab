@@ -12,7 +12,11 @@ import os
 
 
 class SE_ScenarioObjectState(ctypes.Structure):
-    """esmini SE_ScenarioObjectState 结构体（按头文件顺序）"""
+    """esmini SE_ScenarioObjectState 结构体（v3.10.0 esminiLib.hpp 完整26字段）。
+
+    重要：必须与 C 结构体大小完全一致，否则 SE_GetObjectState 会写越界、
+    堆损坏导致段错误。之前版本只定义了前17个字段，缺失后9个。
+    """
     _fields_ = [
         ('id', ctypes.c_int),
         ('model_id', ctypes.c_int),
@@ -31,7 +35,18 @@ class SE_ScenarioObjectState(ctypes.Structure):
         ('laneOffset', ctypes.c_double),
         ('s', ctypes.c_double),
         ('speed', ctypes.c_double),
-        # 后续字段省略（我们只需要前面的）
+        # 以下9个字段之前缺失，导致堆越界写！
+        ('centerOffsetX', ctypes.c_double),
+        ('centerOffsetY', ctypes.c_double),
+        ('centerOffsetZ', ctypes.c_double),
+        ('width', ctypes.c_double),
+        ('length', ctypes.c_double),
+        ('height', ctypes.c_double),
+        ('objectType', ctypes.c_int),
+        ('objectCategory', ctypes.c_int),
+        ('wheel_angle', ctypes.c_double),
+        ('wheel_rot', ctypes.c_double),
+        ('visibilityMask', ctypes.c_int),
     ]
 
 
@@ -107,18 +122,23 @@ class EsminiEnv:
         lib.SE_InitWithArgs.argtypes = [ctypes.c_int,
                                         ctypes.POINTER(ctypes.c_char_p)]
         lib.SE_InitWithArgs.restype = ctypes.c_int
-        lib.SE_StepDT.argtypes = [ctypes.c_float]
+        # 注意：C 签名为 SE_StepDT(double dt)，必须用 c_double（c_float 会导致
+        # dt 被截断为垃圾值，仿真时间不推进、目标车"冻住"）
+        lib.SE_StepDT.argtypes = [ctypes.c_double]
         lib.SE_StepDT.restype = ctypes.c_int
         lib.SE_Close.restype = None
         lib.SE_GetObjectState.argtypes = [ctypes.c_int,
                                           ctypes.POINTER(SE_ScenarioObjectState)]
         lib.SE_GetObjectState.restype = ctypes.c_int
         lib.SE_GetNumberOfObjects.restype = ctypes.c_int
-        # SE_ReportObjectPos(id, timestamp, x, y, z, h, p, r)
-        lib.SE_ReportObjectPos.argtypes = [ctypes.c_int, ctypes.c_float,
-                                           ctypes.c_float, ctypes.c_float,
-                                           ctypes.c_float, ctypes.c_float,
-                                           ctypes.c_float, ctypes.c_float]
+        # 注意：C 签名为 SE_ReportObjectPos(int id, double x, double y,
+        # double z, double h, double p, double r) —— 7 个参数、无 timestamp、
+        # 全 double。之前误写成 8 参数 float 版，导致上报位姿为垃圾值。
+        lib.SE_ReportObjectPos.argtypes = [ctypes.c_int, ctypes.c_double,
+                                           ctypes.c_double, ctypes.c_double,
+                                           ctypes.c_double, ctypes.c_double,
+                                           ctypes.c_double]
+        lib.SE_ReportObjectPos.restype = ctypes.c_int
 
     def reset(self, ego_x=10.0, ego_y=0.0, ego_yaw=0.0, ego_v=15.0):
         """初始化场景，返回初始观测。"""
@@ -194,8 +214,8 @@ class EsminiEnv:
         # 运动学积分
         x, y, yaw, v = self.vehicle.step(a, delta, self.dt)
 
-        # 上报 esmini（id=0 为 Ego，时间戳，x,y,z, 航向角, 俯仰, 翻滚）
-        self._lib.SE_ReportObjectPos(0, self.sim_time, x, y, 0.0, yaw, 0.0, 0.0)
+        # 上报 esmini（id, x, y, z, 航向角, 俯仰, 翻滚 —— 无 timestamp，见 _setup_ctypes）
+        self._lib.SE_ReportObjectPos(0, x, y, 0.0, yaw, 0.0, 0.0)
 
         # 推进一步
         self._lib.SE_StepDT(self.dt)
