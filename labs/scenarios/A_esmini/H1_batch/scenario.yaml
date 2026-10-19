@@ -1,0 +1,34 @@
+# H1: 参数化批量生成 → esmini 批量跑
+id: H1_batch
+name: Cut-in参数化批量实验（3x3全因子）
+engine: esmini
+version: "1.0"
+files:
+  xodr: h1_batch.xodr
+  generator: gen_batch.py
+  scenarios:
+    - cutin_d20_v10.xosc
+    - cutin_d20_v12.xosc
+    - cutin_d20_v14.xosc
+    - cutin_d30_v10.xosc
+    - cutin_d30_v12.xosc
+    - cutin_d30_v14.xosc
+    - cutin_d40_v10.xosc
+    - cutin_d40_v12.xosc
+    - cutin_d40_v14.xosc
+params:
+  distances_m: [20, 30, 40]
+  speeds_mps: [10, 12, 14]
+  ego_init: {x: 10.0, y: -1.5, v: 14.0}
+  cutin_time: 5.0
+  dt: 0.05
+  steps: 300
+  road_length_m: 400
+outputs:
+  - min_ttc_s (3x3 heatmap)
+  - collision_bool (3x3)
+  - results_json: labs/data/results/H1_batch_generation.json
+chain:
+  upstream: [A1_cutin_aeb]
+  downstream: [H2_variant]
+notebook: notebooks/H1_batch_generation.ipynb
