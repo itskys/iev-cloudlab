@@ -1,0 +1,28 @@
+# A4: 交叉口让行 LTAP-OD
+id: A4_intersection
+name: 交叉口左转让行（LTAP-OD）
+engine: esmini
+version: "1.0"
+files:
+  xosc: intersection.xosc
+  xodr: intersection.xodr
+  generator: gen_intersection.py
+geometry:
+  conflict_point: {x: 98.5, y: 0.0}  # Ego左转轨迹与Target车道的交点
+  stop_line_y: -10.0                  # 让行停车线
+params:
+  ego_init: {x: 101.5, y: -30.0, yaw: 1.5708, v: 9.0}  # 北向，准备左转
+  target_init: {x: 98.5, y: 55.0, v: 16.0}             # 南向直行，恒速
+  yield_margin_s: 1.5    # 让行判断的安全裕度
+  dt: 0.05
+outputs:
+  - min_conflict_ttc_s   # 冲突点TTC最小值
+  - pet_s                # PET（两车通过冲突点的时间差）
+  - collision_bool
+chain:
+  upstream: [A1_cutin]
+  downstream: [E3_mpc]
+notes: >
+  LTAP-OD = Left Turn Across Path - Opposite Direction（左转让行对向直行）。
+  Ego（Python控制）北向行驶后左转（向西），Target（esmini脚本）南向直行。
+  学生实现让行逻辑：比较双方到达冲突点的时间，Target先到则停车让行。
