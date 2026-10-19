@@ -444,102 +444,135 @@
   })();
   </script>
   <style>
-  /* Admin 页：强制浅色 + Apple 设计语言（针对 JupyterHub React 实际 DOM） */
-  html[data-bs-theme="dark"] body.admin-page-force-light,
+  /* Admin 页：Apple HIG 真正规范 — 克制、清晰、内容优先 */
   body.admin-page-force-light {
-    background: #f5f5f7 !important;
+    background: #f2f2f7 !important;  /* Apple grouped background */
     color: #1d1d1f !important;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  /* 主容器 */
   body.admin-page-force-light #main .container {
-    max-width: 1160px;
-    padding-top: 28px;
-    padding-bottom: 60px;
+    max-width: 1024px;
+    padding-top: 24px;
+    padding-bottom: 48px;
   }
-  /* 顶部工具栏：搜索框 */
+  /* 搜索框：Apple 风格圆角，无重边框 */
   body.admin-page-force-light .admin-header-buttons .form-control {
-    border-radius: 12px;
-    border: 1px solid #d2d2d7;
-    padding: 9px 16px;
+    border-radius: 10px;
+    border: none;
+    background: #e8e8ed;
+    padding: 8px 14px;
     font-size: 15px;
-    max-width: 300px;
+    max-width: 280px;
   }
   body.admin-page-force-light .admin-header-buttons .form-control:focus {
-    border-color: #0071e3;
-    box-shadow: 0 0 0 4px rgba(0,113,227,.12);
+    background: #fff;
+    box-shadow: 0 0 0 2px #007aff;
+    outline: none;
   }
-  /* 批量操作按钮组：td 单元格，保持 text-align:right，按钮 inline-block 横排 */
+  /* 批量操作：td 保持右对齐，按钮用 Apple 文字链风格 */
   body.admin-page-force-light td.admin-header-buttons {
     text-align: right !important;
     white-space: nowrap;
     vertical-align: middle;
+    background: transparent !important;
+    border: none !important;
   }
   body.admin-page-force-light td.admin-header-buttons .btn {
     display: inline-block;
-    margin-left: 8px;
-    border-radius: 980px;
-    padding: 8px 20px;
-    font-size: 14px;
+    margin-left: 16px;
+    padding: 0;
+    border: none;
+    background: none !important;
+    font-size: 15px;
+    font-weight: 400;
+    border-radius: 0;
+    box-shadow: none !important;
   }
-  /* 用户表格 */
+  body.admin-page-force-light td.admin-header-buttons .btn-primary { color: #007aff !important; }
+  body.admin-page-force-light td.admin-header-buttons .btn-danger { color: #ff3b30 !important; }
+  body.admin-page-force-light td.admin-header-buttons .btn:hover { opacity: .7; transform: none; }
+  /* "添加用户"：Apple 风格蓝色文字按钮 */
+  body.admin-page-force-light .add-users-button {
+    background: none !important;
+    border: none !important;
+    color: #007aff !important;
+    font-size: 15px;
+    padding: 8px 0;
+    border-radius: 0;
+    box-shadow: none !important;
+  }
+  /* 用户表格：Apple grouped table — 白底、发丝线、无卡片阴影 */
   body.admin-page-force-light table.table {
     background: #fff !important;
     color: #1d1d1f !important;
-    border-radius: 16px;
+    border: none !important;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 16px rgba(0,0,0,.06);
-    border: 1px solid #e8e8ed;
+    box-shadow: none;
     border-collapse: separate;
     border-spacing: 0;
   }
   body.admin-page-force-light table.table thead th {
-    background: #fbfbfd !important;
-    color: #6e6e73 !important;
+    background: #fff !important;
+    color: #8e8e93 !important;  /* Apple secondary gray */
     font-weight: 600;
     font-size: 13px;
-    padding: 13px 18px;
-    border-bottom: 1px solid #e8e8ed;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    padding: 10px 16px;
+    border-bottom: 0.5px solid #c6c6c8;
     border-top: none;
   }
   body.admin-page-force-light table.table tbody td {
-    padding: 14px 18px;
-    font-size: 15px;
-    border-bottom: 1px solid #f5f5f7;
+    padding: 12px 16px;
+    font-size: 16px;  /* Apple body text */
+    border-bottom: 0.5px solid #e5e5ea;  /* hairline */
     background: #fff !important;
     color: #1d1d1f !important;
     vertical-align: middle;
   }
   body.admin-page-force-light table.table tbody tr:last-child td { border-bottom: none; }
-  body.admin-page-force-light table.table tbody tr:hover td { background: #f5f5f7 !important; }
-  /* 表格内按钮 */
-  body.admin-page-force-light table.table .btn {
-    border-radius: 980px;
-    padding: 6px 16px;
-    font-size: 13px;
-    margin: 2px 4px 2px 0;
+  /* 行内操作：蓝色文字链，危险操作红色文字 */
+  body.admin-page-force-light table.table tbody td:last-child .btn {
+    background: none !important;
+    border: none !important;
+    padding: 4px 8px;
+    font-size: 15px;
+    border-radius: 0;
+    box-shadow: none !important;
+    margin: 0 4px 0 0;
+    color: #007aff !important;
   }
-  /* 批量操作按钮 */
-  body.admin-page-force-light .btn-primary {
-    background: #0071e3 !important;
-    border-color: #0071e3 !important;
-    border-radius: 980px;
-    padding: 8px 22px;
+  body.admin-page-force-light table.table tbody td:last-child .btn-danger,
+  body.admin-page-force-light table.table tbody td:last-child .btn[class*="stop"] {
+    color: #ff3b30 !important;
   }
-  body.admin-page-force-light .btn-danger, body.admin-page-force-light .btn-default {
-    border-radius: 980px;
-    padding: 8px 22px;
-  }
-  /* 分页 */
+  body.admin-page-force-light table.table tbody td:last-child .btn:hover { opacity: .6; transform: none; }
+  /* 用户名：加粗 */
+  body.admin-page-force-light table.table tbody td:first-child { font-weight: 600; }
+  /* 时间：灰色次要文字 */
+  body.admin-page-force-light table.table tbody td:nth-child(4) { color: #8e8e93 !important; font-size: 14px; }
+  /* 分页：右对齐灰色小字 */
   body.admin-page-force-light .pagination-footer {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 10px;
-    margin-top: 18px;
-    color: #6e6e73;
-    font-size: 14px;
+    gap: 12px;
+    margin-top: 16px;
+    color: #8e8e93;
+    font-size: 13px;
   }
+  body.admin-page-force-light .pagination-footer .btn {
+    background: none !important;
+    border: none !important;
+    color: #007aff !important;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 0;
+    box-shadow: none !important;
+  }
+  body.admin-page-force-light .pagination-footer .btn:disabled { color: #c6c6c8 !important; }
   </style>
   <script>
   /* Admin 页（React 渲染）运行时翻译：MutationObserver 监听 DOM 变化替换英文 */
