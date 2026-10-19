@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<OpenSCENARIO xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="OpenScenario.xsd">
+    <FileHeader description="h1_cutin_d40_v14" author="IEV CloudLab" revMajor="1" revMinor="1" date="2026-10-19T17:01:13.432504"/>
+    <ParameterDeclarations/>
+    <CatalogLocations/>
+    <RoadNetwork>
+        <LogicFile filepath="h1_batch.xodr"/>
+    </RoadNetwork>
+    <Entities>
+        <ScenarioObject name="Ego">
+            <Vehicle name="EgoCar" vehicleCategory="car">
+                <ParameterDeclarations/>
+                <BoundingBox>
+                    <Center x="1.4" y="0.0" z="0.9"/>
+                    <Dimensions width="2.0" length="4.8" height="1.8"/>
+                </BoundingBox>
+                <Performance maxSpeed="150.0" maxDeceleration="8.0" maxAcceleration="10.0"/>
+                <Axles>
+                    <FrontAxle maxSteering="2.5" wheelDiameter="2.5" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                    <RearAxle maxSteering="0.0" wheelDiameter="0.0" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                </Axles>
+                <Properties/>
+            </Vehicle>
+        </ScenarioObject>
+        <ScenarioObject name="Target">
+            <Vehicle name="TargetCar" vehicleCategory="car">
+                <ParameterDeclarations/>
+                <BoundingBox>
+                    <Center x="1.4" y="0.0" z="0.9"/>
+                    <Dimensions width="2.0" length="4.8" height="1.8"/>
+                </BoundingBox>
+                <Performance maxSpeed="150.0" maxDeceleration="8.0" maxAcceleration="10.0"/>
+                <Axles>
+                    <FrontAxle maxSteering="2.5" wheelDiameter="2.5" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                    <RearAxle maxSteering="0.0" wheelDiameter="0.0" trackWidth="1.8" positionX="1.4" positionZ="0.9"/>
+                </Axles>
+                <Properties/>
+            </Vehicle>
+        </ScenarioObject>
+    </Entities>
+    <Storyboard>
+        <Init>
+            <Actions>
+                <Private entityRef="Ego">
+                    <PrivateAction>
+                        <TeleportAction>
+                            <Position>
+                                <LanePosition roadId="0" laneId="-1" s="10.0" offset="0.0"/>
+                            </Position>
+                        </TeleportAction>
+                    </PrivateAction>
+                    <PrivateAction>
+                        <LongitudinalAction>
+                            <SpeedAction>
+                                <SpeedActionDynamics dynamicsShape="step" value="1.0" dynamicsDimension="rate"/>
+                                <SpeedActionTarget>
+                                    <AbsoluteTargetSpeed value="15.0"/>
+                                </SpeedActionTarget>
+                            </SpeedAction>
+                        </LongitudinalAction>
+                    </PrivateAction>
+                </Private>
+                <Private entityRef="Target">
+                    <PrivateAction>
+                        <TeleportAction>
+                            <Position>
+                                <LanePosition roadId="0" laneId="-2" s="50.0" offset="0.0"/>
+                            </Position>
+                        </TeleportAction>
+                    </PrivateAction>
+                    <PrivateAction>
+                        <LongitudinalAction>
+                            <SpeedAction>
+                                <SpeedActionDynamics dynamicsShape="step" value="1.0" dynamicsDimension="rate"/>
+                                <SpeedActionTarget>
+                                    <AbsoluteTargetSpeed value="14.0"/>
+                                </SpeedActionTarget>
+                            </SpeedAction>
+                        </LongitudinalAction>
+                    </PrivateAction>
+                </Private>
+            </Actions>
+        </Init>
+        <Story name="cutin_story">
+            <ParameterDeclarations/>
+            <Act name="cutin_act">
+                <ManeuverGroup name="cutin_group" maximumExecutionCount="1">
+                    <Actors selectTriggeringEntities="false">
+                        <EntityRef entityRef="Target"/>
+                    </Actors>
+                    <Maneuver name="cutin_maneuver">
+                        <Event name="cutin_event" priority="overwrite" maximumExecutionCount="1">
+                            <Action name="lanechange">
+                                <PrivateAction>
+                                    <LateralAction>
+                                        <LaneChangeAction>
+                                            <LaneChangeActionDynamics dynamicsShape="step" value="1.0" dynamicsDimension="rate"/>
+                                            <LaneChangeTarget>
+                                                <AbsoluteTargetLane value="-1"/>
+                                            </LaneChangeTarget>
+                                        </LaneChangeAction>
+                                    </LateralAction>
+                                </PrivateAction>
+                            </Action>
+                            <StartTrigger>
+                                <ConditionGroup>
+                                    <Condition name="cutin" delay="0" conditionEdge="rising">
+                                        <ByValueCondition>
+                                            <SimulationTimeCondition value="5.0" rule="greaterThan"/>
+                                        </ByValueCondition>
+                                    </Condition>
+                                </ConditionGroup>
+                            </StartTrigger>
+                        </Event>
+                    </Maneuver>
+                </ManeuverGroup>
+                <StartTrigger>
+                    <ConditionGroup>
+                        <Condition name="act_start" delay="0" conditionEdge="rising">
+                            <ByValueCondition>
+                                <SimulationTimeCondition value="0" rule="greaterThan"/>
+                            </ByValueCondition>
+                        </Condition>
+                    </ConditionGroup>
+                </StartTrigger>
+                <StopTrigger/>
+            </Act>
+        </Story>
+        <StopTrigger>
+            <ConditionGroup>
+                <Condition name="sim_stop" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                        <SimulationTimeCondition value="20.0" rule="greaterThan"/>
+                    </ByValueCondition>
+                </Condition>
+            </ConditionGroup>
+        </StopTrigger>
+    </Storyboard>
+</OpenSCENARIO>
