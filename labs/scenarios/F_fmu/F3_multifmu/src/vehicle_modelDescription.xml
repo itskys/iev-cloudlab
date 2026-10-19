@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  fmiVersion="2.0"
+  modelName="VehicleLongitudinal"
+  guid="{a1b2c3d4-1111-4222-8333-444455556666}"
+  description="Simple longitudinal vehicle dynamics (FMI 2.0 Co-Simulation)"
+  generationTool="IEV CloudLab handcrafted"
+  variableNamingConvention="flat">
+  <CoSimulation modelIdentifier="VehicleLongitudinal"/>
+  <ModelVariables>
+    <ScalarVariable name="F_motor" valueReference="0" causality="input" variability="continuous">
+      <Real start="0.0"/>
+    </ScalarVariable>
+    <ScalarVariable name="v" valueReference="1" causality="output" variability="continuous">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="x" valueReference="2" causality="output" variability="continuous">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="mass" valueReference="3" causality="parameter" variability="fixed">
+      <Real start="1500.0"/>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs><Unknown index="2"/><Unknown index="3"/></Outputs>
+  </ModelStructure>
+</fmiModelDescription>
