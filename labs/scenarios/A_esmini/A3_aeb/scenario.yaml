@@ -1,0 +1,21 @@
+# A3: AEB 紧急制动 Python 闭环
+id: A3_aeb
+name: 前车急刹AEB闭环测试
+engine: esmini
+version: "1.0"
+files:
+  xosc: aeb_brake.xosc
+  xodr: aeb.xodr
+  generator: gen_aeb.py
+params:
+  ego_init: {x: 10.0, y: 0.0, v: 16.0}
+  target_init: {x: 40.0, y: 0.0, v: 14.0}
+  brake_trigger_time: 3.0  # Target 在 t=3s 以 4m/s^2 急刹到 5m/s
+  dt: 0.05
+outputs:
+  - collision_bool
+  - collision_rel_speed_ms
+  - false_trigger_rate
+chain:
+  upstream: [A1_cutin]
+  downstream: [E3_mpc]
