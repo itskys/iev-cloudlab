@@ -14,9 +14,10 @@ import os
 OUT = os.path.dirname(os.path.abspath(__file__))
 
 
-def box(ax, x, y, w, h, text, fc, ec='#37474F', fs=9, bold=False, tc='black'):
+def box(ax, x, y, w, h, text, fc, ec='#37474F', fs=9, bold=False, tc='black',
+        ls='-'):
     b = FancyBboxPatch((x, y), w, h, boxstyle='round,pad=0.03',
-                       fc=fc, ec=ec, lw=1.2)
+                       fc=fc, ec=ec, lw=1.2, linestyle=ls)
     ax.add_patch(b)
     ax.text(x + w / 2, y + h / 2, text, ha='center', va='center',
             fontsize=fs, fontweight='bold' if bold else 'normal', color=tc)
@@ -58,32 +59,34 @@ def fig_architecture():
     arrow(ax, (8.3, 8.47), (8.8, 8.47), '#6A1B9A')
 
     # ---- 平台层 ----
-    layer_label(ax, 0.15, 7.35, 'PLATFORM (VPS)', '#1565C0')
-    box(ax, 0.6, 6.35, 5.6, 0.95, 'JupyterHub 5.5.3\nEmail-OTP login | DockerSpawner (per-user container)',
-        '#E3F2FD', '#1565C0', 9.5)
-    box(ax, 6.8, 6.35, 5.6, 0.95, 'Student Container (iev-base image)\nUbuntu 24.04 | Python 3.12 + py310-fastsim kernel',
-        '#E3F2FD', '#1565C0', 9.5)
+    layer_label(ax, 0.15, 7.35, 'PLATFORM', '#1565C0')
+    box(ax, 0.6, 6.35, 3.8, 0.95, 'JupyterHub 5.5.3 (VPS)\nEmail-OTP login\nDockerSpawner',
+        '#E3F2FD', '#1565C0', 9)
+    box(ax, 4.6, 6.35, 3.8, 0.95, 'Student Container (CPU)\niev-base image\nPython 3.12 + py310 kernel',
+        '#E3F2FD', '#1565C0', 9)
+    box(ax, 8.6, 6.35, 3.8, 0.95, 'GPU Pods (RunPod 4090)\nOn-demand | ievlab.submit()\nStage 2 - planned',
+        '#EDE7F6', '#5E35B1', 9, ls='--')
     arrow(ax, (10.6, 8.0), (10.6, 7.3), '#1565C0')
-    arrow(ax, (10.6, 7.3), (9.6, 7.3), '#1565C0')
-    arrow(ax, (9.6, 7.3), (9.6, 7.3), '#1565C0')
-    arrow(ax, (6.2, 6.82), (6.8, 6.82), '#1565C0')
+    arrow(ax, (4.4, 6.82), (4.6, 6.82), '#1565C0')
+    arrow(ax, (8.4, 6.82), (8.6, 6.82), '#5E35B1')
 
     # ---- 实验层 ----
-    layer_label(ax, 0.15, 5.9, 'EXPERIMENTS (29)', '#2E7D32')
+    layer_label(ax, 0.15, 5.9, 'EXPERIMENTS (29 live + 5 GPU planned)', '#2E7D32')
     mods = [
-        ('A x5\nADAS\n(esmini)', '#E8F5E9'),
-        ('B x5\nTraffic\n(SUMO)', '#E8F5E9'),
-        ('C x4\nVehicle\n(FASTSim)', '#E8F5E9'),
-        ('D x4\nBattery\n(PyBaMM)', '#E8F5E9'),
-        ('E x4\nOptimize\n(pymoo/CasADi)', '#E8F5E9'),
-        ('F x3\nFMI\n(FMPy)', '#E8F5E9'),
-        ('G x2\nROS 2\n(rclpy)', '#E8F5E9'),
-        ('H x2\nScenarios\n(scenariogen.)', '#E8F5E9'),
+        ('A x5\nADAS\n(esmini)', '#E8F5E9', '#2E7D32', '-'),
+        ('B x5\nTraffic\n(SUMO)', '#E8F5E9', '#2E7D32', '-'),
+        ('C x4\nVehicle\n(FASTSim)', '#E8F5E9', '#2E7D32', '-'),
+        ('D x4\nBattery\n(PyBaMM)', '#E8F5E9', '#2E7D32', '-'),
+        ('E x4\nOptimize\n(pymoo)', '#E8F5E9', '#2E7D32', '-'),
+        ('F x3\nFMI\n(FMPy)', '#E8F5E9', '#2E7D32', '-'),
+        ('G x2\nROS 2\n(rclpy)', '#E8F5E9', '#2E7D32', '-'),
+        ('H x2\nScenarios\n(gen.)', '#E8F5E9', '#2E7D32', '-'),
+        ('I x5\nPerception+AD\n(CARLA, GPU)', '#EDE7F6', '#5E35B1', '--'),
     ]
     x = 0.6
-    for name, fc in mods:
-        box(ax, x, 4.75, 1.42, 1.0, name, fc, '#2E7D32', 8)
-        x += 1.52
+    for name, fc, ec, ls in mods:
+        box(ax, x, 4.75, 1.24, 1.0, name, fc, ec, 7.5, ls=ls)
+        x += 1.317
     ax.text(6.5, 4.52, 'Each experiment: Principles | Objectives | Tasks | Verification | Result Analysis | Troubleshooting (bilingual)',
             ha='center', fontsize=9, style='italic', color='#2E7D32')
 
@@ -99,7 +102,7 @@ def fig_architecture():
     # ---- 引擎层 ----
     layer_label(ax, 0.15, 2.6, 'ENGINES', '#AD1457')
     box(ax, 0.6, 1.6, 11.8, 0.9,
-        'esmini 3.10  |  SUMO 1.18 (TraCI)  |  FASTSim 2.1.5  |  PyBaMM 26.6\nCasADi 3.7 + IPOPT  |  pymoo 0.6.2  |  FMPy 0.3.22  |  ROS 2 Jazzy',
+        'esmini 3.10  |  SUMO 1.18 (TraCI)  |  FASTSim 2.1.5  |  PyBaMM 26.6  |  CasADi 3.7  |  pymoo 0.6.2  |  FMPy 0.3.22  |  ROS 2 Jazzy\n+ Stage 2 (GPU): CARLA 0.9.16  |  AWSIM  |  Autoware  |  YOLO',
         '#FCE4EC', '#AD1457', 9.5, bold=True)
 
     # ---- 管理层 ----
@@ -123,80 +126,93 @@ def fig_architecture():
 
 # ============================================================ 图2 数据流+工作流
 def fig_dataflow():
-    fig, ax = plt.subplots(figsize=(13, 10))
+    fig, ax = plt.subplots(figsize=(13, 11.5))
     ax.set_xlim(0, 13)
-    ax.set_ylim(0, 10)
+    ax.set_ylim(0, 11.5)
     ax.axis('off')
-    ax.text(6.5, 9.75, 'IEV CloudLab - Data Flow & Workflows',
+    ax.text(6.5, 11.25, 'IEV CloudLab - Data Flow & Workflows',
             ha='center', fontsize=16, fontweight='bold')
 
-    # ---------- 三条链 ----------
-    ax.text(0.2, 9.3, 'THREE CHAINS (any entry, full chain out)', fontsize=12,
+    # ---------- chains ----------
+    ax.text(0.2, 10.8, 'FOUR CHAINS (any entry, full chain out)', fontsize=12,
             fontweight='bold', color='#1565C0')
 
     # Chain 1
-    ax.text(0.2, 8.85, 'Chain 1  Vehicle Design:', fontsize=10.5,
+    ax.text(0.2, 10.35, 'Chain 1  Vehicle Design:', fontsize=10.5,
             fontweight='bold', color='#2E7D32')
-    box(ax, 1.6, 8.15, 2.1, 0.62, 'D3 PyBaMM\ncalibration', '#E8F5E9', '#2E7D32', 8.5)
-    box(ax, 4.3, 8.15, 2.1, 0.62, 'batteries/*.csv\nOCV-SOC', '#FFF8E1', '#F9A825', 8.5)
-    box(ax, 7.0, 8.15, 2.1, 0.62, 'C1/C2 FASTSim\n(+ Adapter)', '#E8F5E9', '#2E7D32', 8.5)
-    box(ax, 9.7, 8.15, 2.1, 0.62, 'vehicles/*.yaml', '#FFF8E1', '#F9A825', 8.5)
-    box(ax, 10.6, 7.3, 2.1, 0.62, 'A1-A4 esmini\nADAS tests', '#E8F5E9', '#2E7D32', 8.5)
-    for p1, p2 in [((3.7, 8.46), (4.3, 8.46)), ((6.4, 8.46), (7.0, 8.46)),
-                   ((9.1, 8.46), (9.7, 8.46))]:
+    box(ax, 1.6, 9.65, 2.1, 0.62, 'D3 PyBaMM\ncalibration', '#E8F5E9', '#2E7D32', 8.5)
+    box(ax, 4.3, 9.65, 2.1, 0.62, 'batteries/*.csv\nOCV-SOC', '#FFF8E1', '#F9A825', 8.5)
+    box(ax, 7.0, 9.65, 2.1, 0.62, 'C1/C2 FASTSim\n(+ Adapter)', '#E8F5E9', '#2E7D32', 8.5)
+    box(ax, 9.7, 9.65, 2.1, 0.62, 'vehicles/*.yaml', '#FFF8E1', '#F9A825', 8.5)
+    box(ax, 10.6, 8.8, 2.1, 0.62, 'A1-A4 esmini\nADAS tests', '#E8F5E9', '#2E7D32', 8.5)
+    for p1, p2 in [((3.7, 9.96), (4.3, 9.96)), ((6.4, 9.96), (7.0, 9.96)),
+                   ((9.1, 9.96), (9.7, 9.96))]:
         arrow(ax, p1, p2, '#2E7D32')
-    arrow(ax, (10.75, 8.15), (11.2, 7.92), '#2E7D32')
+    arrow(ax, (10.75, 9.65), (11.2, 9.42), '#2E7D32')
 
     # Chain 2
-    ax.text(0.2, 7.55, 'Chain 2  Algorithm Dev:', fontsize=10.5,
+    ax.text(0.2, 8.6, 'Chain 2  Algorithm Dev:', fontsize=10.5,
             fontweight='bold', color='#2E7D32')
-    box(ax, 1.6, 6.55, 2.1, 0.62, 'BaseController\n(common)', '#E3F2FD', '#1565C0', 8.5)
-    box(ax, 4.3, 6.55, 2.1, 0.62, 'A / B closed loop\nesmini / TraCI', '#E8F5E9', '#2E7D32', 8.5)
-    box(ax, 7.0, 6.55, 2.1, 0.62, 'Metrics\nTTC / error / PET', '#FFF8E1', '#F9A825', 8.5)
-    box(ax, 9.7, 6.55, 2.1, 0.62, 'Tune & iterate\nresults/*.json', '#E3F2FD', '#1565C0', 8.5)
-    for p1, p2 in [((3.7, 6.86), (4.3, 6.86)), ((6.4, 6.86), (7.0, 6.86)),
-                   ((9.1, 6.86), (9.7, 6.86))]:
+    box(ax, 1.6, 7.85, 2.1, 0.62, 'BaseController\n(common)', '#E3F2FD', '#1565C0', 8.5)
+    box(ax, 4.3, 7.85, 2.1, 0.62, 'A / B closed loop\nesmini / TraCI', '#E8F5E9', '#2E7D32', 8.5)
+    box(ax, 7.0, 7.85, 2.1, 0.62, 'Metrics\nTTC / error / PET', '#FFF8E1', '#F9A825', 8.5)
+    box(ax, 9.7, 7.85, 2.1, 0.62, 'Tune & iterate\nresults/*.json', '#E3F2FD', '#1565C0', 8.5)
+    for p1, p2 in [((3.7, 8.16), (4.3, 8.16)), ((6.4, 8.16), (7.0, 8.16)),
+                   ((9.1, 8.16), (9.7, 8.16))]:
         arrow(ax, p1, p2, '#2E7D32')
-    arrow(ax, (10.75, 6.55), (5.4, 6.35), '#90A4AE', lw=1.1, rad=-0.25)
-    ax.text(8.0, 6.08, 'feedback: retune controller', fontsize=8.5,
+    arrow(ax, (10.75, 7.85), (5.4, 7.62), '#90A4AE', lw=1.1, rad=-0.25)
+    ax.text(8.0, 7.32, 'feedback: retune controller', fontsize=8.5,
             color='#607D8B', style='italic', ha='center')
 
     # Chain 3
-    ax.text(0.2, 5.85, 'Chain 3  Energy Mgmt:', fontsize=10.5,
+    ax.text(0.2, 7.0, 'Chain 3  Energy Mgmt:', fontsize=10.5,
             fontweight='bold', color='#2E7D32')
-    box(ax, 1.6, 5.05, 2.1, 0.62, 'E2/E4 optimize\npymoo / DP', '#E8F5E9', '#2E7D32', 8.5)
-    box(ax, 4.3, 5.05, 2.1, 0.62, 'Optimal params\n/ strategy', '#FFF8E1', '#F9A825', 8.5)
-    box(ax, 7.0, 5.05, 2.1, 0.62, 'C4 FASTSim\nvalidation', '#E8F5E9', '#2E7D32', 8.5)
-    box(ax, 9.7, 5.05, 2.1, 0.62, 'Report card\nresults/*.json', '#E3F2FD', '#1565C0', 8.5)
-    for p1, p2 in [((3.7, 5.36), (4.3, 5.36)), ((6.4, 5.36), (7.0, 5.36)),
-                   ((9.1, 5.36), (9.7, 5.36))]:
+    box(ax, 1.6, 6.2, 2.1, 0.62, 'E2/E4 optimize\npymoo / DP', '#E8F5E9', '#2E7D32', 8.5)
+    box(ax, 4.3, 6.2, 2.1, 0.62, 'Optimal params\n/ strategy', '#FFF8E1', '#F9A825', 8.5)
+    box(ax, 7.0, 6.2, 2.1, 0.62, 'C4 FASTSim\nvalidation', '#E8F5E9', '#2E7D32', 8.5)
+    box(ax, 9.7, 6.2, 2.1, 0.62, 'Report card\nresults/*.json', '#E3F2FD', '#1565C0', 8.5)
+    for p1, p2 in [((3.7, 6.51), (4.3, 6.51)), ((6.4, 6.51), (7.0, 6.51)),
+                   ((9.1, 6.51), (9.7, 6.51))]:
         arrow(ax, p1, p2, '#2E7D32')
 
-    # ---------- 成绩流 ----------
-    ax.text(0.2, 4.45, 'GRADING FLOW', fontsize=12, fontweight='bold',
+    # Chain 4 (Stage 2, planned - purple dashed)
+    ax.text(0.2, 5.6, 'Chain 4  Perception (Stage 2):', fontsize=10.5,
+            fontweight='bold', color='#5E35B1')
+    box(ax, 1.6, 4.8, 2.1, 0.62, 'I1 CARLA/AWSIM\n3D world (GPU pod)', '#EDE7F6', '#5E35B1', 8.5, ls='--')
+    box(ax, 4.3, 4.8, 2.1, 0.62, 'Sensor data\ncamera/LiDAR/radar', '#EDE7F6', '#5E35B1', 8.5, ls='--')
+    box(ax, 7.0, 4.8, 2.1, 0.62, 'Perception\nYOLO / fusion', '#EDE7F6', '#5E35B1', 8.5, ls='--')
+    box(ax, 9.7, 4.8, 2.1, 0.62, 'I5 Autoware\nfull-stack AD', '#EDE7F6', '#5E35B1', 8.5, ls='--')
+    for p1, p2 in [((3.7, 5.11), (4.3, 5.11)), ((6.4, 5.11), (7.0, 5.11)),
+                   ((9.1, 5.11), (9.7, 5.11))]:
+        arrow(ax, p1, p2, '#5E35B1')
+    ax.text(11.9, 4.5, 'planned', fontsize=8.5, color='#5E35B1',
+            style='italic', ha='center')
+
+    # ---------- grading ----------
+    ax.text(0.2, 4.15, 'GRADING FLOW', fontsize=12, fontweight='bold',
             color='#AD1457')
-    box(ax, 0.6, 3.55, 2.3, 0.7, 'Student runs\nexperiment', '#FCE4EC', '#AD1457', 9)
-    box(ax, 3.4, 3.55, 2.3, 0.7, 'save_result()\nresults/*.json', '#FFF8E1', '#F9A825', 9)
-    box(ax, 6.2, 3.55, 2.3, 0.7, 'collect_grades.py\nhourly cron (host)', '#FCE4EC', '#AD1457', 9)
-    box(ax, 9.0, 3.55, 2.3, 0.7, 'evaluator +\ngradebook', '#FCE4EC', '#AD1457', 9)
-    box(ax, 10.6, 2.6, 2.3, 0.7, 'Teacher Dashboard\ntable/stats/charts', '#E0F2F1', '#00695C', 9)
-    for p1, p2 in [((2.9, 3.9), (3.4, 3.9)), ((5.7, 3.9), (6.2, 3.9)),
-                   ((8.5, 3.9), (9.0, 3.9))]:
+    box(ax, 0.6, 3.25, 2.3, 0.7, 'Student runs\nexperiment', '#FCE4EC', '#AD1457', 9)
+    box(ax, 3.4, 3.25, 2.3, 0.7, 'save_result()\nresults/*.json', '#FFF8E1', '#F9A825', 9)
+    box(ax, 6.2, 3.25, 2.3, 0.7, 'collect_grades.py\nhourly cron (host)', '#FCE4EC', '#AD1457', 9)
+    box(ax, 9.0, 3.25, 2.3, 0.7, 'evaluator +\ngradebook', '#FCE4EC', '#AD1457', 9)
+    box(ax, 10.6, 2.3, 2.3, 0.7, 'Teacher Dashboard\ntable/stats/charts', '#E0F2F1', '#00695C', 9)
+    for p1, p2 in [((2.9, 3.6), (3.4, 3.6)), ((5.7, 3.6), (6.2, 3.6)),
+                   ((8.5, 3.6), (9.0, 3.6))]:
         arrow(ax, p1, p2, '#AD1457')
-    arrow(ax, (11.0, 3.55), (11.6, 3.3), '#AD1457')
-    ax.text(6.5, 3.28, 'Anti-cheat: min-steps criteria + execution timeout watchdog',
+    arrow(ax, (11.0, 3.25), (11.6, 3.0), '#AD1457')
+    ax.text(6.5, 2.95, 'Anti-cheat: min-steps criteria + execution timeout watchdog',
             ha='center', fontsize=8.5, color='#AD1457', style='italic')
 
-    # ---------- 双角色工作流 ----------
-    ax.text(0.2, 2.35, 'WORKFLOWS', fontsize=12, fontweight='bold', color='#00695C')
-    box(ax, 0.6, 1.45, 11.8, 0.62,
+    # ---------- workflows ----------
+    ax.text(0.2, 2.1, 'WORKFLOWS', fontsize=12, fontweight='bold', color='#00695C')
+    box(ax, 0.6, 1.3, 11.8, 0.6,
         'Student:  Email-OTP login  >  Pick experiment  >  Read principles (+ schematics)  >  Run & tune (Try-It)  >  Self-check score  >  Lab report',
         '#E0F2F1', '#00695C', 9.5)
-    box(ax, 0.6, 0.65, 11.8, 0.62,
-        'Teacher:  Roster (add / CSV import)  >  Teach with 3 chains  >  View grades + charts  >  Identify weak experiments  >  Archive (course done)',
+    box(ax, 0.6, 0.6, 11.8, 0.6,
+        'Teacher:  Roster (add / CSV import)  >  Teach with chains  >  View grades + charts  >  Identify weak experiments  >  Archive (course done)',
         '#FFF3E0', '#E65100', 9.5)
-    box(ax, 0.6, 0.08, 11.8, 0.45,
-        'Honesty by design: real engines only; stand-ins labeled; A-series target-freeze disclosed in every affected notebook',
+    box(ax, 0.6, 0.05, 11.8, 0.42,
+        'Honesty by design: real engines only; stand-ins labeled; planned (dashed) = Stage 2, not yet live',
         'white', '#90A4AE', 9)
 
     path = os.path.join(OUT, 'fig2_dataflow.png')
