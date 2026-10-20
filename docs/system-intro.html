@@ -50,7 +50,7 @@
 
 <section>
   <h2>系统架构 <span class="en">System Architecture</span></h2>
-  <p>六层架构：接入层（Cloudflare）→ 平台层（JupyterHub）→ 实验层（29个实验）→ 支撑层（共享库/场景/数据）→ 仿真引擎层（全部真实开源引擎）→ 教学管理层（自动评分与教师面板）。</p>
+  <p>六层架构：接入层（Cloudflare）→ 平台层（JupyterHub + GPU算力舱）→ 实验层（29个已上线 + 5个GPU规划）→ 支撑层（共享库/场景/数据）→ 仿真引擎层（全部真实开源引擎）→ 教学管理层（自动评分与教师面板）。图中虚线框为二期规划。</p>
   <div class="figbar">
     <span>图版：</span>
     <button class="on" onclick="setFig('arch','cn',this)">中文版</button>
@@ -99,8 +99,9 @@
     <li><b>F 模型交换（3）</b>：FMU 加载、建模导出、多模型协仿真</li>
     <li><b>G 中间件（2）</b>：ROS 2 话题通信与服务调用</li>
     <li><b>H 场景工程（2）</b>：场景批量生成、变异模糊测试</li>
+    <li><b>I 感知与自动驾驶（5，二期·GPU）</b>：CARLA三维场景与传感器、YOLO目标检测、点云与融合、定位规划、Autoware完整驾驶栈——经 GPU 算力舱（RunPod 4090）按需运行</li>
   </ul>
-  <div class="note">诚实边界：感知层（相机/激光雷达）与完整自动驾驶栈属二期（需 GPU）；A 系列中 esmini 目标车在 ctypes 模式下为冻结状态（等价静态障碍物），已在每个受影响实验中如实声明。</div>
+  <div class="note">诚实边界：I 系列（感知与完整自动驾驶栈）为二期规划、尚未上线，图中以虚线框标注；A 系列中 esmini 目标车在 ctypes 模式下为冻结状态（等价静态障碍物），已在每个受影响实验中如实声明。</div>
 </section>
 
 <footer>IEV CloudLab · 智能电动汽车云仿真实验平台 · <a href="/hub/login">登录平台</a></footer>
