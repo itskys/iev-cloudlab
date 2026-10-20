@@ -48,19 +48,24 @@ def main():
     args = ap.parse_args()
 
     all_results = collect(args.home_root)
-    os.makedirs(args.out, exist_ok=True)
-    out_path = os.path.join(args.out, 'all_results.json')
-    with open(out_path, 'w') as f:
-        json.dump(all_results, f, ensure_ascii=False, indent=2)
+    outs = [args.out]
+    if args.out.endswith('/teacher/grades'):
+        outs.append(args.out.replace('/teacher/grades', '/admin/grades'))
+    out_path = None
+    for out_dir in outs:
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, 'all_results.json')
+        with open(out_path, 'w') as f:
+            json.dump(all_results, f, ensure_ascii=False, indent=2)
+        # teacher容器内文件属主应为jovyan(1000)
+        try:
+            os.chown(out_path, 1000, 1000)
+            os.chown(out_dir, 1000, 1000)
+        except PermissionError:
+            pass
     n_exp = sum(len(v) for v in all_results.values())
     print(f'Collected: {len(all_results)} students, {n_exp} experiment '
           f'results -> {out_path}')
-    # teacher容器内文件属主应为jovyan(1000)
-    try:
-        os.chown(out_path, 1000, 1000)
-        os.chown(args.out, 1000, 1000)
-    except PermissionError:
-        pass
     return 0
 
 
