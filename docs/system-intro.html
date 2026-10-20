@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>系统介绍 · IEV CloudLab 智能电动汽车云仿真实验平台</title>
+<meta name="description" content="IEV CloudLab 系统架构、数据流与功能特色介绍">
+<style>
+  :root{--blue:#1D4ED8;--cyan:#0284C7;--teal:#0D9488;--ink:#0F172A;--sub:#5a6b84;--line:#e6ebf2;--bg:#f5f8fc}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:var(--ink);background:var(--bg);line-height:1.75}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 64px}
+  header{background:linear-gradient(135deg,#0b2a5b,#1D4ED8 55%,#0284C7);color:#fff;padding:52px 20px 44px;text-align:center}
+  header img{height:64px;background:#fff;border-radius:14px;padding:6px 14px}
+  header h1{margin:18px 0 6px;font-size:30px;letter-spacing:.5px}
+  header .en{opacity:.85;font-size:15px;letter-spacing:1px}
+  header p{max-width:760px;margin:16px auto 0;opacity:.92;font-size:16px}
+  .cta{display:inline-block;margin-top:22px;background:#00c2a8;color:#fff;padding:11px 30px;border-radius:999px;text-decoration:none;font-weight:600}
+  .cta:hover{background:#00a892}
+  section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 30px;margin-top:26px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+  h2{margin:0 0 6px;font-size:21px}
+  h2 .en{color:var(--sub);font-size:14px;font-weight:400;margin-left:8px}
+  .figbar{display:flex;gap:8px;align-items:center;margin:10px 0 14px}
+  .figbar button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 16px;cursor:pointer;font-size:14px}
+  .figbar button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  figure{margin:0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:10px}
+  figcaption{color:var(--sub);font-size:14px;margin-top:8px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+  .card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#fbfdff}
+  .card h3{margin:0 0 6px;font-size:16px}
+  .card p{margin:0;color:var(--sub);font-size:14.5px}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  .note{background:#fff8e6;border:1px solid #f2dfae;border-radius:10px;padding:12px 16px;font-size:14.5px}
+  footer{text-align:center;color:var(--sub);font-size:13.5px;margin-top:34px}
+  @media (max-width:640px){header h1{font-size:24px}section{padding:20px}}
+</style>
+</head>
+<body>
+<header>
+  <img src="/hub/assets/logo-mark.png" alt="IEV CloudLab">
+  <h1>IEV CloudLab</h1>
+  <div class="en">INTELLIGENT ELECTRIC VEHICLE CLOUD SIMULATION LAB</div>
+  <p>智能电动汽车云仿真实验平台：浏览器零安装，从电池、整车到智能驾驶，完成设计、仿真、优化与验证的完整实验链。</p>
+  <a class="cta" href="/hub/login">进入平台 →</a>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2>系统架构 <span class="en">System Architecture</span></h2>
+  <p>六层架构：接入层（Cloudflare）→ 平台层（JupyterHub）→ 实验层（29个实验）→ 支撑层（共享库/场景/数据）→ 仿真引擎层（全部真实开源引擎）→ 教学管理层（自动评分与教师面板）。</p>
+  <div class="figbar">
+    <span>图版：</span>
+    <button class="on" onclick="setFig('arch','cn',this)">中文版</button>
+    <button onclick="setFig('arch','en',this)">English</button>
+  </div>
+  <figure>
+    <img id="fig-arch" src="/hub/assets/fig1_architecture_cn.png" alt="系统架构图">
+    <figcaption>图 1 · 系统架构图：从学生浏览器到仿真引擎与教学管理的完整分层。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>数据流与工作流 <span class="en">Data Flow &amp; Workflows</span></h2>
+  <p>核心理念是「任一入口进，全链路出」：数据沿三条链在实验间流动——<b>车型设计链</b>（电池标定→整车能耗→智驾测试）、<b>算法开发链</b>（控制器→闭环→指标→调参）、<b>能量管理链</b>（优化→验证→成绩单）；成绩则经自动汇总与评分引擎流向教师面板。</p>
+  <div class="figbar">
+    <span>图版：</span>
+    <button class="on" onclick="setFig('flow','cn',this)">中文版</button>
+    <button onclick="setFig('flow','en',this)">English</button>
+  </div>
+  <figure>
+    <img id="fig-flow" src="/hub/assets/fig2_dataflow_cn.png" alt="数据流与工作流图">
+    <figcaption>图 2 · 数据流与工作流图：三条链、成绩流与师生双角色工作流。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>功能特色 <span class="en">Features</span></h2>
+  <div class="cards">
+    <div class="card"><h3>🧪 真实仿真</h3><p>esmini、SUMO、FASTSim、PyBaMM 等真实引擎逐一实测验证；演示性内容强制标注，绝不以假充真。</p></div>
+    <div class="card"><h3>🔗 全链打通</h3><p>实验不是孤岛：换一块电池、改一个车型参数，下游整车与智驾实验自动跟随。</p></div>
+    <div class="card"><h3>📚 教学完整</h3><p>每个实验含原理、目的、任务、验证、结果分析、报错说明六段式与原理图，配学生指南、教师手册与 16 周大纲。</p></div>
+    <div class="card"><h3>✅ 自动评分</h3><p>29 套判据阈值全部取自实测值，带防作弊设计；教师面板提供成绩、统计、图表与名册管理。</p></div>
+    <div class="card"><h3>☁️ 弹性云原生</h3><p>Cloudflare 门面 + 容器隔离，按需扩容；GPU 感知层（CARLA / Autoware）已为二期预留。</p></div>
+    <div class="card"><h3>🔓 全开源</h3><p>工具链全部开源并完成 31 项许可证审计，无商业授权风险。</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>实验一览 <span class="en">Experiments</span></h2>
+  <ul>
+    <li><b>A 自动驾驶（5）</b>：AEB 紧急制动、ACC 跟车、交叉口让行等场景闭环测试</li>
+    <li><b>B 交通流（5）</b>：跟车模型标定、信号优化、CACC 编队、拥堵波、绿波协调</li>
+    <li><b>C 整车能量（4）</b>：百公里电耗、车型对比、灵敏度、能量管理策略</li>
+    <li><b>D 电池（4）</b>：充放电特性、倍率容量、OCV 标定、快充析锂</li>
+    <li><b>E 优化控制（4）</b>：单/多目标优化、MPC 跟车、动态规划能量管理</li>
+    <li><b>F 模型交换（3）</b>：FMU 加载、建模导出、多模型协仿真</li>
+    <li><b>G 中间件（2）</b>：ROS 2 话题通信与服务调用</li>
+    <li><b>H 场景工程（2）</b>：场景批量生成、变异模糊测试</li>
+  </ul>
+  <div class="note">诚实边界：感知层（相机/激光雷达）与完整自动驾驶栈属二期（需 GPU）；A 系列中 esmini 目标车在 ctypes 模式下为冻结状态（等价静态障碍物），已在每个受影响实验中如实声明。</div>
+</section>
+
+<footer>IEV CloudLab · 智能电动汽车云仿真实验平台 · <a href="/hub/login">登录平台</a></footer>
+</div>
+
+<script>
+function setFig(which, lang, btn){
+  var src = which === 'arch'
+    ? '/hub/assets/fig1_architecture' + (lang === 'cn' ? '_cn' : '') + '.png'
+    : '/hub/assets/fig2_dataflow' + (lang === 'cn' ? '_cn' : '') + '.png';
+  document.getElementById('fig-' + which).src = src;
+  var bar = btn.parentElement;
+  for (var i = 0; i < bar.children.length; i++) {
+    if (bar.children[i].tagName === 'BUTTON') bar.children[i].classList.remove('on');
+  }
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>
