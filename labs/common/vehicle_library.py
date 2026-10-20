@@ -37,7 +37,13 @@ def list_vehicles():
 
 
 def load_battery(name):
-    """加载电池OCV-SOC曲线，返回dict列表"""
+    """加载电池OCV-SOC曲线，返回dict列表
+    
+    Args:
+        name: 电池名，可带或不带.csv后缀，如 'chen2020_nmc_75ah'
+    """
+    if not name.endswith('.csv'):
+        name = name + '.csv'
     path = os.path.join(BATTERY_DIR, name)
     with open(path) as f:
         reader = csv.DictReader(f)
@@ -45,7 +51,13 @@ def load_battery(name):
 
 
 def load_vehicle(name):
-    """加载车辆参数，返回dict"""
+    """加载车辆参数，返回dict
+    
+    Args:
+        name: 车辆名，可带或不带.yaml后缀，如 'bev_sedan'
+    """
+    if not name.endswith('.yaml'):
+        name = name + '.yaml'
     path = os.path.join(VEHICLE_DIR, name)
     with open(path) as f:
         return yaml.safe_load(f)
