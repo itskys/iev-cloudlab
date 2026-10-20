@@ -53,7 +53,7 @@ RUN pip install --no-cache-dir --ignore-installed \
       pybamm fmpy \
       matplotlib stable_baselines3 \
       "jupyterhub==5.5.3" ipykernel \
-      jupyter_server jupyterlab \
+      jupyter_server jupyterlab ipywidgets \
       jupyterlab-language-pack-zh-CN
 
 # f1tenth_gym（MIT）——暂时摘掉：
