@@ -576,6 +576,12 @@
     [data-bs-theme="dark"] .iev-lang-opt.active {
       color: #00d4ff !important;
     }
+    .lang-check {
+      display: none !important;
+    }
+    .iev-lang-opt.active .lang-check {
+      display: inline !important;
+    }
 
     /* 移动端菜单美化 */
     @media (max-width: 575.98px) {
@@ -698,6 +704,12 @@
                     </li>
                   {% endif %}
                   <li class="nav-item">
+                    <a class="nav-link" href="{{ base_url }}assets/system-intro.html" target="_blank" title="系统架构与全景介绍">
+                      <span>🏛️</span>
+                      <span data-i18n="nav_intro">系统介绍</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
                     <a class="nav-link iev-nav-lab-link" href="{{ base_url }}user/{{ user.name }}/lab" target="_blank" title="Launch JupyterLab">
                       <span>🚀</span>
                       <span data-i18n="nav_launch_lab">进入实验沙箱</span>
@@ -722,16 +734,21 @@
                     </li>
                   {% endif %}
                 {% endblock nav_bar_left_items %}
+              {% else %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ base_url }}assets/system-intro.html" target="_blank" title="系统架构与全景介绍">
+                    <span>🏛️</span>
+                    <span data-i18n="nav_intro">系统介绍</span>
+                  </a>
+                </li>
               {% endif %}
             </ul>
             <ul class="nav navbar-nav me-2">
               {% block nav_bar_right_items %}
-                <li class="nav-item dropdown" style="display: flex; align-items: center; margin-right: 6px; position: relative;">
+                <li class="nav-item" style="display: flex; align-items: center; margin-right: 6px; position: relative;">
                   <button type="button"
-                          class="btn btn-sm dropdown-toggle"
+                          class="btn btn-sm"
                           id="iev-lang-btn"
-                          data-bs-toggle="dropdown"
-                          data-bs-auto-close="true"
                           aria-expanded="false"
                           title="Language / 语言"
                           style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--iev-table-border); background: var(--iev-card-bg); color: var(--iev-text-primary); display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: none; cursor: pointer; transition: all 0.2s ease;">
@@ -741,10 +758,9 @@
                       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                     </svg>
                   </button>
-                  <ul class="dropdown-menu dropdown-menu-end shadow"
+                  <ul class="dropdown-menu shadow"
                       id="iev-lang-menu"
-                      aria-labelledby="iev-lang-btn"
-                      style="min-width: 145px; border-radius: 12px; border: 1px solid var(--iev-card-border); background: var(--iev-card-bg); padding: 6px; margin-top: 8px;">
+                      style="display: none; position: absolute !important; top: 100% !important; right: 0 !important; left: auto !important; min-width: 145px; border-radius: 12px; border: 1px solid var(--iev-card-border); background: var(--iev-card-bg); padding: 6px; margin-top: 8px; z-index: 1060; box-shadow: var(--iev-card-shadow);">
                     <li>
                       <button type="button" class="dropdown-item iev-lang-opt" data-lang="zh"
                               style="display: flex; align-items: center; justify-content: space-between; border-radius: 8px; font-size: 13.5px; font-weight: 500; padding: 8px 12px; color: var(--iev-text-primary); background: transparent; width: 100%; border: none;">
@@ -839,6 +855,34 @@
         nav_logout: "退出登录",
         nav_login: "登录",
         nav_docs: "实验手册",
+        nav_intro: "系统介绍",
+        login_intro_link: "了解平台：系统架构、数据流与特色功能 ➔",
+        home_arch_title: "系统架构与功能特色",
+        home_arch_sub: "六层云原生分层架构 · 任一入口进、全链路出 · 真实开源引擎实测",
+        home_arch_btn: "查看系统全景架构与数据流图谱 (System Architecture) ➔",
+        home_docs_title: "高校实验教研资源套件",
+        home_docs_sub: "预置学生指南、教师手册、16周教学大纲及快速体验脚本",
+        home_doc_student: "学生快速入门指南",
+        home_doc_student_desc: "浏览器零安装体验，10分钟熟悉云端工作区、代码运行与结果导出",
+        home_doc_teacher: "教师指导与评分手册",
+        home_doc_teacher_desc: "实验批改标准、评分判据阈值及班级作业管理",
+        home_doc_syllabus: "16 周课程实验大纲",
+        home_doc_syllabus_desc: "从电池机理、整车能耗到智驾测试的完整教学排课参考",
+        home_doc_demo: "10 分钟快速体验脚本",
+        home_doc_demo_desc: "面向答辩、演示与快速功能巡检的脚本化闭环路线",
+        home_doc_view: "打开文档 ↗",
+        feat_real_title: "真实引擎驱动",
+        feat_real_desc: "esmini, SUMO, FASTSim, PyBaMM, FMU 实测验证，绝无假数据以假充真。",
+        feat_chain_title: "全链路协同打通",
+        feat_chain_desc: "打破孤岛，电池标定、整车能耗与动力学闭环自动串联协同更新。",
+        feat_pedagogy_title: "严谨六段式教学",
+        feat_pedagogy_desc: "原理、目的、任务、验证、分析、排错六段式标准与配属教研套件。",
+        feat_grade_title: "实测基准自动评分",
+        feat_grade_desc: "29 套判据阈值全部源自实测物理极限，内置防作弊与教师评定面板。",
+        feat_cloud_title: "弹性云原生沙箱",
+        feat_cloud_desc: "零安装秒级就绪，隔离独立单人容器配额，已预留 GPU 算力感知层。",
+        feat_open_title: "全开源安全审计",
+        feat_open_desc: "全套工具链均采用宽松开源许可证，通过 31 项严格合规安全性审查。",
 
         login_pill: "高校智能电动汽车云仿真平台",
         card_subtitle: "智能电动汽车云仿真实验平台",
@@ -1002,6 +1046,34 @@
         nav_logout: "Logout",
         nav_login: "Login",
         nav_docs: "Lab Docs",
+        nav_intro: "System Intro",
+        login_intro_link: "Platform Overview: Architecture, Dataflow & Features ➔",
+        home_arch_title: "System Architecture & Core Features",
+        home_arch_sub: "6-Layer Cloud-Native Architecture · End-to-End Co-Simulation · Real Engines Verified",
+        home_arch_btn: "View Complete Architecture & Dataflow Diagrams ➔",
+        home_docs_title: "Academic Teaching & Curriculum Suite",
+        home_docs_sub: "Preset Student Guide, Teacher Manual, 16-Week Syllabus & Interactive Demo Script",
+        home_doc_student: "Student Quickstart Guide",
+        home_doc_student_desc: "Zero-install web experience, master cloud workspace, execution and export in 10 mins",
+        home_doc_teacher: "Teacher & Grading Manual",
+        home_doc_teacher_desc: "Grading criteria, auto-evaluation thresholds and class assignment administration",
+        home_doc_syllabus: "16-Week Curriculum Syllabus",
+        home_doc_syllabus_desc: "Complete semester schedule from battery physics, energy consumption to AD testing",
+        home_doc_demo: "10-Min Interactive Demo Script",
+        home_doc_demo_desc: "Guided interactive walkthrough designed for presentations and rapid inspection",
+        home_doc_view: "Open Document ↗",
+        feat_real_title: "Real Engine Verification",
+        feat_real_desc: "esmini, SUMO, FASTSim, PyBaMM, FMU verified with authentic physics — zero fabricated mocks.",
+        feat_chain_title: "End-to-End Co-Simulation",
+        feat_chain_desc: "Breaks silos: battery calibration, vehicle energy and control loops sync automatically.",
+        feat_pedagogy_title: "Rigorous 6-Step Pedagogy",
+        feat_pedagogy_desc: "Theory, objective, tasks, validation, analysis, and debugging standard across all 29 labs.",
+        feat_grade_title: "Empirical Auto-Grading",
+        feat_grade_desc: "29 evaluation thresholds derived from real physics tests, with anti-cheat and grading dashboard.",
+        feat_cloud_title: "Elastic Cloud-Native Sandbox",
+        feat_cloud_desc: "Instant web access, isolated single-user container quota, with GPU perception layer planned.",
+        feat_open_title: "100% Open-Source Audited",
+        feat_open_desc: "Entire toolchain built on permissive open licenses, rigorously cleared through 31 license audits.",
 
         login_pill: "Academic Intelligent EV Cloud Simulation Laboratory",
         card_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
@@ -1207,21 +1279,6 @@
 
     function initLangSwitcher() {
       applyI18n();
-      var btn = document.getElementById("iev-lang-btn");
-      var menu = document.getElementById("iev-lang-menu");
-      if (btn && menu) {
-        btn.addEventListener("click", function(e) {
-          e.stopPropagation();
-          var isOpen = menu.classList.contains("show");
-          if (!isOpen) {
-            menu.classList.add("show");
-            btn.setAttribute("aria-expanded", "true");
-          } else {
-            menu.classList.remove("show");
-            btn.setAttribute("aria-expanded", "false");
-          }
-        });
-      }
     }
 
     if (document.readyState === "loading") {
@@ -1230,9 +1287,31 @@
       initLangSwitcher();
     }
 
-    // Delegated click on document for language options and closing dropdowns
+    // Delegated click on document for language options, button toggle, and closing dropdown
     document.addEventListener("click", function(e) {
-      var opt = e.target.closest(".iev-lang-opt");
+      var btn = document.getElementById("iev-lang-btn");
+      var menu = document.getElementById("iev-lang-menu");
+      if (!btn || !menu) return;
+
+      var clickedBtn = (btn === e.target || btn.contains(e.target));
+      var opt = e.target.closest ? e.target.closest(".iev-lang-opt") : null;
+
+      if (clickedBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var isShown = (menu.style.display === "block" || menu.classList.contains("show"));
+        if (isShown) {
+          menu.style.display = "none";
+          menu.classList.remove("show");
+          btn.setAttribute("aria-expanded", "false");
+        } else {
+          menu.style.display = "block";
+          menu.classList.add("show");
+          btn.setAttribute("aria-expanded", "true");
+        }
+        return;
+      }
+
       if (opt) {
         e.preventDefault();
         e.stopPropagation();
@@ -1240,19 +1319,16 @@
         if (l && window.ievSetLang) {
           window.ievSetLang(l);
         }
-        var m = document.getElementById("iev-lang-menu");
-        var b = document.getElementById("iev-lang-btn");
-        if (m) m.classList.remove("show");
-        if (b) b.setAttribute("aria-expanded", "false");
+        menu.style.display = "none";
+        menu.classList.remove("show");
+        btn.setAttribute("aria-expanded", "false");
         return;
       }
-      var btn = document.getElementById("iev-lang-btn");
-      var menu = document.getElementById("iev-lang-menu");
-      if (menu && menu.classList.contains("show")) {
-        if (!btn || !btn.contains(e.target)) {
-          menu.classList.remove("show");
-          if (btn) btn.setAttribute("aria-expanded", "false");
-        }
+
+      if (!menu.contains(e.target)) {
+        menu.style.display = "none";
+        menu.classList.remove("show");
+        btn.setAttribute("aria-expanded", "false");
       }
     });
   })();
@@ -1713,6 +1789,8 @@
       "从不": "Never"
     };
 
+    var isUpdating = false;
+
     function enhanceAdminRows() {
       var isZh = (window.ievGetLang ? window.ievGetLang() : "zh") === "zh";
       var rows = document.querySelectorAll("#react-admin-hook table.table tbody tr");
@@ -1733,20 +1811,28 @@
             adminCell.setAttribute("data-raw-admin", rawAdmin);
           }
           var isAdmin = (rawAdmin === "admin" || rawAdmin === "管理员" || rawAdmin === "yes" || rawAdmin === "true");
-          if (isAdmin) {
-            adminCell.innerHTML = '<span class="badge" style="background: rgba(21, 94, 239, 0.1); color: #155eef; border: 1px solid rgba(21, 94, 239, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600;">🛡️ ' + (isZh ? '管理员' : 'Admin') + '</span>';
-          } else {
-            adminCell.innerHTML = '<span class="badge" style="background: var(--iev-card-subtle-bg); color: var(--iev-text-muted); border: 1px solid var(--iev-table-border); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500;">' + (isZh ? '普通用户' : 'Standard') + '</span>';
+          var targetBadge = isAdmin ? ("admin-" + (isZh ? "zh" : "en")) : ("user-" + (isZh ? "zh" : "en"));
+          if (adminCell.getAttribute("data-applied-badge") !== targetBadge) {
+            adminCell.setAttribute("data-applied-badge", targetBadge);
+            if (isAdmin) {
+              adminCell.innerHTML = '<span class="badge" style="background: rgba(21, 94, 239, 0.1); color: #155eef; border: 1px solid rgba(21, 94, 239, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600;">🛡️ ' + (isZh ? '管理员' : 'Admin') + '</span>';
+            } else {
+              adminCell.innerHTML = '<span class="badge" style="background: var(--iev-card-subtle-bg); color: var(--iev-text-muted); border: 1px solid var(--iev-table-border); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500;">' + (isZh ? '普通用户' : 'Standard') + '</span>';
+            }
           }
         }
 
         // 服务器状态列 (第 3 列)
         var serverCell = cells[2];
         if (serverCell) {
-          if (isRunning) {
-            serverCell.innerHTML = '<span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>' + (isZh ? '运行中' : 'Running') + '</span>';
-          } else {
-            serverCell.innerHTML = '<span class="badge" style="background: var(--iev-card-subtle-bg); color: var(--iev-text-muted); border: 1px solid var(--iev-table-border); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>' + (isZh ? '未运行' : 'Stopped') + '</span>';
+          var targetServerBadge = isRunning ? ("running-" + (isZh ? "zh" : "en")) : ("stopped-" + (isZh ? "zh" : "en"));
+          if (serverCell.getAttribute("data-applied-badge") !== targetServerBadge) {
+            serverCell.setAttribute("data-applied-badge", targetServerBadge);
+            if (isRunning) {
+              serverCell.innerHTML = '<span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>' + (isZh ? '运行中' : 'Running') + '</span>';
+            } else {
+              serverCell.innerHTML = '<span class="badge" style="background: var(--iev-card-subtle-bg); color: var(--iev-text-muted); border: 1px solid var(--iev-table-border); border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>' + (isZh ? '未运行' : 'Stopped') + '</span>';
+            }
           }
         }
       });
@@ -1785,6 +1871,7 @@
           if (ZH_TO_EN[t]) node.textContent = node.textContent.replace(t, ZH_TO_EN[t]);
         }
       } else if (node.nodeType === 1) {
+        if (node.hasAttribute && node.hasAttribute("data-applied-badge")) return;
         var testid = node.getAttribute && node.getAttribute("data-testid");
         if (testid === "paginate-prev") node.textContent = isZh ? "上一页" : "Previous";
         if (testid === "paginate-next") node.textContent = isZh ? "下一页" : "Next";
@@ -1815,34 +1902,41 @@
     }
 
     function apply() {
-      translateNode(document.body);
-      enhanceAdminRows();
+      if (isUpdating) return;
+      isUpdating = true;
+      var hook = document.getElementById("react-admin-hook");
+      if (hook) {
+        if (obs) obs.disconnect();
+        translateNode(hook);
+        enhanceAdminRows();
+        if (obs) {
+          try {
+            obs.observe(hook, { childList: true, subtree: true });
+          } catch(e) {}
+        }
+      }
+      setTimeout(function() { isUpdating = false; }, 80);
     }
     window.ievAdminRefresh = apply;
 
-    var obs = new MutationObserver(function(muts) {
-      muts.forEach(function(m) {
-        m.addedNodes.forEach(translateNode);
-        if (m.type === "characterData") translateNode(m.target);
+    var obs = null;
+    if (window.MutationObserver) {
+      obs = new MutationObserver(function() {
+        if (!isUpdating) {
+          apply();
+        }
       });
-      enhanceAdminRows();
-    });
+    }
 
     var tries = 0;
     var timer = setInterval(function() {
       tries++;
-      if (document.getElementById("react-admin-hook") || tries > 40) {
+      var el = document.getElementById("react-admin-hook");
+      if (el || tries > 25) {
         clearInterval(timer);
         apply();
-        obs.observe(document.body, {childList: true, subtree: true, characterData: true});
-        var sweep = 0;
-        var sweeper = setInterval(function() {
-          sweep++;
-          apply();
-          if (sweep >= 30) clearInterval(sweeper);
-        }, 1500);
       }
-    }, 250);
+    }, 300);
   })();
   </script>
   <script>

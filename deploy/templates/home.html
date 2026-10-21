@@ -149,6 +149,192 @@
       margin-top: 36px;
       margin-bottom: 36px;
     }
+
+    /* 系统架构全景展卡 (System Architecture Spotlight) */
+    .iev-arch-spotlight {
+      background: var(--iev-card-bg);
+      border: 1px solid var(--iev-card-border);
+      border-radius: 20px;
+      box-shadow: var(--iev-card-shadow);
+      padding: 30px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .iev-arch-spotlight::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #155eef 0%, #00d4ff 50%, #10b981 100%);
+    }
+    .iev-arch-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .iev-arch-header-left {
+      max-width: 680px;
+    }
+    .iev-arch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(21, 94, 239, 0.08);
+      border: 1px solid rgba(21, 94, 239, 0.2);
+      color: #155eef;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    [data-bs-theme="dark"] .iev-arch-pill {
+      background: rgba(0, 212, 255, 0.12);
+      border-color: rgba(0, 212, 255, 0.3);
+      color: #00d4ff;
+    }
+    .iev-arch-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .iev-arch-feat-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--iev-card-subtle-bg);
+      border: 1px solid var(--iev-table-border);
+      border-radius: 14px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .iev-arch-feat-item:hover {
+      transform: translateY(-2px);
+      border-color: rgba(21, 94, 239, 0.4);
+    }
+    [data-bs-theme="dark"] .iev-arch-feat-item:hover {
+      border-color: rgba(0, 212, 255, 0.4);
+    }
+    .iev-arch-feat-icon {
+      font-size: 22px;
+      line-height: 1;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .iev-arch-feat-content h5 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--iev-text-primary);
+      margin: 0 0 4px;
+    }
+    .iev-arch-feat-content p {
+      font-size: 12.5px;
+      color: var(--iev-text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .iev-arch-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%);
+      color: #ffffff !important;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-decoration: none !important;
+      box-shadow: 0 4px 14px rgba(21, 94, 239, 0.28);
+      transition: all 0.18s ease;
+    }
+    .iev-arch-cta-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.38);
+    }
+    [data-bs-theme="dark"] .iev-arch-cta-btn {
+      background: linear-gradient(135deg, #155eef 0%, #00b4ff 100%);
+      box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
+    }
+
+    /* 教研套件卡片网格 (Teaching Suite) */
+    .iev-docs-section {
+      margin-bottom: 36px;
+    }
+    .iev-docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .iev-doc-card {
+      background: var(--iev-card-bg);
+      border: 1px solid var(--iev-card-border);
+      border-radius: 16px;
+      box-shadow: var(--iev-card-shadow);
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .iev-doc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      border-color: rgba(21, 94, 239, 0.35);
+    }
+    [data-bs-theme="dark"] .iev-doc-card:hover {
+      border-color: rgba(0, 212, 255, 0.35);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+    }
+    .iev-doc-icon {
+      font-size: 26px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    .iev-doc-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--iev-text-primary);
+      margin: 0 0 6px;
+    }
+    .iev-doc-desc {
+      font-size: 12.5px;
+      color: var(--iev-text-secondary);
+      line-height: 1.55;
+      margin: 0 0 16px;
+      flex: 1;
+    }
+    .iev-doc-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 9px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: var(--iev-card-subtle-bg);
+      border: 1px solid var(--iev-table-border);
+      color: var(--iev-text-primary) !important;
+      text-decoration: none !important;
+      transition: all 0.15s ease;
+    }
+    .iev-doc-btn:hover {
+      background: #155eef;
+      border-color: #155eef;
+      color: #ffffff !important;
+    }
+    [data-bs-theme="dark"] .iev-doc-btn:hover {
+      background: #00d4ff;
+      border-color: #00d4ff;
+      color: #090d16 !important;
+    }
     .iev-chain-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -517,6 +703,134 @@
           </a>
         </div>
       {% endif %}
+    </div>
+
+    <!-- 系统架构与全景特色 (System Architecture & Highlights) -->
+    <div class="iev-arch-spotlight" id="arch-section">
+      <div class="iev-arch-header">
+        <div class="iev-arch-header-left">
+          <div class="iev-arch-pill">
+            <span>🏛️</span>
+            <span>Cloud-Native EV Sim Architecture</span>
+          </div>
+          <h2 class="iev-section-title" style="margin-bottom: 6px;" data-i18n="home_arch_title">系统架构与功能特色</h2>
+          <p class="iev-section-sub" style="margin-bottom: 0;" data-i18n="home_arch_sub">六层云原生分层架构 · 任一入口进、全链路出 · 真实开源引擎实测</p>
+        </div>
+        <div>
+          <a class="iev-arch-cta-btn" href="{{ base_url }}assets/system-intro.html" target="_blank">
+            <span data-i18n="home_arch_btn">查看系统全景架构与数据流图谱 (System Architecture) ➔</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="iev-arch-features">
+        <div class="iev-arch-feat-item">
+          <div class="iev-arch-feat-icon">🧪</div>
+          <div class="iev-arch-feat-content">
+            <h5 data-i18n="feat_real_title">真实引擎驱动</h5>
+            <p data-i18n="feat_real_desc">esmini, SUMO, FASTSim, PyBaMM, FMU 实测验证，绝无假数据以假充真。</p>
+          </div>
+        </div>
+        <div class="iev-arch-feat-item">
+          <div class="iev-arch-feat-icon">🔗</div>
+          <div class="iev-arch-feat-content">
+            <h5 data-i18n="feat_chain_title">全链路协同打通</h5>
+            <p data-i18n="feat_chain_desc">打破孤岛，电池标定、整车能耗与动力学闭环自动串联协同更新。</p>
+          </div>
+        </div>
+        <div class="iev-arch-feat-item">
+          <div class="iev-arch-feat-icon">📚</div>
+          <div class="iev-arch-feat-content">
+            <h5 data-i18n="feat_pedagogy_title">严谨六段式教学</h5>
+            <p data-i18n="feat_pedagogy_desc">原理、目的、任务、验证、分析、排错六段式标准与配属教研套件。</p>
+          </div>
+        </div>
+        <div class="iev-arch-feat-item">
+          <div class="iev-arch-feat-icon">✅</div>
+          <div class="iev-arch-feat-content">
+            <h5 data-i18n="feat_grade_title">实测基准自动评分</h5>
+            <p data-i18n="feat_grade_desc">29 套判据阈值全部源自实测物理极限，内置防作弊与教师评定面板。</p>
+          </div>
+        </div>
+        <div class="iev-arch-feat-item">
+          <div class="iev-arch-feat-icon">☁️</div>
+          <div class="iev-arch-feat-content">
+            <h5 data-i18n="feat_cloud_title">弹性云原生沙箱</h5>
+            <p data-i18n="feat_cloud_desc">零安装秒级就绪，隔离独立单人容器配额，已预留 GPU 算力感知层。</p>
+          </div>
+        </div>
+        <div class="iev-arch-feat-item">
+          <div class="iev-arch-feat-icon">🔓</div>
+          <div class="iev-arch-feat-content">
+            <h5 data-i18n="feat_open_title">全开源安全审计</h5>
+            <p data-i18n="feat_open_desc">全套工具链均采用宽松开源许可证，通过 31 项严格合规安全性审查。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 高校实验教研资源套件 (Academic Teaching Suite) -->
+    <div class="iev-docs-section" id="teaching-suite-section">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h2 class="iev-section-title" data-i18n="home_docs_title">📖 高校实验教研资源套件</h2>
+          <p class="iev-section-sub" data-i18n="home_docs_sub">预置学生指南、教师手册、16周教学大纲及快速体验脚本</p>
+        </div>
+      </div>
+
+      <div class="iev-docs-grid">
+        <div class="iev-doc-card">
+          <div>
+            <span class="iev-doc-icon">📘</span>
+            <h4 class="iev-doc-title" data-i18n="home_doc_student">学生快速入门指南</h4>
+            <p class="iev-doc-desc" data-i18n="home_doc_student_desc">浏览器零安装体验，10分钟熟悉云端工作区、代码运行与结果导出</p>
+          </div>
+          <div>
+            <a class="iev-doc-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/student_quickstart.md" target="_blank">
+              <span data-i18n="home_doc_view">打开文档 ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="iev-doc-card">
+          <div>
+            <span class="iev-doc-icon">🎓</span>
+            <h4 class="iev-doc-title" data-i18n="home_doc_teacher">教师指导与评分手册</h4>
+            <p class="iev-doc-desc" data-i18n="home_doc_teacher_desc">实验批改标准、评分判据阈值及班级作业管理</p>
+          </div>
+          <div>
+            <a class="iev-doc-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/teacher_guide.md" target="_blank">
+              <span data-i18n="home_doc_view">打开文档 ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="iev-doc-card">
+          <div>
+            <span class="iev-doc-icon">📅</span>
+            <h4 class="iev-doc-title" data-i18n="home_doc_syllabus">16 周课程实验大纲</h4>
+            <p class="iev-doc-desc" data-i18n="home_doc_syllabus_desc">从电池机理、整车能耗到智驾测试的完整教学排课参考</p>
+          </div>
+          <div>
+            <a class="iev-doc-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/syllabus_16weeks.md" target="_blank">
+              <span data-i18n="home_doc_view">打开文档 ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="iev-doc-card">
+          <div>
+            <span class="iev-doc-icon">⏱️</span>
+            <h4 class="iev-doc-title" data-i18n="home_doc_demo">10 分钟快速体验脚本</h4>
+            <p class="iev-doc-desc" data-i18n="home_doc_demo_desc">面向答辩、演示与快速功能巡检的脚本化闭环路线</p>
+          </div>
+          <div>
+            <a class="iev-doc-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/demo_script_10min.md" target="_blank">
+              <span data-i18n="home_doc_view">打开文档 ↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 跨领域数据协同链路 (Data Chains) -->
