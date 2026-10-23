@@ -1,4 +1,5 @@
 {% extends "page.html" %}
+{% block title %}登录 · IEV CloudLab 智能电动汽车云仿真实验平台{% endblock title %}
 {% if announcement_login is string %}
   {% set announcement = announcement_login %}
 {% endif %}
@@ -234,7 +235,7 @@
       <div class="iev-brand">
         <div class="iev-lab-pill">
           <span class="iev-lab-pill-dot"></span>
-          <span data-i18n="login_pill">高校智能电动汽车云仿真平台</span>
+          <span data-i18n="login_pill">智能电动汽车云仿真实验平台</span>
         </div>
         <div>
           <img src="{{ base_url }}assets/logo-mark.svg?v=20261019c" alt="IEV CloudLab"
@@ -288,7 +289,7 @@
 
       <div style="text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--iev-table-border);">
         <a href="{{ base_url }}assets/system-intro.html" target="_blank"
-           style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #155eef; text-decoration: none; padding: 6px 14px; border-radius: 20px; background: var(--iev-card-subtle-bg); border: 1px solid var(--iev-table-border); transition: all 0.2s ease;">
+           style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #155eef; text-decoration: none; padding: 7px 16px; border-radius: 20px; background: var(--iev-card-subtle-bg); border: 1px solid var(--iev-table-border); transition: all 0.2s ease; white-space: nowrap; max-width: 100%; box-sizing: border-box;">
           <span>🏛️</span>
           <span data-i18n="login_intro_link">了解平台：系统架构、数据流与特色功能 ➔</span>
         </a>

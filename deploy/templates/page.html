@@ -33,7 +33,7 @@
     <meta charset="utf-8">
     <title>
       {%- block title -%}
-        JupyterHub
+        IEV CloudLab · 智能电动汽车云仿真实验平台
       {%- endblock title -%}
     </title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
@@ -41,6 +41,9 @@
     {% block stylesheet %}
       <link rel="stylesheet"
             href="{{ static_url('css/style.min.css') }}"
+            type="text/css" />
+      <link rel="stylesheet"
+            href="{{ base_url }}assets/iev-theme.css?v=0.1"
             type="text/css" />
     {% endblock stylesheet %}
     {% block favicon %}
@@ -223,436 +226,7 @@
       transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    /* ---- 统一容器宽度 (三个菜单宽度严格一致 1140px) ---- */
-    .iev-page-container {
-      max-width: var(--iev-page-max-width, 1140px);
-      width: 100%;
-      margin: 0 auto;
-      padding: 32px 24px 64px;
-      box-sizing: border-box;
-    }
-
-    /* ---- 统一页面标题头规范 ---- */
-    .iev-page-header {
-      margin-bottom: 28px;
-    }
-    .iev-page-header .iev-badge-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 14px;
-      border-radius: 20px;
-      background: var(--iev-badge-chip-bg);
-      border: 1px solid var(--iev-badge-chip-border);
-      color: var(--iev-badge-chip-text);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      margin-bottom: 12px;
-    }
-    .iev-page-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--iev-text-primary);
-      letter-spacing: -0.015em;
-      margin: 0 0 6px;
-      line-height: 1.25;
-    }
-    .iev-page-sub {
-      color: var(--iev-text-secondary);
-      font-size: 14px;
-      margin: 0;
-      line-height: 1.5;
-    }
-
-    /* ---- 统一卡片设计规范 ---- */
-    .iev-card {
-      background: var(--iev-card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 20px;
-      border: 1px solid var(--iev-card-border);
-      box-shadow: var(--iev-card-shadow);
-      padding: 32px 32px;
-      margin-bottom: 24px;
-      position: relative;
-      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .iev-section-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--iev-text-primary);
-      margin: 0 0 6px;
-      letter-spacing: -0.01em;
-    }
-    .iev-section-sub {
-      color: var(--iev-text-muted);
-      font-size: 13px;
-      margin: 0 0 20px;
-      line-height: 1.45;
-    }
-
-    /* ---- 统一表单输入组件 ---- */
-    .iev-input, 
-    .form-control, 
-    .form-select {
-      background-color: var(--iev-input-bg) !important;
-      border: 1.5px solid var(--iev-input-border) !important;
-      color: var(--iev-input-text) !important;
-      border-radius: 12px !important;
-      padding: 10px 14px !important;
-      font-size: 14px !important;
-      transition: all 0.18s ease !important;
-    }
-    .iev-input:focus, 
-    .form-control:focus, 
-    .form-select:focus {
-      border-color: var(--iev-input-focus-border) !important;
-      box-shadow: 0 0 0 3.5px var(--iev-input-focus-ring) !important;
-      outline: none !important;
-    }
-    .iev-input::placeholder,
-    .form-control::placeholder {
-      color: var(--iev-text-muted) !important;
-      opacity: 0.8;
-    }
-
-    /* ---- 统一主按钮与操作按钮 ---- */
-    .iev-btn-primary, 
-    .btn-jupyter, 
-    .btn-primary {
-      background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
-      border: none !important;
-      color: #ffffff !important;
-      border-radius: 12px !important;
-      padding: 10px 24px !important;
-      font-weight: 600 !important;
-      font-size: 14px !important;
-      letter-spacing: 0.01em !important;
-      box-shadow: 0 4px 14px rgba(21, 94, 239, 0.28) !important;
-      transition: all 0.18s ease !important;
-      text-decoration: none !important;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .iev-btn-primary:hover, 
-    .btn-jupyter:hover, 
-    .btn-primary:hover {
-      box-shadow: 0 6px 20px rgba(21, 94, 239, 0.4) !important;
-      transform: translateY(-1px);
-      color: #ffffff !important;
-    }
-    .iev-btn-danger-pill,
-    .btn-danger-pill {
-      background: rgba(239, 68, 68, 0.1) !important;
-      border: 1px solid rgba(239, 68, 68, 0.25) !important;
-      color: #ef4444 !important;
-      border-radius: 8px !important;
-      font-size: 12.5px !important;
-      font-weight: 600 !important;
-      padding: 4px 14px !important;
-      transition: all 0.18s ease !important;
-      text-decoration: none !important;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .iev-btn-danger-pill:hover,
-    .btn-danger-pill:hover {
-      background: rgba(239, 68, 68, 0.18) !important;
-      border-color: #ef4444 !important;
-      color: #dc2626 !important;
-    }
-
-    /* ---- 统一表格设计规范 ---- */
-    .table {
-      background-color: var(--iev-table-bg) !important;
-      color: var(--iev-text-primary) !important;
-      border-color: var(--iev-table-border) !important;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 0;
-    }
-    .table thead th {
-      background-color: var(--iev-table-head) !important;
-      color: var(--iev-table-head-text) !important;
-      font-size: 12.5px !important;
-      font-weight: 700 !important;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      padding: 12px 16px !important;
-      border-bottom: 1.5px solid var(--iev-table-border) !important;
-      vertical-align: middle;
-    }
-    .table tbody td {
-      padding: 14px 16px !important;
-      vertical-align: middle !important;
-      border-bottom: 1px solid var(--iev-table-border) !important;
-      color: var(--iev-text-primary) !important;
-      font-size: 13.5px !important;
-      background-color: transparent !important;
-    }
-    .table tbody tr:hover td {
-      background-color: var(--iev-table-hover) !important;
-    }
-
-    /* ---- IEV 顶栏磨砂玻璃与品牌设计 ---- */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 1030;
-      background: var(--iev-nav-bg) !important;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--iev-nav-border);
-      box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
-      padding: 10px 0;
-      margin-bottom: 0 !important;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
-    }
-    .navbar-brand {
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-    }
-    .brand-logo {
-      height: 40px;
-      width: auto;
-      object-fit: contain;
-      margin-right: 12px;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
-      filter: drop-shadow(0 2px 4px rgba(21, 94, 239, 0.15));
-    }
-    .brand-logo:hover {
-      transform: scale(1.03) translateY(-1px);
-      filter: drop-shadow(0 4px 8px rgba(0, 212, 255, 0.3));
-    }
-    .brand-title-wrap {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .brand-title {
-      font-weight: 800;
-      font-size: 17.5px;
-      color: var(--iev-brand-title);
-      letter-spacing: -0.01em;
-      line-height: 1.2;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .brand-tag {
-      font-size: 10.5px;
-      font-weight: 700;
-      padding: 1.5px 6px;
-      border-radius: 6px;
-      background: var(--iev-badge-chip-bg);
-      color: var(--iev-badge-chip-text);
-      border: 1px solid var(--iev-badge-chip-border);
-      letter-spacing: 0.02em;
-    }
-    .brand-subtitle {
-      font-size: 11.5px;
-      color: var(--iev-text-muted);
-      line-height: 1.3;
-      margin-top: 1px;
-      letter-spacing: 0.01em;
-    }
-
-    /* 统一导航链接风格与高亮选中 */
-    .navbar-nav .nav-link {
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--iev-text-secondary) !important;
-      padding: 7px 16px !important;
-      border-radius: 10px;
-      transition: all 0.18s ease;
-      margin: 0 3px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .navbar-nav .nav-link:hover {
-      color: #155eef !important;
-      background: rgba(21, 94, 239, 0.06);
-    }
-    .navbar-nav .nav-link.active {
-      color: #155eef !important;
-      background: rgba(21, 94, 239, 0.1);
-      font-weight: 700;
-    }
-    [data-bs-theme="dark"] .navbar-nav .nav-link {
-      color: #cbd5e1 !important;
-    }
-    [data-bs-theme="dark"] .navbar-nav .nav-link:hover {
-      color: #00d4ff !important;
-      background: rgba(0, 212, 255, 0.08);
-    }
-    [data-bs-theme="dark"] .navbar-nav .nav-link.active {
-      color: #00d4ff !important;
-      background: rgba(0, 212, 255, 0.15);
-      font-weight: 700;
-    }
-    .navbar-nav .nav-link.iev-nav-lab-link {
-      background: linear-gradient(135deg, rgba(21, 94, 239, 0.1) 0%, rgba(0, 212, 255, 0.12) 100%) !important;
-      border: 1px solid rgba(21, 94, 239, 0.25) !important;
-      color: #155eef !important;
-      font-weight: 700 !important;
-      margin-left: 6px;
-    }
-    .navbar-nav .nav-link.iev-nav-lab-link:hover {
-      background: linear-gradient(135deg, rgba(21, 94, 239, 0.2) 0%, rgba(0, 212, 255, 0.22) 100%) !important;
-      border-color: #155eef !important;
-      transform: translateY(-1px);
-    }
-    [data-bs-theme="dark"] .navbar-nav .nav-link.iev-nav-lab-link {
-      background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(21, 94, 239, 0.2) 100%) !important;
-      border-color: rgba(0, 212, 255, 0.35) !important;
-      color: #00d4ff !important;
-    }
-
-    /* 用户徽标与退出按钮 */
-    .user-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(21, 94, 239, 0.08);
-      color: #155eef;
-      border: 1px solid rgba(21, 94, 239, 0.18);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      margin-right: 6px;
-    }
-    [data-bs-theme="dark"] .user-pill {
-      background: rgba(0, 212, 255, 0.1);
-      color: #00d4ff;
-      border-color: rgba(0, 212, 255, 0.25);
-    }
-    .btn-logout {
-      font-size: 13px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 8px;
-      color: #dc2626;
-      border: 1px solid rgba(220, 38, 38, 0.2);
-      background: var(--iev-card-bg);
-      transition: all 0.15s ease;
-      text-decoration: none;
-    }
-    .btn-logout:hover {
-      background: rgba(220, 38, 38, 0.08);
-      border-color: #dc2626;
-      color: #dc2626;
-      text-decoration: none;
-    }
-    #iev-lang-btn::after {
-      display: none !important;
-    }
-    #iev-lang-btn:hover {
-      border-color: #155eef !important;
-      color: #155eef !important;
-    }
-    [data-bs-theme="dark"] #iev-lang-btn:hover {
-      border-color: #00d4ff !important;
-      color: #00d4ff !important;
-    }
-    .iev-lang-opt:hover {
-      background: rgba(21, 94, 239, 0.08) !important;
-      color: #155eef !important;
-    }
-    [data-bs-theme="dark"] .iev-lang-opt:hover {
-      background: rgba(0, 212, 255, 0.12) !important;
-      color: #00d4ff !important;
-    }
-    .iev-lang-opt.active {
-      font-weight: 700 !important;
-      color: #155eef !important;
-    }
-    [data-bs-theme="dark"] .iev-lang-opt.active {
-      color: #00d4ff !important;
-    }
-    .lang-check {
-      display: none !important;
-    }
-    .iev-lang-opt.active .lang-check {
-      display: inline !important;
-    }
-
-    /* 移动端菜单美化 */
-    @media (max-width: 575.98px) {
-      .navbar-collapse {
-        background: var(--iev-card-bg);
-        border: 1px solid var(--iev-card-border);
-        border-radius: 16px;
-        margin-top: 12px;
-        padding: 12px 16px 16px;
-        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15);
-      }
-      .navbar-collapse .navbar-nav .nav-item { padding: 3px 0; }
-      .navbar-collapse .navbar-nav .nav-link {
-        font-size: 15px;
-        padding: 10px 12px !important;
-      }
-      .navbar-collapse ul.nav.navbar-nav.me-2 {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-        border-top: 1px solid var(--iev-table-border);
-        margin-top: 10px;
-        padding-top: 12px;
-      }
-      #login_widget { display: flex; align-items: center; gap: 8px; }
-    }
-    @media (min-width: 576px) {
-      .navbar-nav.me-2 { align-items: center; }
-    }
-
-    /* 底部通用 Footer */
-    .iev-footer {
-      margin-top: auto;
-      padding: 24px 16px;
-      text-align: center;
-      background: var(--iev-footer-bg);
-      border-top: 1px solid var(--iev-footer-border);
-      color: var(--iev-text-muted);
-      font-size: 12.5px;
-    }
-    .iev-footer-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 4px 14px;
-      border-radius: 20px;
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.22);
-      color: #047857;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    [data-bs-theme="dark"] .iev-footer-status {
-      background: rgba(16, 185, 129, 0.12);
-      border-color: rgba(16, 185, 129, 0.3);
-      color: #10b981;
-    }
-    .iev-status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-      animation: iev-pulse-dot 2s infinite;
-    }
-    @keyframes iev-pulse-dot {
-      0% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-      100% { opacity: 1; transform: scale(1); }
-    }
+    /* ---- UI 组件与布局公共样式已分离至 /hub/assets/iev-theme.css ---- */
   </style>
     <noscript>
       <div id='noscript'>
@@ -671,7 +245,7 @@
               <span class="brand-title-wrap">
                 <span class="brand-title">
                   <span>IEV CloudLab</span>
-                  <span class="brand-tag">v0.1</span>
+                  <span class="brand-tag" title="IEV CloudLab 平台版本规范：v0.1 (预览验证版)">v0.1</span>
                 </span>
                 <span class="brand-subtitle" data-i18n="brand_subtitle">智能电动汽车云仿真实验平台</span>
               </span>
@@ -884,7 +458,7 @@
         feat_open_title: "全开源安全审计",
         feat_open_desc: "全套工具链均采用宽松开源许可证，通过 31 项严格合规安全性审查。",
 
-        login_pill: "高校智能电动汽车云仿真平台",
+        login_pill: "智能电动汽车云仿真实验平台",
         card_subtitle: "智能电动汽车云仿真实验平台",
         email_label: "邮箱地址",
         email_ph: "请输入你的邮箱",
@@ -922,9 +496,9 @@
         home_spec_sync: "💾 /opt/ievlab 持久化同步",
         home_spec_labs: "📦 预置 29 门实验 Notebooks",
         home_curr_title: "课程实验体系与仿真工具",
-        home_curr_sub: "8 大专业实验模块 · 29 个仿真实验 · 3 条跨领域数据协同链路",
+        home_curr_sub: "8 大专业实验模块 · 29 个仿真实验 · 4 条跨领域数据协同链路",
         home_filter_all: "全部实验 (29)",
-        home_filter_chains: "🔗 3条数据协同链",
+        home_filter_chains: "🔗 4条数据协同链",
         home_open_nb: "打开 Notebook",
         home_kernel_default: "Python 3.12 默认",
         home_kernel_fastsim: "py310-fastsim 内核",
@@ -934,7 +508,7 @@
         home_prereq_none: "无前置",
         home_prereq: "前置: ",
 
-        chain_section_title: "🔗 三条跨领域数据协同链路 (Cross-Domain Data Chains)",
+        chain_section_title: "🔗 四条跨领域数据协同链路 (Cross-Domain Data Chains)",
         chain_section_sub: "打破单一仿真工具孤岛，通过统一标准化数据流贯通电池机理、整车能耗与自动驾驶控制闭环",
         chain1_badge: "车型设计链 · D → C → A",
         chain1_title: "电池标定 ➔ 整车能耗 ➔ 动力学闭环",
@@ -945,6 +519,9 @@
         chain3_badge: "能量管理链 · E → C → 成绩单",
         chain3_title: "多目标/DP优化 ➔ EMS策略验证 ➔ 综合成绩单",
         chain3_desc: "E2/E4 pymoo 多目标遗传与动态规划优化求解 → FASTSim C4 能量管理策略验证 → 输出综合节能与动力学成绩单",
+        chain4_badge: "感知智驾链 · I 系列（二期规划）",
+        chain4_title: "三维场景 ➔ 传感器感知 ➔ 自动驾驶全栈",
+        chain4_desc: "CARLA/AWSIM 高精场景 → 相机/LiDAR/雷达传感器流 → YOLO目标检测与点云融合 → Autoware 完整驾驶栈闭环验证（GPU 算力舱按需调度）",
 
         mod_a_name: "A. 自动驾驶场景测试（esmini）",
         mod_a_tag: "OpenSCENARIO · TraCI · 5 Labs",
@@ -1075,7 +652,7 @@
         feat_open_title: "100% Open-Source Audited",
         feat_open_desc: "Entire toolchain built on permissive open licenses, rigorously cleared through 31 license audits.",
 
-        login_pill: "Academic Intelligent EV Cloud Simulation Laboratory",
+        login_pill: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
         card_subtitle: "Intelligent Electric Vehicle Cloud Simulation Laboratory",
         email_label: "Email address",
         email_ph: "Enter your university email",
@@ -1113,9 +690,9 @@
         home_spec_sync: "💾 /opt/ievlab Persistent Sync",
         home_spec_labs: "📦 29 Pre-installed Lab Notebooks",
         home_curr_title: "Curriculum Labs & Simulation Toolkit",
-        home_curr_sub: "8 Core Academic Modules · 29 Simulation Labs · 3 Cross-Domain Data Chains",
+        home_curr_sub: "8 Core Academic Modules · 29 Simulation Labs · 4 Cross-Domain Data Chains",
         home_filter_all: "All Labs (29)",
-        home_filter_chains: "🔗 3 Data Chains",
+        home_filter_chains: "🔗 4 Data Chains",
         home_open_nb: "Open Notebook",
         home_kernel_default: "Python 3.12 Default",
         home_kernel_fastsim: "py310-fastsim Kernel",
@@ -1125,7 +702,7 @@
         home_prereq_none: "None",
         home_prereq: "Prereq: ",
 
-        chain_section_title: "🔗 3 Cross-Domain Simulation Chains",
+        chain_section_title: "🔗 4 Cross-Domain Simulation Chains",
         chain_section_sub: "Breaking multi-tool silos by connecting battery electrochemistry, vehicle energy consumption, and autonomous driving closed-loop control via standardized data flows.",
         chain1_badge: "Vehicle Design Chain · D → C → A",
         chain1_title: "Battery Calibration ➔ Vehicle Energy ➔ Dynamics Loop",
@@ -1136,6 +713,9 @@
         chain3_badge: "Energy Management Chain · E → C → Report",
         chain3_title: "Multi-objective / DP ➔ EMS Strategy ➔ Report Card",
         chain3_desc: "E2/E4 pymoo multi-objective genetic & DP optimization → FASTSim C4 EMS strategy verification → comprehensive eco-driving report card",
+        chain4_badge: "Perception & AD Chain · Stage 2",
+        chain4_title: "3D Scenario ➔ Sensor Fusion ➔ Full-Stack AD",
+        chain4_desc: "CARLA/AWSIM 3D scenario → Camera/LiDAR/Radar sensors → YOLO perception & fusion → Autoware full-stack driving verification (on-demand GPU pod)",
 
         mod_a_name: "A. Autonomous Driving Scenario Testing (esmini)",
         mod_a_tag: "OpenSCENARIO · TraCI · 5 Labs",
@@ -1209,7 +789,7 @@
         admin_role_user: "User",
         admin_status_active: "Running",
         admin_status_stopped: "Stopped",
-        admin_tip: "<strong>Admin Tip:</strong> When labs conclude or compute reclamation is needed, click <strong>\\"Stop All\\"</strong> on the right to suspend student containers. Student workspaces at <code>/home/jovyan</code> remain securely saved in persistent volumes.",
+        admin_tip: '<strong>Admin Tip:</strong> When labs conclude or compute reclamation is needed, click <strong>"Stop All"</strong> on the right to suspend student containers. Student workspaces at <code>/home/jovyan</code> remain securely saved in persistent volumes.',
 
         sp_starting: "Starting lab environment…",
         sp_redirect: "Allocating container compute and loading image. Will redirect automatically when ready.",
@@ -1274,6 +854,13 @@
       var sb = document.getElementById("send-code-btn");
       if (sb && !sb.disabled) sb.textContent = t("send_code");
       document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      if (document.title.indexOf("IEV CloudLab") !== -1 || document.title.indexOf("JupyterHub") !== -1) {
+        if (lang === "zh") {
+          document.title = document.title.replace(/JupyterHub/, "IEV CloudLab · 智能电动汽车云仿真实验平台").replace(/Intelligent EV.*/, "智能电动汽车云仿真实验平台");
+        } else {
+          document.title = document.title.replace(/JupyterHub/, "IEV CloudLab").replace(/智能电动汽车云仿真实验平台/, "Intelligent EV Cloud Simulation Lab");
+        }
+      }
     }
     window.ievApplyI18n = applyI18n;
 
@@ -1333,403 +920,7 @@
     });
   })();
   </script>
-  <style>
-  /* ============================================================
-     Admin 管理页统一设计规范 (支持 Light / Dark 模式)
-     对齐、表格、按钮与分页完整美化
-     ============================================================ */
-  #react-admin-hook {
-    width: 100%;
-  }
-  #react-admin-hook .container,
-  #react-admin-hook .container-fluid {
-    max-width: 100% !important;
-    padding: 0 !important;
-  }
-  /* 顶部搜索与筛选栏布局：强制单行或自然换行，消除单元素独占一行居中缺陷 */
-  #react-admin-hook form,
-  #react-admin-hook .row-cols-lg-auto,
-  #react-admin-hook .row {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 12px 16px !important;
-    margin-bottom: 22px !important;
-  }
-  #react-admin-hook .row-cols-lg-auto > .col-12,
-  #react-admin-hook .row > .col-12 {
-    width: auto !important;
-    flex: 0 0 auto !important;
-    max-width: none !important;
-  }
-  #react-admin-hook .admin-header-buttons .form-control,
-  #react-admin-hook input[type="text"] {
-    border-radius: 12px !important;
-    border: 1.5px solid var(--iev-input-border) !important;
-    background: var(--iev-input-bg) !important;
-    color: var(--iev-input-text) !important;
-    padding: 9px 18px !important;
-    font-size: 13.5px !important;
-    min-width: 280px !important;
-    box-shadow: none !important;
-    transition: all 0.18s ease !important;
-  }
-  #react-admin-hook .admin-header-buttons .form-control:focus,
-  #react-admin-hook input[type="text"]:focus {
-    border-color: #155eef !important;
-    box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.18) !important;
-  }
-  #react-admin-hook .form-check {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    margin-bottom: 0 !important;
-    color: var(--iev-text-secondary) !important;
-    font-size: 13.5px !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
-    padding-left: 0 !important;
-  }
-  #react-admin-hook .form-check-input {
-    float: none !important;
-    margin-left: 0 !important;
-    width: 18px !important;
-    height: 18px !important;
-    margin-top: 0 !important;
-    border-radius: 6px !important;
-    border: 1.5px solid var(--iev-input-border) !important;
-    background-color: var(--iev-input-bg) !important;
-    cursor: pointer !important;
-  }
-  #react-admin-hook .form-check-input:checked {
-    background-color: #155eef !important;
-    border-color: #155eef !important;
-  }
-  /* 管理分组按钮 */
-  #react-admin-hook .btn-light,
-  #react-admin-hook button.btn-secondary {
-    background: var(--iev-btn-secondary-bg) !important;
-    border: 1.5px solid var(--iev-btn-secondary-border) !important;
-    color: var(--iev-btn-secondary-text) !important;
-    border-radius: 10px !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    padding: 8px 16px !important;
-    transition: all 0.18s ease !important;
-  }
-  #react-admin-hook .btn-light:hover,
-  #react-admin-hook button.btn-secondary:hover {
-    border-color: #155eef !important;
-    color: #155eef !important;
-    background: rgba(21, 94, 239, 0.08) !important;
-  }
-
-  /* 表格整体美化 */
-  #react-admin-hook table.table {
-    background: var(--iev-table-bg) !important;
-    color: var(--iev-text-primary) !important;
-    border: 1px solid var(--iev-table-border) !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    width: 100% !important;
-    margin-bottom: 0 !important;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
-  }
-  #react-admin-hook table.table thead th {
-    background: var(--iev-table-head) !important;
-    color: var(--iev-table-head-text) !important;
-    font-weight: 700 !important;
-    font-size: 12.5px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
-    padding: 14px 18px !important;
-    border-bottom: 1.5px solid var(--iev-table-border) !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    white-space: nowrap !important;
-    vertical-align: middle !important;
-  }
-
-  /* 首行全局操作行：去除难看的内边框与空白网格，呈现精美操作栏 */
-  #react-admin-hook table.table tbody tr:first-child {
-    background: var(--iev-card-subtle-bg) !important;
-  }
-  #react-admin-hook table.table tbody tr:first-child td {
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: 1.5px solid var(--iev-table-border) !important;
-    padding: 12px 18px !important;
-    background: transparent !important;
-    vertical-align: middle !important;
-  }
-  /* "添加用户" 主操作按钮：渐变色 + 阴影 */
-  #react-admin-hook .add-users-button {
-    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
-    border: none !important;
-    color: #ffffff !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    padding: 8px 18px !important;
-    border-radius: 10px !important;
-    box-shadow: 0 2px 8px rgba(21, 94, 239, 0.28) !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    transition: all 0.18s ease !important;
-  }
-  #react-admin-hook .add-users-button:hover {
-    box-shadow: 0 4px 14px rgba(21, 94, 239, 0.42) !important;
-    transform: translateY(-1px) !important;
-    color: #ffffff !important;
-  }
-  /* 批量操作按钮组：右对齐高质感胶囊按钮 */
-  #react-admin-hook td.admin-header-buttons,
-  #react-admin-hook table.table tbody tr:first-child td:last-child {
-    text-align: right !important;
-    white-space: nowrap !important;
-  }
-  #react-admin-hook td.admin-header-buttons .btn,
-  #react-admin-hook table.table tbody tr:first-child td:last-child .btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    margin-left: 8px !important;
-    padding: 7px 15px !important;
-    border-radius: 9px !important;
-    font-size: 12.5px !important;
-    font-weight: 600 !important;
-    transition: all 0.18s ease !important;
-    text-decoration: none !important;
-  }
-  /* 全部启动：鲜活绿色 */
-  #react-admin-hook .start-all,
-  #react-admin-hook td.admin-header-buttons .btn-primary {
-    background: #10b981 !important;
-    border: 1px solid #059669 !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
-  }
-  #react-admin-hook .start-all:hover,
-  #react-admin-hook td.admin-header-buttons .btn-primary:hover {
-    background: #059669 !important;
-    color: #ffffff !important;
-    transform: translateY(-1px) !important;
-  }
-  /* 全部停止：鲜明红色 */
-  #react-admin-hook .stop-all,
-  #react-admin-hook td.admin-header-buttons .btn-danger:first-of-type {
-    background: #ef4444 !important;
-    border: 1px solid #dc2626 !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
-  }
-  #react-admin-hook .stop-all:hover,
-  #react-admin-hook td.admin-header-buttons .btn-danger:first-of-type:hover {
-    background: #dc2626 !important;
-    color: #ffffff !important;
-    transform: translateY(-1px) !important;
-  }
-  /* 关闭 Hub：琥珀黄色 */
-  #react-admin-hook .shutdown-hub,
-  #react-admin-hook td.admin-header-buttons .btn-danger:last-child {
-    background: #f59e0b !important;
-    border: 1px solid #d97706 !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
-  }
-  #react-admin-hook .shutdown-hub:hover,
-  #react-admin-hook td.admin-header-buttons .btn-danger:last-child:hover {
-    background: #d97706 !important;
-    color: #ffffff !important;
-    transform: translateY(-1px) !important;
-  }
-
-  /* 用户数据数据行规范 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td {
-    padding: 13px 18px !important;
-    font-size: 13.5px !important;
-    border-bottom: 1px solid var(--iev-table-border) !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    color: var(--iev-text-primary) !important;
-    vertical-align: middle !important;
-    background: transparent !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child):hover td {
-    background-color: var(--iev-table-hover) !important;
-  }
-  /* 用户名列加粗 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td:first-child {
-    font-weight: 700 !important;
-    color: var(--iev-text-primary) !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child) td:first-child button {
-    width: 24px !important;
-    height: 24px !important;
-    border-radius: 6px !important;
-    padding: 0 !important;
-    margin-right: 8px !important;
-    background: var(--iev-btn-secondary-bg) !important;
-    border: 1px solid var(--iev-btn-secondary-border) !important;
-    color: var(--iev-text-secondary) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 10px !important;
-  }
-  /* 操作栏按钮组：右对齐精致胶囊按钮 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child {
-    text-align: right !important;
-    white-space: nowrap !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn,
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a.btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    border-radius: 8px !important;
-    padding: 5px 12px !important;
-    font-size: 12.5px !important;
-    font-weight: 600 !important;
-    margin: 0 3px !important;
-    text-decoration: none !important;
-    transition: all 0.16s ease !important;
-    box-shadow: none !important;
-  }
-  /* 启动服务器：轻绿底色药丸 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"] {
-    background: rgba(16, 185, 129, 0.1) !important;
-    border: 1px solid rgba(16, 185, 129, 0.35) !important;
-    color: #059669 !important;
-  }
-  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"] {
-    color: #34d399 !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"]:hover {
-    background: #10b981 !important;
-    color: #ffffff !important;
-    border-color: #10b981 !important;
-  }
-  /* 进入服务器：蓝色主要药丸 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-primary,
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a[class*="access"] {
-    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
-    border: none !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 6px rgba(21, 94, 239, 0.28) !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-primary:hover,
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a[class*="access"]:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 3px 10px rgba(21, 94, 239, 0.4) !important;
-    color: #ffffff !important;
-  }
-  /* 停止服务器：轻红底色药丸 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger,
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"] {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border: 1px solid rgba(239, 68, 68, 0.35) !important;
-    color: #dc2626 !important;
-  }
-  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger,
-  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"] {
-    color: #f87171 !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger:hover,
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"]:hover {
-    background: #ef4444 !important;
-    color: #ffffff !important;
-    border-color: #ef4444 !important;
-  }
-  /* 编辑用户 / 启动页：灰色次要药丸 */
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]) {
-    background: var(--iev-btn-secondary-bg) !important;
-    border: 1px solid var(--iev-btn-secondary-border) !important;
-    color: var(--iev-text-secondary) !important;
-  }
-  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]):hover {
-    border-color: #155eef !important;
-    color: #155eef !important;
-    background: rgba(21, 94, 239, 0.08) !important;
-  }
-
-  /* 分页区域：左右对齐，彻底消除挤压与错位 */
-  #react-admin-hook .pagination-footer,
-  #react-admin-hook div[class*="pagination"] {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 16px !important;
-    margin-top: 22px !important;
-    padding: 18px 4px 0 !important;
-    border-top: 1px solid var(--iev-table-border) !important;
-    color: var(--iev-text-secondary) !important;
-    font-size: 13.5px !important;
-  }
-  #react-admin-hook .pagination-footer > div,
-  #react-admin-hook .pagination-footer > span,
-  #react-admin-hook div[class*="pagination"] > div {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-  }
-  #react-admin-hook .pagination-footer .btn {
-    background: var(--iev-btn-secondary-bg) !important;
-    border: 1px solid var(--iev-btn-secondary-border) !important;
-    color: var(--iev-text-primary) !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    padding: 6px 14px !important;
-    border-radius: 8px !important;
-    margin: 0 4px !important;
-    box-shadow: none !important;
-    transition: all 0.15s ease !important;
-  }
-  #react-admin-hook .pagination-footer .btn:hover:not(:disabled) {
-    border-color: #155eef !important;
-    color: #155eef !important;
-    background: rgba(21, 94, 239, 0.08) !important;
-  }
-  #react-admin-hook .pagination-footer .btn:disabled {
-    opacity: 0.45 !important;
-    cursor: not-allowed !important;
-    border-color: var(--iev-btn-secondary-border) !important;
-    color: var(--iev-text-muted) !important;
-  }
-  #react-admin-hook .pagination-footer select,
-  #react-admin-hook select[name*="page"],
-  #react-admin-hook .pagination-footer .form-control {
-    width: 78px !important;
-    max-width: 80px !important;
-    height: 36px !important;
-    margin: 0 6px !important;
-    padding: 4px 10px !important;
-    border-radius: 8px !important;
-    border: 1.5px solid var(--iev-input-border) !important;
-    background: var(--iev-input-bg) !important;
-    color: var(--iev-input-text) !important;
-    font-size: 13px !important;
-    cursor: pointer !important;
-    display: inline-block !important;
-  }
-  #react-admin-hook .pagination-footer label {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    margin-bottom: 0 !important;
-    font-size: 13px !important;
-    color: var(--iev-text-secondary) !important;
-  }
-  </style>
+  
   <script>
   /* Admin 管理页双向动态翻译与表格数据行美化 */
   (function() {

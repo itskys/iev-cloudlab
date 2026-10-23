@@ -1,0 +1,395 @@
+/* IEV CloudLab Admin Styles (v0.1) */
+     Admin 管理页统一设计规范 (支持 Light / Dark 模式)
+     对齐、表格、按钮与分页完整美化
+     ============================================================ */
+  #react-admin-hook {
+    width: 100%;
+  }
+  #react-admin-hook .container,
+  #react-admin-hook .container-fluid {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  /* 顶部搜索与筛选栏布局：强制单行或自然换行，消除单元素独占一行居中缺陷 */
+  #react-admin-hook form,
+  #react-admin-hook .row-cols-lg-auto,
+  #react-admin-hook .row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 12px 16px !important;
+    margin-bottom: 22px !important;
+  }
+  #react-admin-hook .row-cols-lg-auto > .col-12,
+  #react-admin-hook .row > .col-12 {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+  }
+  #react-admin-hook .admin-header-buttons .form-control,
+  #react-admin-hook input[type="text"] {
+    border-radius: 12px !important;
+    border: 1.5px solid var(--iev-input-border) !important;
+    background: var(--iev-input-bg) !important;
+    color: var(--iev-input-text) !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    min-width: 280px !important;
+    box-shadow: none !important;
+    transition: all 0.18s ease !important;
+  }
+  #react-admin-hook .admin-header-buttons .form-control:focus,
+  #react-admin-hook input[type="text"]:focus {
+    border-color: #155eef !important;
+    box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.18) !important;
+  }
+  #react-admin-hook .form-check {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+    color: var(--iev-text-secondary) !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    padding-left: 0 !important;
+  }
+  #react-admin-hook .form-check-input {
+    float: none !important;
+    margin-left: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-top: 0 !important;
+    border-radius: 6px !important;
+    border: 1.5px solid var(--iev-input-border) !important;
+    background-color: var(--iev-input-bg) !important;
+    cursor: pointer !important;
+  }
+  #react-admin-hook .form-check-input:checked {
+    background-color: #155eef !important;
+    border-color: #155eef !important;
+  }
+  /* 管理分组按钮 */
+  #react-admin-hook .btn-light,
+  #react-admin-hook button.btn-secondary {
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1.5px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-btn-secondary-text) !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    transition: all 0.18s ease !important;
+  }
+  #react-admin-hook .btn-light:hover,
+  #react-admin-hook button.btn-secondary:hover {
+    border-color: #155eef !important;
+    color: #155eef !important;
+    background: rgba(21, 94, 239, 0.08) !important;
+  }
+
+  /* 表格整体美化 */
+  #react-admin-hook table.table {
+    background: var(--iev-table-bg) !important;
+    color: var(--iev-text-primary) !important;
+    border: 1px solid var(--iev-table-border) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
+  }
+  #react-admin-hook table.table thead th {
+    background: var(--iev-table-head) !important;
+    color: var(--iev-table-head-text) !important;
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 14px 18px !important;
+    border-bottom: 1.5px solid var(--iev-table-border) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+  }
+
+  /* 首行全局操作行：去除难看的内边框与空白网格，呈现精美操作栏 */
+  #react-admin-hook table.table tbody tr:first-child {
+    background: var(--iev-card-subtle-bg) !important;
+  }
+  #react-admin-hook table.table tbody tr:first-child td {
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 1.5px solid var(--iev-table-border) !important;
+    padding: 12px 18px !important;
+    background: transparent !important;
+    vertical-align: middle !important;
+  }
+  /* "添加用户" 主操作按钮：渐变色 + 阴影 */
+  #react-admin-hook .add-users-button {
+    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 8px 18px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(21, 94, 239, 0.28) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.18s ease !important;
+  }
+  #react-admin-hook .add-users-button:hover {
+    box-shadow: 0 4px 14px rgba(21, 94, 239, 0.42) !important;
+    transform: translateY(-1px) !important;
+    color: #ffffff !important;
+  }
+  /* 批量操作按钮组：右对齐高质感胶囊按钮 */
+  #react-admin-hook td.admin-header-buttons,
+  #react-admin-hook table.table tbody tr:first-child td:last-child {
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+  #react-admin-hook td.admin-header-buttons .btn,
+  #react-admin-hook table.table tbody tr:first-child td:last-child .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-left: 8px !important;
+    padding: 7px 15px !important;
+    border-radius: 9px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    transition: all 0.18s ease !important;
+    text-decoration: none !important;
+  }
+  /* 全部启动：鲜活绿色 */
+  #react-admin-hook .start-all,
+  #react-admin-hook td.admin-header-buttons .btn-primary {
+    background: #10b981 !important;
+    border: 1px solid #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+  }
+  #react-admin-hook .start-all:hover,
+  #react-admin-hook td.admin-header-buttons .btn-primary:hover {
+    background: #059669 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+  }
+  /* 全部停止：鲜明红色 */
+  #react-admin-hook .stop-all,
+  #react-admin-hook td.admin-header-buttons .btn-danger:first-of-type {
+    background: #ef4444 !important;
+    border: 1px solid #dc2626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
+  }
+  #react-admin-hook .stop-all:hover,
+  #react-admin-hook td.admin-header-buttons .btn-danger:first-of-type:hover {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+  }
+  /* 关闭 Hub：琥珀黄色 */
+  #react-admin-hook .shutdown-hub,
+  #react-admin-hook td.admin-header-buttons .btn-danger:last-child {
+    background: #f59e0b !important;
+    border: 1px solid #d97706 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
+  }
+  #react-admin-hook .shutdown-hub:hover,
+  #react-admin-hook td.admin-header-buttons .btn-danger:last-child:hover {
+    background: #d97706 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* 用户数据数据行规范 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td {
+    padding: 13px 18px !important;
+    font-size: 13.5px !important;
+    border-bottom: 1px solid var(--iev-table-border) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    color: var(--iev-text-primary) !important;
+    vertical-align: middle !important;
+    background: transparent !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child):hover td {
+    background-color: var(--iev-table-hover) !important;
+  }
+  /* 用户名列加粗 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:first-child {
+    font-weight: 700 !important;
+    color: var(--iev-text-primary) !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:first-child button {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+    padding: 0 !important;
+    margin-right: 8px !important;
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-secondary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
+  }
+  /* 操作栏按钮组：右对齐精致胶囊按钮 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child {
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a.btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    border-radius: 8px !important;
+    padding: 5px 12px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    margin: 0 3px !important;
+    text-decoration: none !important;
+    transition: all 0.16s ease !important;
+    box-shadow: none !important;
+  }
+  /* 启动服务器：轻绿底色药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"] {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
+    color: #059669 !important;
+  }
+  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"] {
+    color: #34d399 !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="start"]:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+  }
+  /* 进入服务器：蓝色主要药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-primary,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a[class*="access"] {
+    background: linear-gradient(135deg, #155eef 0%, #003eb3 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(21, 94, 239, 0.28) !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-primary:hover,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child a[class*="access"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 10px rgba(21, 94, 239, 0.4) !important;
+    color: #ffffff !important;
+  }
+  /* 停止服务器：轻红底色药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"] {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    color: #dc2626 !important;
+  }
+  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger,
+  [data-bs-theme="dark"] #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"] {
+    color: #f87171 !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn-danger:hover,
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn[class*="stop"]:hover {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+  }
+  /* 编辑用户 / 启动页：灰色次要药丸 */
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]) {
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-secondary) !important;
+  }
+  #react-admin-hook table.table tbody tr:not(:first-child) td:last-child .btn:not(.btn-danger):not(.btn-primary):not([class*="start"]):not([class*="stop"]):hover {
+    border-color: #155eef !important;
+    color: #155eef !important;
+    background: rgba(21, 94, 239, 0.08) !important;
+  }
+
+  /* 分页区域：左右对齐，彻底消除挤压与错位 */
+  #react-admin-hook .pagination-footer,
+  #react-admin-hook div[class*="pagination"] {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    margin-top: 22px !important;
+    padding: 18px 4px 0 !important;
+    border-top: 1px solid var(--iev-table-border) !important;
+    color: var(--iev-text-secondary) !important;
+    font-size: 13.5px !important;
+  }
+  #react-admin-hook .pagination-footer > div,
+  #react-admin-hook .pagination-footer > span,
+  #react-admin-hook div[class*="pagination"] > div {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  #react-admin-hook .pagination-footer .btn {
+    background: var(--iev-btn-secondary-bg) !important;
+    border: 1px solid var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-primary) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    margin: 0 4px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }
+  #react-admin-hook .pagination-footer .btn:hover:not(:disabled) {
+    border-color: #155eef !important;
+    color: #155eef !important;
+    background: rgba(21, 94, 239, 0.08) !important;
+  }
+  #react-admin-hook .pagination-footer .btn:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    border-color: var(--iev-btn-secondary-border) !important;
+    color: var(--iev-text-muted) !important;
+  }
+  #react-admin-hook .pagination-footer select,
+  #react-admin-hook select[name*="page"],
+  #react-admin-hook .pagination-footer .form-control {
+    width: 78px !important;
+    max-width: 80px !important;
+    height: 36px !important;
+    margin: 0 6px !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid var(--iev-input-border) !important;
+    background: var(--iev-input-bg) !important;
+    color: var(--iev-input-text) !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+  }
+  #react-admin-hook .pagination-footer label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    color: var(--iev-text-secondary) !important;
+  }

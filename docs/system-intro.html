@@ -57,22 +57,32 @@
     <button onclick="setFig('arch','en',this)">English</button>
   </div>
   <figure>
-    <img id="fig-arch" src="/hub/assets/fig1_architecture_cn.png" alt="系统架构图">
-    <figcaption>图 1 · 系统架构图：从学生浏览器到仿真引擎与教学管理的完整分层。</figcaption>
+    <a id="link-fig-arch" href="/hub/assets/fig1_architecture_cn.png" target="_blank" title="点击查看高清大图">
+      <img id="fig-arch" src="/hub/assets/fig1_architecture_cn.png" alt="系统架构图" style="cursor: zoom-in; transition: transform 0.2s ease;">
+    </a>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+      <figcaption style="margin-top: 0;">图 1 · 系统架构图：从学生浏览器到仿真引擎与教学管理的完整分层。</figcaption>
+      <a id="zoom-arch-btn" href="/hub/assets/fig1_architecture_cn.png" target="_blank" style="font-size: 13px; font-weight: 600; color: var(--blue); text-decoration: none; padding: 4px 12px; border-radius: 999px; background: #eef2ff; border: 1px solid #c7d2fe; white-space: nowrap;">🔍 点开看高清大图 ↗</a>
+    </div>
   </figure>
 </section>
 
 <section>
   <h2>数据流与工作流 <span class="en">Data Flow &amp; Workflows</span></h2>
-  <p>核心理念是「任一入口进，全链路出」：数据沿三条链在实验间流动——<b>车型设计链</b>（电池标定→整车能耗→智驾测试）、<b>算法开发链</b>（控制器→闭环→指标→调参）、<b>能量管理链</b>（优化→验证→成绩单）；成绩则经自动汇总与评分引擎流向教师面板。</p>
+  <p>核心理念是「任一入口进，全链路出」：数据沿四条链在实验间流动——<b>车型设计链</b>（电池标定→整车能耗→智驾测试）、<b>算法开发链</b>（控制器→闭环→指标→调参）、<b>能量管理链</b>（优化→验证→成绩单）、<b>感知链（二期规划）</b>（CARLA/AWSIM三维场景→传感器数据→YOLO目标检测与融合→Autoware完整驾驶栈）；成绩则经自动汇总与评分引擎流向教师面板。</p>
   <div class="figbar">
     <span>图版：</span>
     <button class="on" onclick="setFig('flow','cn',this)">中文版</button>
     <button onclick="setFig('flow','en',this)">English</button>
   </div>
   <figure>
-    <img id="fig-flow" src="/hub/assets/fig2_dataflow_cn.png" alt="数据流与工作流图">
-    <figcaption>图 2 · 数据流与工作流图：三条链、成绩流与师生双角色工作流。</figcaption>
+    <a id="link-fig-flow" href="/hub/assets/fig2_dataflow_cn.png" target="_blank" title="点击查看高清大图">
+      <img id="fig-flow" src="/hub/assets/fig2_dataflow_cn.png" alt="数据流与工作流图" style="cursor: zoom-in; transition: transform 0.2s ease;">
+    </a>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+      <figcaption style="margin-top: 0;">图 2 · 数据流与工作流图：四条链（含感知链二期）、成绩流与师生双角色工作流。</figcaption>
+      <a id="zoom-flow-btn" href="/hub/assets/fig2_dataflow_cn.png" target="_blank" style="font-size: 13px; font-weight: 600; color: var(--blue); text-decoration: none; padding: 4px 12px; border-radius: 999px; background: #eef2ff; border: 1px solid #c7d2fe; white-space: nowrap;">🔍 点开看高清大图 ↗</a>
+    </div>
   </figure>
 </section>
 
@@ -104,7 +114,7 @@
   <div class="note">诚实边界：I 系列（感知与完整自动驾驶栈）为二期规划、尚未上线，图中以虚线框标注；A 系列中 esmini 目标车在 ctypes 模式下为冻结状态（等价静态障碍物），已在每个受影响实验中如实声明。</div>
 </section>
 
-<footer>IEV CloudLab · 智能电动汽车云仿真实验平台 · <a href="/hub/login">登录平台</a></footer>
+<footer>IEV CloudLab · 智能电动汽车云仿真实验平台 · <a href="/hub/login" style="white-space: nowrap;">登录平台</a></footer>
 </div>
 
 <script>
@@ -113,6 +123,10 @@ function setFig(which, lang, btn){
     ? '/hub/assets/fig1_architecture' + (lang === 'cn' ? '_cn' : '') + '.png'
     : '/hub/assets/fig2_dataflow' + (lang === 'cn' ? '_cn' : '') + '.png';
   document.getElementById('fig-' + which).src = src;
+  var link = document.getElementById('link-fig-' + which);
+  if (link) link.href = src;
+  var zoomBtn = document.getElementById('zoom-' + which + '-btn');
+  if (zoomBtn) zoomBtn.href = src;
   var bar = btn.parentElement;
   for (var i = 0; i < bar.children.length; i++) {
     if (bar.children[i].tagName === 'BUTTON') bar.children[i].classList.remove('on');

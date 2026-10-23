@@ -1,4 +1,11 @@
 {% extends "page.html" %}
+{% block title %}管理控制台 · IEV CloudLab 智能电动汽车云仿真实验平台{% endblock title %}
+{% block stylesheet %}
+  {{ super() }}
+  <link rel="stylesheet"
+        href="{{ base_url }}assets/iev-admin.css?v=0.1"
+        type="text/css" />
+{% endblock stylesheet %}
 {% block main %}
   <style>
     .iev-admin-stat-card {

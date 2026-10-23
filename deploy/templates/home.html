@@ -1,4 +1,5 @@
 {% extends "page.html" %}
+{% block title %}实验工作台 · IEV CloudLab 智能电动汽车云仿真实验平台{% endblock title %}
 {% if announcement_home is string %}
   {% set announcement = announcement_home %}
 {% endif %}
@@ -337,8 +338,8 @@
     }
     .iev-chain-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
       margin-top: 16px;
     }
     .iev-chain-card {
@@ -837,7 +838,7 @@
     <div class="iev-chains-section" id="chains-section">
       <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
-          <h2 class="iev-section-title" data-i18n="chain_section_title">🔗 三条跨领域数据协同链路 (Cross-Domain Data Chains)</h2>
+          <h2 class="iev-section-title" data-i18n="chain_section_title">🔗 四条跨领域数据协同链路 (Cross-Domain Data Chains)</h2>
           <p class="iev-section-sub" data-i18n="chain_section_sub">打破单一仿真工具孤岛，通过统一标准化数据流贯通电池机理、整车能耗与自动驾驶控制闭环</p>
         </div>
       </div>
@@ -884,6 +885,20 @@
             <span class="iev-flow-step">成绩单 JSON</span>
           </div>
         </div>
+
+        <!-- 链 4 -->
+        <div class="iev-chain-card" style="border-style: dashed;">
+          <span class="iev-chain-badge" style="background: rgba(94, 53, 177, 0.1); color: #5e35b1; border-color: rgba(94, 53, 177, 0.25);" data-i18n="chain4_badge">感知智驾链 · I 系列（二期规划）</span>
+          <h4 class="iev-chain-title" data-i18n="chain4_title">三维场景 ➔ 传感器感知 ➔ 自动驾驶全栈</h4>
+          <p class="iev-chain-desc" data-i18n="chain4_desc">CARLA/AWSIM 高精场景 → 相机/LiDAR/雷达传感器流 → YOLO目标检测与点云融合 → Autoware 完整驾驶栈闭环验证（GPU 算力舱按需调度）</p>
+          <div class="iev-chain-flow">
+            <span class="iev-flow-step">CARLA/AWSIM</span>
+            <span class="iev-flow-arrow">➔</span>
+            <span class="iev-flow-step">Camera/LiDAR</span>
+            <span class="iev-flow-arrow">➔</span>
+            <span class="iev-flow-step">YOLO/Autoware</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -892,7 +907,7 @@
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
           <h2 class="iev-section-title" data-i18n="home_curr_title">📚 课程实验体系与仿真工具</h2>
-          <p class="iev-section-sub" data-i18n="home_curr_sub">8 大专业实验模块 · 29 个仿真实验 · 3 条跨领域数据协同链路</p>
+          <p class="iev-section-sub" data-i18n="home_curr_sub">8 大专业实验模块 · 29 个仿真实验 · 4 条跨领域数据协同链路</p>
         </div>
         <div class="iev-filter-bar">
           <button type="button" class="iev-filter-btn active" data-filter="all" data-i18n="home_filter_all">全部实验 (29)</button>
