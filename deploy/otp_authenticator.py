@@ -2,6 +2,7 @@
 # 流程：登录页只显示邮箱输入框（不预置任何地址）→ 点"发送验证码" →
 # 邮箱在允许列表才真发（Gmail SMTP），否则返回同样的"已发送"提示（防枚举）→
 # 输入 6 位码 → 验证通过按映射得用户名。
+import asyncio
 import json
 import re
 import secrets
@@ -133,7 +134,12 @@ class EmailOTPAuthenticator(Authenticator):
             "sends": entry["sends"] + [now],
         }
         try:
-            self._send_mail(email, code)
+            # [Bug修复 - 2026-10-25 给 Muse 说明]：
+            # 原 self._send_mail 为同步阻塞网络 I/O（包含 DNS 查询、TLS 握手和 Gmail SMTP 认证，耗时 2~5s 甚至 20s 超时）。
+            # 在 Tornado 单线程异步事件循环中直接调用同步发信，会导致整个 JupyterHub 主进程完全阻塞挂起，
+            # 其他学生的请求、页面刷新、单用户容器生命周期探测全部暂停响应。
+            # 此处使用 asyncio.to_thread 放入后台线程池执行，确保 Tornado 主事件循环平稳运行。
+            await asyncio.to_thread(self._send_mail, email, code)
             self.log.info("OTP sent to %s", email)
         except Exception as e:
             # 发送失败则作废该码，避免用户拿着收不到的码干等

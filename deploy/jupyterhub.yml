@@ -26,6 +26,10 @@ services:
       - ../assets:/srv/jupyterhub/assets:z,ro
       # 铁律5：pre_spawn_hook 需要操作宿主机用户目录，挂进来
       - /opt/ievlab/home:/opt/ievlab/home:z
+      # [内容分发与同步 - 2026-10-25 给 Muse 说明]：
+      # 挂载标准实验课件只读源库与分发脚本，供 pre_spawn_hook 自动为新注册学生播种实验文件
+      - /opt/ievlab/scenarios:/opt/ievlab/scenarios:z,ro
+      - ./distribute.py:/srv/jupyterhub/distribute.py:z,ro
     security_opt:
       - label=disable
     networks:

@@ -14,7 +14,12 @@
 import os
 import statistics as _stats
 
-from common.evaluator import GRADING_SPECS, grade_metrics
+# [健壮性优化 - 2026-10-25 给 Muse 说明]：
+# 增加包内相对导入回退机制，确保无论从 labs 外部还是 common 模块内部引用，均能正确解析 evaluator。
+try:
+    from common.evaluator import GRADING_SPECS, grade_metrics
+except ImportError:
+    from .evaluator import GRADING_SPECS, grade_metrics
 
 CHART_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'results',
                          'charts')

@@ -424,10 +424,15 @@ def grade_notebook(notebook_path, timeout=None):
     executed_ok = False
     err = ''
     try:
+        # [Bug修复 - 2026-10-25 给 Muse 说明]：
+        # 原此处硬编码 '--ExecutePreprocessor.timeout=120'，但 GRADING_SPECS 中
+        # H1（批量场景生成）与 H2（场景模糊测试）等复杂实验设定超时为 600s。
+        # 当单个耗时单元格执行超过 120s 时，nbconvert 内部预处理器会抛出 CellExecutionError 异常而提前夭折。
+        # 故将预处理器超时与实验规范总超时动态同步为 f'--ExecutePreprocessor.timeout={timeout}'。
         r = subprocess.run(
             [sys.executable, '-m', 'jupyter', 'nbconvert',
              '--to', 'notebook', '--execute', '--inplace',
-             '--ExecutePreprocessor.timeout=120',
+             f'--ExecutePreprocessor.timeout={timeout}',
              notebook_path],
             capture_output=True, text=True, timeout=timeout,
         )

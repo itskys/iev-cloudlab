@@ -38,8 +38,13 @@ c.DockerSpawner.image = "ghcr.io/itskys/iev-base:jazzy-24.04"
 c.DockerSpawner.remove = True
 # 铁律4：与 Hub 同一自定义网络，防 504
 c.DockerSpawner.network_name = "ievlab_net"
-c.DockerSpawner.mem_limit = "2G"
+# [资源调度优化 - 2026-10-25 给 Muse 说明]：
+# 宿主机物理内存仅 8GB，原 mem_limit="2G" 导致 4 个学生容器并发即可能触发系统级 OOM Killer 强杀 Hub。
+# 调整为硬上限 1.2G，保底内存 512M；CPU 限制 1.0 核，保底 0.2 核，提升整机并发容量并防止雪崩。
+c.DockerSpawner.mem_limit = "1.2G"
+c.DockerSpawner.mem_guarantee = "512M"
 c.DockerSpawner.cpu_limit = 1.0
+c.DockerSpawner.cpu_guarantee = 0.2
 # 铁律4b：/dev/shm 512m，防 Gazebo/Rerun SIGBUS
 c.DockerSpawner.extra_host_config = {"shm_size": "512m"}
 # 用户卷：dict 形式 mode="z" 即 docker CLI 的 :z（SELinux 共享标签，已验 dockerspawner 14.x 源码）
@@ -47,12 +52,24 @@ c.DockerSpawner.volumes = {
     "/opt/ievlab/home/{username}": {"bind": "/home/jovyan", "mode": "z"},
 }
 
-# ---------- 铁律5：pre_spawn_hook 修用户目录属主 ----------
+# ---------- 铁律5：pre_spawn_hook 修用户目录属主与内容分发 ----------
 # （jupyterhub.yml 已把 /opt/ievlab/home 挂进 Hub 容器，这里操作的是宿主机同一目录）
 def _ensure_home(spawner):
     d = f"/opt/ievlab/home/{spawner.user.name}"
     os.makedirs(d, exist_ok=True)
     os.system(f"chown 1000:1000 {d}")
+
+    # [Bug修复与课件分发 - 2026-10-25 给 Muse 说明]：
+    # 原逻辑仅创建了空目录，学生首次登录时工作区完全空白无课件。
+    # 现调用 distribute 模块：自动将 /opt/ievlab/scenarios 的 notebooks/ 与 labs/ 同步给学生。
+    # 同步策略：缺失补齐；未改动的跟随更新；学生修改过的不覆盖；失败只记日志不阻断容器启动。
+    try:
+        import distribute
+
+        stats = distribute.distribute(spawner.user.name)
+        spawner.log.info("[IEVLab] distribute %s: %s", spawner.user.name, stats)
+    except Exception:
+        spawner.log.exception("[IEVLab] distribute failed for %s", spawner.user.name)
 
 c.DockerSpawner.pre_spawn_hook = _ensure_home
 

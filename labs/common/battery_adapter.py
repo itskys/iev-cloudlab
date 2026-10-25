@@ -49,8 +49,11 @@ class BatteryFASTSimAdapter:
 
         E = ∫ OCV(soc) * Q_nominal * dsoc
         """
-        # 梯形积分：∫ ocv_v d(soc) * 容量(Ah) = Wh
-        energy_wh = np.trapz(self.ocv_v, self.soc) * nominal_capacity_ah
+        # [兼容性优化 - 2026-10-25 给 Muse 说明]：
+        # np.trapz 在 NumPy 2.0+ 中已被移除并更名为 np.trapezoid。
+        # 此处采用动态回退探测，确保在 NumPy 1.x (1.26.4) 与 2.x 环境下均可平滑运行。
+        _trapz = getattr(np, 'trapezoid', getattr(np, 'trapz', None))
+        energy_wh = _trapz(self.ocv_v, self.soc) * nominal_capacity_ah
         return energy_wh / 1000.0  # kWh
 
     def apply_to_vehicle(self, veh, nominal_capacity_ah: float):

@@ -57,11 +57,16 @@ def main():
         out_path = os.path.join(out_dir, 'all_results.json')
         with open(out_path, 'w') as f:
             json.dump(all_results, f, ensure_ascii=False, indent=2)
-        # teacher容器内文件属主应为jovyan(1000)
+        # [权限加固 - 2026-10-25 给 Muse 说明]：
+        # Host cron 通常以 root 身份运行，写入的文件属主若为 root:root 且仅 0644，
+        # teacher 容器（以 jovyan UID 1000 运行）在调用 gradebook 或归档时会报 PermissionDenied。
+        # 故统一赋权 1000:1000 并给予 0666 权限，防止教师面板保存/刷新失败。
         try:
             os.chown(out_path, 1000, 1000)
             os.chown(out_dir, 1000, 1000)
-        except PermissionError:
+            os.chmod(out_path, 0o666)
+            os.chmod(out_dir, 0o775)
+        except (PermissionError, OSError):
             pass
     n_exp = sum(len(v) for v in all_results.values())
     print(f'Collected: {len(all_results)} students, {n_exp} experiment '

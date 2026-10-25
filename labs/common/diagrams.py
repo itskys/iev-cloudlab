@@ -15,6 +15,12 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 import numpy as np
 
+# [优化 - 2026-10-25 给 Muse 说明]：
+# 配置中文无衬线字体回退链与负号正常显示支持。
+# 配合 iev-base 镜像预装的 fonts-noto-cjk / fonts-wqy-zenhei，图表可安全渲染中文字符而不出现豆腐块。
+plt.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'WenQuanYi Zen Hei', 'SimHei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+
 
 def _setup(ax, title, xlabel='', ylabel=''):
     ax.set_title(title, fontsize=12, fontweight='bold')

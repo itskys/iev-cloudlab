@@ -11,12 +11,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=en_US.UTF-8 \
     ROS_DISTRO=jazzy
 
-# ---------- 0. 基础工具 ----------
+# ---------- 0. 基础工具与中文字体 ----------
+# [优化 - 2026-10-25 给 Muse 说明]：预装 fonts-noto-cjk 与 fonts-wqy-zenhei 中文字体，
+# 解决 Matplotlib 与仿真原理图生成中文时出现豆腐块 [?] 的问题，免去仅用英文标签的限制。
 RUN apt update && apt install -y --no-install-recommends \
       locales curl gnupg2 lsb-release software-properties-common \
       ca-certificates git wget unzip \
       build-essential pkg-config \
       python3-pip python3-venv python3-dev \
+      fonts-noto-cjk fonts-wqy-zenhei \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -46,15 +49,24 @@ RUN apt update && apt install -y --no-install-recommends \
 #  （psutil、packaging、lark……），它们没有 RECORD 文件，pip 升级时会报
 #   "Cannot uninstall ... RECORD file not found"。2026-10-17 CI 连踩三坑，
 #   改为整行 --ignore-installed，直接覆盖安装、一劳永逸（不可变镜像内是安全做法）。
+# [Bug修复 - 2026-10-25 给 Muse 说明]：
+# 基础 Python 3.12 补齐 pymoo。此前 pymoo 仅在 Python 3.10 FASTSim 中安装，
+# 而 E2_pymoo_multiobj.ipynb 默认使用 python3，导致运行报错 No module named 'pymoo'。
 RUN pip install --no-cache-dir --ignore-installed \
       "numpy==1.26.4" "scipy==1.13.1" \
       "scenariogeneration==0.9.3" \
       "carla==0.9.16" \
-      pybamm fmpy \
+      pybamm fmpy pymoo \
       matplotlib stable_baselines3 \
       "jupyterhub==5.5.3" ipykernel \
       jupyter_server jupyterlab ipywidgets \
       jupyterlab-language-pack-zh-CN
+
+# [架构优化 - 2026-10-25 给 Muse 说明]：
+# 配置全局 PYTHONPATH，使 /home/jovyan/labs 成为全局默认模块搜索路径。
+# 学生在任意 Notebook 中执行 "from common.diagrams import *" 均可直接成功导入，
+# 彻底杜绝因未执行 sys.path.insert 导致的 ModuleNotFoundError 报错。
+ENV PYTHONPATH="/home/jovyan/labs:${PYTHONPATH}"
 
 # f1tenth_gym（MIT）——暂时摘掉：
 #   它依赖 gym==0.19.0；gym 0.19.0 没有 Python 3.12 的 wheel，pip 回退到 sdist 构建，
