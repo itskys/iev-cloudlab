@@ -1,4 +1,4 @@
-"""IEV CloudLab 共享库 v0.9.0"""
+"""IEV CloudLab 工业级共享库 v1.0.0"""
 from .controller import BaseController, PIDController
 from .esmini_env import EsminiEnv, KinematicBicycleModel
 from .battery_adapter import BatteryFASTSimAdapter
@@ -59,8 +59,24 @@ from .plagiarism_detector import (
     scan_class_code_plagiarism,
     render_plagiarism_report_html,
 )
+from .copilot import (
+    diagnose_experiment,
+    render_copilot_card,
+    ask_copilot,
+)
+from .v2x_fleet import (
+    V2XMessage,
+    V2XWirelessChannel,
+    CACCPlatoonSimulator,
+    render_v2x_topology_html,
+)
+from .semester_archiver import (
+    export_student_portfolio,
+    export_teacher_semester_archive,
+    render_download_link_html,
+)
 
-__version__ = "0.9.0"
+__version__ = "1.0.0"
 __all__ = [
     "BaseController", "PIDController",
     "EsminiEnv", "KinematicBicycleModel",
@@ -92,4 +108,10 @@ __all__ = [
     "compute_code_diff", "render_time_machine_html", "show_time_machine",
     # 教师端 AST 语法树代码查重 (P2.3)
     "check_code_similarity", "scan_class_code_plagiarism", "render_plagiarism_report_html",
+    # 智能工程导师与启发式伴学 Copilot (P3.1)
+    "diagnose_experiment", "render_copilot_card", "ask_copilot",
+    # 多车分布式 V2X CACC 编队引擎 (P3.2)
+    "V2XMessage", "V2XWirelessChannel", "CACCPlatoonSimulator", "render_v2x_topology_html",
+    # 学期结课总归档与毕业成就包 (P3.3)
+    "export_student_portfolio", "export_teacher_semester_archive", "render_download_link_html",
 ]
