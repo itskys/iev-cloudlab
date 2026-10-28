@@ -73,14 +73,14 @@ def _ensure_home(spawner):
 
 c.DockerSpawner.pre_spawn_hook = _ensure_home
 
-# ---------- idle-culler：1200s 空闲回收 ----------
+# ---------- idle-culler：3600s (1小时) 空闲回收 (采纳 Muse 实测调优) ----------
 c.JupyterHub.services = [
     {
         "name": "idle-culler",
         "admin": True,
         "command": [
             sys.executable, "-m", "jupyterhub_idle_culler",
-            "--timeout=1200",
+            "--timeout=3600",
         ],
     }
 ]
