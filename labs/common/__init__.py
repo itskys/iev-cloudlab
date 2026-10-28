@@ -1,4 +1,4 @@
-"""IEV CloudLab 共享库 v0.7.0"""
+"""IEV CloudLab 共享库 v0.8.0"""
 from .controller import BaseController, PIDController
 from .esmini_env import EsminiEnv, KinematicBicycleModel
 from .battery_adapter import BatteryFASTSimAdapter
@@ -29,8 +29,25 @@ from .skills_profiler import (
     render_class_weakness_html,
     SKILL_DIMENSIONS,
 )
+from .xosc_converter import (
+    create_cutin_scenario_xosc,
+    create_ccr_braking_scenario_xosc,
+    validate_xosc_xml,
+    render_xosc_download_button,
+    batch_generate_scenarios,
+)
+from .report_evaluator import (
+    evaluate_report_comprehensively,
+    render_report_evaluation_card,
+)
+from .student_cockpit import (
+    get_student_study_progress,
+    render_student_cockpit_html,
+    pre_submit_report_check,
+    scan_personal_results,
+)
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __all__ = [
     "BaseController", "PIDController",
     "EsminiEnv", "KinematicBicycleModel",
@@ -49,4 +66,12 @@ __all__ = [
     "compute_student_skill_profile", "render_student_radar_svg",
     "compute_class_skills_matrix", "render_class_weakness_html",
     "SKILL_DIMENSIONS",
+    # OpenSCENARIO 工业级导出与转换器 (T2.1)
+    "create_cutin_scenario_xosc", "create_ccr_braking_scenario_xosc",
+    "validate_xosc_xml", "render_xosc_download_button", "batch_generate_scenarios",
+    # 实验报告综合质性评定 (T2.2)
+    "evaluate_report_comprehensively", "render_report_evaluation_card",
+    # 学生自主学习驾驶舱与预审自检 (T2.3)
+    "get_student_study_progress", "render_student_cockpit_html",
+    "pre_submit_report_check", "scan_personal_results",
 ]
