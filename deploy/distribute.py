@@ -29,7 +29,7 @@ MANIFEST_NAME = ".ievlab_manifest.json"
 EXCLUDE_DIRS = {"__pycache__", ".ipynb_checkpoints", "archive"}
 EXCLUDE_FILES = {"教师面板_成绩与学生管理.ipynb"}
 # results/ 只建空目录，不分发其中内容（那是学生自己的产出区）
-EMPTY_DIRS = {"labs/data/results"}
+EMPTY_DIRS = {"labs/data/results", "labs/data/benchmarks"}
 
 SETTINGS_REL = (
     ".jupyter/lab/user-settings/@jupyterlab/"
@@ -106,9 +106,14 @@ def distribute(username):
         else:
             stats["skipped_foreign"] += 1  # 非分发放入：不碰
 
-    # 空目录（学生产出区）只建目录本身
+    # 空目录（学生产出区）只建目录本身，并赋予可写权限
     for rel in EMPTY_DIRS:
-        _ensure_dir(os.path.join(home, rel.replace("/", os.sep)), created_dirs)
+        target_dir = os.path.join(home, rel.replace("/", os.sep))
+        _ensure_dir(target_dir, created_dirs)
+        try:
+            os.chmod(target_dir, 0o777)
+        except OSError:
+            pass
 
     # [优化 - 2026-10-25 给 Muse 说明]：为学生目录自动补齐 README.md 快速入门指引
     quickstart_src = os.path.join(SRC, "student_quickstart.md")
