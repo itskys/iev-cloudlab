@@ -150,6 +150,12 @@ def diagnose_experiment(
     """
     clean_id = experiment_id.replace('_pro', '')
     spec = DIAGNOSTIC_KNOWLEDGE_BASE.get(clean_id)
+    if not spec:
+        for k, v in DIAGNOSTIC_KNOWLEDGE_BASE.items():
+            if k == clean_id or k.startswith(f"{clean_id}_") or clean_id.startswith(f"{k}_"):
+                spec = v
+                clean_id = k
+                break
 
     findings = []
     if spec:
