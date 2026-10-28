@@ -184,7 +184,7 @@ GRADING_SPECS = {
         'timeout': 600,
         'criteria': [
             ('calibration_error_pct', {'type': 'max', 'value': 5.0, 'weight': 3,
-                                       'desc': '标定误差<5%（实测1.05%）'}),
+                                       'desc': '最大标定误差<5%（C/20相对C/50参考）'}),
         ],
     },
     'D4_lithium_plating': {
