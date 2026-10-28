@@ -16,18 +16,32 @@ def load_bev_list():
     return [(int(idx), row.get('veh_year', '?')) for idx, row in bevs.iterrows()]
 
 
-def run_udds(vnum: int, cycle_name: str = 'udds') -> dict:
+def run_udds(vnum: int, cycle_name: str = 'udds', veh=None, apply_chained_battery: bool = True) -> dict:
     """跑一条循环工况，返回关键指标。
 
     :param vnum: 车型编号（见 load_bev_list）
     :param cycle_name: 工况名（'udds' / 'hwfet' / 'us06'）
-    :return: {'kwh_per_100km': float, 'simdrive': SimDrive}
+    :param veh: 自定义 Vehicle 实例（若为 None 则从数据库加载 vnum）
+    :param apply_chained_battery: 是否尝试动态加载 D3 电池标定数据（默认开启）
+    :return: {'kwh_per_100km': float, 'simdrive': SimDrive, 'vehicle': veh, 'cycle': cyc, 'chain_validation': dict}
     """
     from fastsim.vehicle import Vehicle, DEFAULT_VEH_DB
     from fastsim import cycle
     from fastsim.simdrive import SimDrive
 
-    veh = Vehicle.from_file(DEFAULT_VEH_DB, vnum=vnum)
+    if veh is None:
+        veh = Vehicle.from_file(DEFAULT_VEH_DB, vnum=vnum)
+        if apply_chained_battery:
+            try:
+                from common.chain_validator import load_chained_battery_model
+                veh, _ = load_chained_battery_model(veh)
+            except Exception:
+                try:
+                    from .chain_validator import load_chained_battery_model
+                    veh, _ = load_chained_battery_model(veh)
+                except Exception:
+                    pass
+
     cyc = cycle.Cycle.from_file(cycle_name)
     sd = SimDrive(cyc, veh)
     sd.sim_drive()
@@ -40,6 +54,7 @@ def run_udds(vnum: int, cycle_name: str = 'udds') -> dict:
         'simdrive': sd,
         'vehicle': veh,
         'cycle': cyc,
+        'chain_validation': getattr(veh, '_chain_validation', None),
     }
 
 
