@@ -734,3 +734,8 @@ def render_trajectory_replay(
         return HTML(html_code)
     except ImportError:
         return html_code
+
+
+# 兼容性别名
+render_visualizer_html = render_trajectory_replay
+

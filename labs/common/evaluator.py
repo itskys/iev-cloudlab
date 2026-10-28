@@ -297,6 +297,22 @@ GRADING_SPECS = {
                                     'desc': '误触发率<5%（实测0%）'}),
         ],
     },
+    # ---------- Capstone: 全域全链路大作业 ----------
+    'Capstone_iev_integrated': {
+        'name': '全域端到端闭环大作业',
+        'timeout': 600,
+        'criteria': [
+            ('collision', {'type': 'equals', 'value': False, 'weight': 3,
+                           'desc': '全程零碰撞（避险成功）'}),
+            ('min_ttc_s', {'type': 'min', 'value': 1.5, 'weight': 2,
+                           'desc': '最小TTC≥1.5s（满足避险安全余量）'}),
+            ('energy_kwh_100km', {'type': 'range', 'min': 10.0, 'max': 20.0,
+                                  'weight': 2,
+                                  'desc': '百公里电耗处于真实物理区间 [10, 20]'}),
+            ('capstone_completed', {'type': 'equals', 'value': True, 'weight': 1,
+                                    'desc': '感-算-控-电-网全链路闭环执行完成'}),
+        ],
+    },
 }
 
 
@@ -388,7 +404,7 @@ def grade_metrics(experiment_id, metrics, executed_ok=None):
     if executed_ok is None:
         score = score * (100.0 / 90.0)  # 无执行信息时按90分满分折算
 
-    return {
+    res = {
         'experiment': experiment_id,
         'name': spec['name'],
         'score': round(min(score, 100.0), 1),
@@ -397,6 +413,21 @@ def grade_metrics(experiment_id, metrics, executed_ok=None):
         'details': details,
         'graded_at': datetime.now().isoformat(timespec='seconds'),
     }
+
+    # 达标自动打下安全快照锚点 (P2.2 时光机保护)
+    if res['passed']:
+        try:
+            from common.snapshot_manager import create_snapshot
+            for c_nb in [f"{experiment_id}_pro.ipynb", f"{experiment_id}.ipynb"]:
+                for base_p in ['notebooks', '.', '/home/jovyan/notebooks']:
+                    p = os.path.join(base_p, c_nb)
+                    if os.path.exists(p):
+                        create_snapshot(p, f"评测自动锚点 ({res['score']}分)", score=res['score'])
+                        break
+        except Exception:
+            pass
+
+    return res
 
 
 def grade_result_file(experiment_id):

@@ -1,4 +1,4 @@
-"""IEV CloudLab 共享库 v0.8.0"""
+"""IEV CloudLab 共享库 v0.9.0"""
 from .controller import BaseController, PIDController
 from .esmini_env import EsminiEnv, KinematicBicycleModel
 from .battery_adapter import BatteryFASTSimAdapter
@@ -46,8 +46,21 @@ from .student_cockpit import (
     pre_submit_report_check,
     scan_personal_results,
 )
+from .snapshot_manager import (
+    create_snapshot,
+    list_snapshots,
+    restore_snapshot,
+    compute_code_diff,
+    render_time_machine_html,
+    show_time_machine,
+)
+from .plagiarism_detector import (
+    check_code_similarity,
+    scan_class_code_plagiarism,
+    render_plagiarism_report_html,
+)
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 __all__ = [
     "BaseController", "PIDController",
     "EsminiEnv", "KinematicBicycleModel",
@@ -74,4 +87,9 @@ __all__ = [
     # 学生自主学习驾驶舱与预审自检 (T2.3)
     "get_student_study_progress", "render_student_cockpit_html",
     "pre_submit_report_check", "scan_personal_results",
+    # 学生端代码时光机与自动快照 (P2.2)
+    "create_snapshot", "list_snapshots", "restore_snapshot",
+    "compute_code_diff", "render_time_machine_html", "show_time_machine",
+    # 教师端 AST 语法树代码查重 (P2.3)
+    "check_code_similarity", "scan_class_code_plagiarism", "render_plagiarism_report_html",
 ]
