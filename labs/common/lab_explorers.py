@@ -1913,3 +1913,2112 @@ def show_e3_explorer():
     ])
     display(controls)
     update_view()
+
+
+# ==============================================================================
+# 16. A4: 交叉口无保护左转让行博弈与避撞探索器
+# ==============================================================================
+
+def show_a4_explorer():
+    """A4 交叉口无保护左转让行直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_gap = widgets.FloatSlider(value=4.0, min=2.0, max=7.0, step=0.5, description="让行时隙门槛 (s):", readout_format=".1f", style={"description_width": "140px"})
+    slider_opp_v = widgets.IntSlider(value=60, min=30, max=80, step=5, description="对向来车速度 (km/h):", style={"description_width": "150px"})
+    btn_run = widgets.Button(description="🚀 模拟左转穿越博弈", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：来车 60km/h 时，时隙门槛调到多少既安全又不死等？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            v_opp = slider_opp_v.value / 3.6 # m/s
+            t_gap_thresh = slider_gap.value
+            d_init_opp = 75.0 # m
+
+            # 对向车到达冲突区时间
+            t_opp_reach = d_init_opp / v_opp
+            # 冲突区通过时长 (车长 4.5m + 冲突区 10m)
+            t_opp_clear = (d_init_opp + 15.0) / v_opp
+
+            # 自车决策
+            will_yield = t_opp_reach < t_gap_thresh
+            t = np.linspace(0, 10, 501)
+            
+            # 自车左转轨迹 (弧长 25m, 冲突区在 10m~18m)
+            # 匀加速到 15 km/h (4.17 m/s)
+            v_turn_max = 4.17
+            a_turn = 1.5
+
+            if not will_yield:
+                # 抢行穿行
+                t_start = 0.0
+            else:
+                # 让行：等对向车离开冲突区后再起步
+                t_start = t_opp_clear + 0.3
+
+            ego_s = np.zeros_like(t)
+            opp_x = d_init_opp - v_opp * t
+
+            for i in range(len(t)):
+                if t[i] >= t_start:
+                    dt_move = t[i] - t_start
+                    # 运动距离
+                    t_acc = v_turn_max / a_turn
+                    if dt_move < t_acc:
+                        ego_s[i] = 0.5 * a_turn * dt_move**2
+                    else:
+                        ego_s[i] = 0.5 * a_turn * t_acc**2 + v_turn_max * (dt_move - t_acc)
+
+            # 冲突区判定：ego_s 在 [10, 18], opp_x 在 [-5, 8]
+            crashed = False
+            crash_t = None
+            min_dist = float("inf")
+            for i in range(len(t)):
+                # 相对距离估算
+                dist = np.sqrt((ego_s[i] - 14.0)**2 + (opp_x[i] - 0.0)**2)
+                min_dist = min(min_dist, dist)
+                in_ego = 10.0 <= ego_s[i] <= 18.0
+                in_opp = -5.0 <= opp_x[i] <= 8.0
+                if in_ego and in_opp:
+                    crashed = True
+                    crash_t = t[i]
+                    break
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            # 时空占用图
+            ax1.plot(t, ego_s, color="#2563eb", linewidth=2.2, label="自车左转进程 (m)")
+            ax1.axhspan(10.0, 18.0, color="#fbbf24", alpha=0.25, label="路口中心冲突区")
+            ax1.axvspan(t_opp_reach, t_opp_clear, color="#f43f5e", alpha=0.25, label="对向直行车占用时窗")
+            if crashed:
+                ax1.scatter([crash_t], [14.0], color="#dc2626", s=120, zorder=5, marker="X", label=f"发生垂直侧碰 ({crash_t:.1f}s)")
+            ax1.set_xlabel("仿真时间 (s)")
+            ax1.set_ylabel("左转路径位移 (m)")
+            ax1.set_title("交叉口冲突区时空占用窗口对比")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend(loc="upper left")
+
+            # 对向车距离与避险间隙
+            ax2.plot(t, opp_x, color="#475569", linestyle="--", label="对向车与路口距离 (m)")
+            ax2.axhline(0.0, color="#dc2626", linestyle=":", label="路口冲突中心线")
+            ax2.set_xlabel("仿真时间 (s)")
+            ax2.set_ylabel("对向车纵向相对坐标 (m)")
+            ax2.set_title(f"对向直行车逼近轨迹 ({slider_opp_v.value} km/h)")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            if crashed:
+                badge_text = "🔴 发生侧向垂直碰撞 (T-bone)"
+                badge_color = "red"
+                insight = "<b>危险穿行</b>：让行门槛过小导致自车贸然抢行，恰好与对向高速直行车辆在路口中心发生严重侧碰！请增大时隙门槛。"
+            elif will_yield:
+                badge_text = "🟢 成功让行安全穿行"
+                badge_color = "green"
+                insight = f"<b>守法让行</b>：识别到对向车距离过近（预计 {t_opp_reach:.1f}s 到达），自车主动在停车线等待其驶离冲突区后起步通过，确保 100% 安全。"
+            else:
+                badge_text = "⚡ 充分时隙果断抢行通过"
+                badge_color = "yellow"
+                insight = f"<b>安全穿越</b>：对向车距离充足（需 {t_opp_reach:.1f}s 到达），自车果断起步穿过冲突区，未造成交通死锁。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 A4 交叉口博弈决策研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>对向车到达冲突区耗时</b>: {t_opp_reach:.2f} 秒 (设定时隙门槛: {t_gap_thresh:.1f}s)；<br/>
+                    • <b>博弈决策行为</b>: {"主动减速等待让行" if will_yield else "直接起步左转穿越"}；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("A4_intersection_yield", {
+                "experiment": "A4_intersection_yield",
+                "mode": "novice_preview",
+                "gap_threshold": slider_gap.value,
+                "opp_speed": slider_opp_v.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 A4 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节让行时隙门槛与对向来车速度，观察时空冲突窗口，找出“既不被对向车侧面撞击、又不过度等待造成死锁”的黄金安全时隙。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_gap, slider_opp_v, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 17. A5: 匝道加速汇入主线博弈探索器
+# ==============================================================================
+
+def show_a5_explorer():
+    """A5 匝道加速汇入主线直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_accel = widgets.FloatSlider(value=1.8, min=0.8, max=3.0, step=0.2, description="匝道加速度 (m/s²):", readout_format=".1f", style={"description_width": "140px"})
+    slider_gap = widgets.FloatSlider(value=2.5, min=1.2, max=4.5, step=0.3, description="主线前后车时距 (s):", readout_format=".1f", style={"description_width": "150px"})
+    btn_run = widgets.Button(description="🚀 模拟加速并入主线", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：加速度不足时并入主线为什么会导致后车急刹？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            a_ego = slider_accel.value
+            v_main = 22.22 # 80 km/h
+            v_ramp_init = 11.11 # 40 km/h
+            ramp_len = 150.0 # 加速车道 150m
+
+            # 自车到达汇入点耗时与汇入时速
+            # s = v0*t + 0.5*a*t^2
+            t_merge = (-v_ramp_init + np.sqrt(v_ramp_init**2 + 2*a_ego*ramp_len)) / a_ego
+            v_ego_merge = v_ramp_init + a_ego * t_merge
+            speed_delta_kmh = (v_main - v_ego_merge) * 3.6
+
+            # 主线前后车：前车在 t=0 到达汇入点，后车在 t=slider_gap 到达汇入点
+            t_trail_reach = slider_gap.value
+            trail_dist_at_merge = (t_trail_reach - t_merge) * v_main
+
+            # 后车避让制动需求
+            if trail_dist_at_merge < 8.0 or speed_delta_kmh > 25.0:
+                trail_decel = -4.5
+                crashed = trail_dist_at_merge < 3.0
+            else:
+                trail_decel = max(-2.5, -speed_delta_kmh / 8.0)
+                crashed = False
+
+            t = np.linspace(0, 10, 301)
+            ego_speed = np.minimum(v_main, v_ramp_init + a_ego * t)
+            ego_pos = np.zeros_like(t)
+            for i in range(1, len(t)):
+                ego_pos[i] = ego_pos[i-1] + ego_speed[i-1] * (t[i]-t[i-1])
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(t, ego_speed * 3.6, color="#2563eb", linewidth=2.2, label="自车加速车速 (km/h)")
+            ax1.axhline(80.0, color="#16a34a", linestyle="--", label="主线巡航基准时速 (80 km/h)")
+            ax1.axvline(t_merge, color="#fbbf24", linestyle=":", label=f"并入主线时刻 ({t_merge:.1f}s)")
+            ax1.set_xlabel("时间 (s)")
+            ax1.set_ylabel("车速 (km/h)")
+            ax1.set_title("匝道加速段车速提升过程")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            bars = ax2.bar(["并入时自车时速", "主线车流时速", "主线速差"], [v_ego_merge*3.6, 80.0, speed_delta_kmh], color=["#2563eb", "#16a34a", "#f43f5e" if speed_delta_kmh>15 else "#94a3b8"], width=0.45)
+            ax2.set_ylabel("时速 (km/h)")
+            ax2.set_title("汇入瞬态车速匹配度")
+            for b in bars:
+                ax2.text(b.get_x() + b.get_width()/2., b.get_height() + 1.0, f"{b.get_height():.1f}", ha="center", va="bottom", fontweight="bold")
+            ax2.grid(True, axis="y", alpha=0.3, linestyle="--")
+
+            plt.tight_layout()
+            plt.show()
+
+            if crashed:
+                badge_text = "🔴 汇入严重逼停/追尾"
+                badge_color = "red"
+            elif speed_delta_kmh <= 10.0 and trail_dist_at_merge >= 12.0:
+                badge_text = "🟢 完美车速匹配平稳汇入"
+                badge_color = "green"
+            else:
+                badge_text = "🟡 速度偏低后车受迫减速"
+                badge_color = "yellow"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 A5 匝道合流物理指标研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>汇入点时速</b>: {v_ego_merge*3.6:.1f} km/h (与主线速差: {speed_delta_kmh:.1f} km/h)；<br/>
+                    • <b>主线后车间隙</b>: {trail_dist_at_merge:.1f} 米 (后车制动响应: {trail_decel:.2f} m/s²)；<br/>
+                    • <b>物理因果分析</b>: 匝道合流的核心是‘在有限加速距离内将车速提至与主线一致’。速差大于 15 km/h 会强制迫使主线车流急刹，引发通行瓶颈甚至幽灵堵车！
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("A5_merge_kinematic", {
+                "experiment": "A5_merge_kinematic",
+                "mode": "novice_preview",
+                "ramp_accel": slider_accel.value,
+                "main_gap": slider_gap.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 A5 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节匝道加速度，观察汇入瞬态车速匹配与主线后车制动响应，体会高速合流‘以速度换安全’的动态机理。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_accel, slider_gap, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 18. B3: V2X CACC 4车编队弦稳定性探索器
+# ==============================================================================
+
+def show_b3_explorer():
+    """B3 车联网 CACC 编队弦稳定性直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_delay = widgets.FloatSlider(value=0.08, min=0.0, max=0.30, step=0.02, description="V2X 通信时延 (s):", readout_format=".2f", style={"description_width": "140px"})
+    slider_gap = widgets.FloatSlider(value=0.6, min=0.3, max=1.4, step=0.1, description="编队期望时距 (s):", readout_format=".1f", style={"description_width": "140px"})
+    btn_run = widgets.Button(description="🚀 模拟编队扰动传递", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：通信时延超过多少时后车扰动开始逐级放大（失稳）？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            tau = slider_delay.value
+            th = slider_gap.value
+            t = np.linspace(0, 15, 301)
+            dt = 0.05
+
+            # 头车速度：在 t=3s 时急刹减速 -3m/s2 持续 1.5s，随后恢复
+            v0 = 20.0 * np.ones_like(t)
+            a0 = np.zeros_like(t)
+            for i in range(len(t)):
+                if 2.5 <= t[i] < 4.0:
+                    a0[i] = -3.0
+                elif 4.0 <= t[i] < 5.5:
+                    a0[i] = 3.0
+                if i > 0:
+                    v0[i] = v0[i-1] + a0[i-1] * dt
+
+            # 4车编队仿真 (Car 0, 1, 2, 3)
+            # 传递增益模型：G = (1 + Kff*s)/(1 + Th*s + 0.5*s^2) * e^(-s*tau)
+            # 经验弦稳定判据：当 tau > 0.18 或 th 过小时，增益 > 1.0 (失稳)
+            gain = (1.0 + 3.5 * tau) / (1.0 + 0.8 * (th - 0.5))
+
+            v = np.zeros((4, len(t)))
+            v[0, :] = v0
+            peak_decel = [3.0]
+
+            for car in range(1, 4):
+                amp = 3.0 * (gain ** car)
+                peak_decel.append(round(amp, 2))
+                shift_idx = int((car * th + car * tau) / dt)
+                v_car = 20.0 * np.ones_like(t)
+                for i in range(len(t)):
+                    orig_idx = i - shift_idx
+                    if 0 <= orig_idx < len(t):
+                        # 扰动波动
+                        delta = (v0[orig_idx] - 20.0) * (gain ** car)
+                        v_car[i] = 20.0 + delta
+                v[car, :] = v_car
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            colors = ["#0f172a", "#2563eb", "#f59e0b", "#dc2626"]
+            for car in range(4):
+                c_name = "领航车" if car == 0 else f"跟驰车 {car}"
+                ax1.plot(t, v[car, :], color=colors[car], linewidth=2.0 if car==0 else 1.8, label=f"Car {car} ({c_name})")
+            ax1.set_xlabel("时间 (s)")
+            ax1.set_ylabel("车速 (m/s)")
+            ax1.set_title("4车编队车速扰动传递曲线")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            bars = ax2.bar([f"Car {i}" for i in range(4)], peak_decel, color=colors, width=0.5)
+            ax2.axhline(3.0, color="#64748b", linestyle="--", label="头车扰动基准 (3.0 m/s²)")
+            ax2.set_ylabel("最大减速度峰值 (m/s²)")
+            ax2.set_title("车队减速度峰值传递 (弦稳定性)")
+            for b in bars:
+                ax2.text(b.get_x() + b.get_width()/2., b.get_height() + 0.1, f"{b.get_height():.2f}", ha="center", va="bottom", fontweight="bold")
+            ax2.grid(True, axis="y", alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            stable = gain <= 1.05
+            if stable:
+                badge_text = f"🟢 弦稳定 (扰动衰减率 {(1.0-gain)*100:.1f}%)"
+                badge_color = "green"
+                insight = "<b>车队弦稳定 (String Stable)</b>：后车减速波动逐级减弱收敛，车队不会发生‘幽灵堵车’，0.6s 超近车头时距安全可靠！"
+            else:
+                badge_text = f"🔴 弦失稳 (扰动逐级放大 {(gain-1.0)*100:.1f}%)"
+                badge_color = "red"
+                insight = f"<b>车队弦失稳 (String Unstable)</b>：通信时延偏大导致前馈信息滞后，第 3 辆车制动峰值达到 {peak_decel[3]:.1f} m/s²（比头车放大 {(peak_decel[3]/3.0-1)*100:.0f}%），极易在队尾引发追尾！"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else "#dc2626")}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 B3 CACC 编队弦稳定性研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else "#fee2e2")}; color: {("#15803d" if badge_color=="green" else "#dc2626")}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>扰动放大因子 Gain</b>: {gain:.3f} (基准要求: ≤ 1.0$)；<br/>
+                    • <b>第 4 辆车制动冲击</b>: {peak_decel[3]:.2f} m/s² (领航头车: 3.00 m/s²)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("B3_sumo_cacc", {
+                "experiment": "B3_sumo_cacc",
+                "mode": "novice_preview",
+                "v2x_delay": slider_delay.value,
+                "headway": slider_gap.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 B3 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节 V2X 通信时延与期望时距，观察头车急刹扰动在 4 车队列中的波动收敛情况，理解‘弦稳定性’的核心本质。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_delay, slider_gap, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 19. B5: 干线绿波带协调控制探索器
+# ==============================================================================
+
+def show_b5_explorer():
+    """B5 干线多交叉口绿波带协调直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_offset = widgets.IntSlider(value=24, min=0, max=60, step=2, description="信号相位差 (s):", style={"description_width": "120px"})
+    slider_speed = widgets.IntSlider(value=50, min=30, max=70, step=5, description="绿波巡航速度 (km/h):", style={"description_width": "150px"})
+    btn_run = widgets.Button(description="🚀 绘制干线时空图", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：车速 50km/h 且路口间距 400m 时，最佳相位差是多少？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            offset = slider_offset.value
+            v_des = slider_speed.value / 3.6 # m/s
+            cycle = 60.0
+            green_len = 30.0
+            d_inter = 400.0 # 400m 间距，共 3 个路口 (0, 400, 800)
+
+            # 理论最佳相位差：delta_phi = d / v
+            ideal_offset = (d_inter / v_des) % cycle
+            offset_err = abs(offset - ideal_offset)
+
+            # 绿波带宽估算 (max 30s)
+            bandwidth = max(0.0, green_len - offset_err)
+
+            # 车辆行驶轨迹
+            t_traj = np.linspace(0, 80, 401)
+            x_traj = v_des * t_traj
+
+            fig, ax = plt.subplots(figsize=(12, 4.2))
+            # 绘制 3 个路口的红绿灯周期 (x=0, x=400, x=800)
+            inter_pos = [0.0, 400.0, 800.0]
+            stops = 0
+
+            for idx, x_p in enumerate(inter_pos):
+                phi = (idx * offset) % cycle
+                for c_start in range(-60, 120, int(cycle)):
+                    g_start = c_start + phi
+                    g_end = g_start + green_len
+                    ax.plot([g_start, g_end], [x_p, x_p], color="#16a34a", linewidth=6, solid_capstyle="butt", label="绿灯放行" if idx==0 and c_start==0 else "")
+                    ax.plot([g_end, g_start + cycle], [x_p, x_p], color="#dc2626", linewidth=3, solid_capstyle="butt", label="红灯禁行" if idx==0 and c_start==0 else "")
+
+                # 检查车辆在通过该路口时是否遇到红灯
+                t_cross = x_p / v_des
+                phase_at_cross = (t_cross - (idx * offset)) % cycle
+                if phase_at_cross > green_len:
+                    stops += 1
+
+            # 绘制设计绿波带 (绿色半透明多边形)
+            t_band_start = 0.0
+            t_band_end = t_band_start + bandwidth
+            if bandwidth > 0:
+                ax.fill_betweenx([0.0, 800.0], [t_band_start, t_band_start + 800.0/v_des], [t_band_end, t_band_end + 800.0/v_des], color="#86efac", alpha=0.35, label=f"畅行绿波带 ({bandwidth:.1f}s)")
+
+            # 车辆真实轨迹
+            ax.plot(t_traj, x_traj, color="#1e40af", linewidth=2.5, linestyle="--", label=f"车辆巡航轨迹 ({slider_speed.value} km/h)")
+
+            ax.set_xlim(0, 80)
+            ax.set_ylim(-20, 850)
+            ax.set_xlabel("时间 (s)")
+            ax.set_ylabel("干线距离 (m)")
+            ax.set_title(f"干线绿波时空推演图 (XT Diagram) —— 相位差 ΔΦ={offset}$s")
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.legend(loc="upper left")
+
+            plt.tight_layout()
+            plt.show()
+
+            if stops == 0 and bandwidth >= 15.0:
+                badge_text = f"🟢 完美双向绿波畅行 (带宽 {bandwidth:.1f}s, 0 次停车)"
+                badge_color = "green"
+                insight = f"<b>最佳配时</b>：相位差 {offset}s 与巡航速度 {slider_speed.value} km/h 完美共振！车辆在所有 3 个路口均在绿灯期间畅行穿过，全程零停顿！"
+            elif stops == 0:
+                badge_text = f"🟡 窄带宽绿波通行 (带宽 {bandwidth:.1f}s, 0 次停车)"
+                badge_color = "yellow"
+                insight = "<b>边缘绿波</b>：虽然实现了 0 次停车，但绿波带较窄，稍有车流波动或起步慢就会被下一个路口的红灯截断。"
+            else:
+                badge_text = f"🔴 绿波断裂 ({stops} 次被红灯截停)"
+                badge_color = "red"
+                insight = f"<b>信号脱节</b>：当前相位差导致车辆到达路口时刚好迎面撞上下游红灯（需停车等待），失去了干线协调意义。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 B5 干线绿波协调指标研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>干线绿波可用带宽</b>: {bandwidth:.1f} 秒 (理论上限: 30.0s)；<br/>
+                    • <b>理论最优相位差参考</b>: {ideal_offset:.1f} 秒 (当前偏差: {offset_err:.1f}s)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("B5_green_wave", {
+                "experiment": "B5_green_wave",
+                "mode": "novice_preview",
+                "offset": slider_offset.value,
+                "speed": slider_speed.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 B5 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节相邻交叉口相位差与设计车速，观察干线 XT 时空图中的连续放行带宽，实现从起点到终点‘一路绿灯零停车’。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_offset, slider_speed, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 20. C4: PHEV 能量管理策略对比探索器
+# ==============================================================================
+
+def show_c4_explorer():
+    """C4 PHEV 能量管理策略对比直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_s = widgets.FloatSlider(value=2.6, min=2.0, max=3.5, step=0.1, description="ECMS 等效因子 s:", readout_format=".1f", style={"description_width": "140px"})
+    slider_soc0 = widgets.FloatSlider(value=0.6, min=0.35, max=0.85, step=0.05, description="初始电池 SOC:", readout_format=".2f", style={"description_width": "130px"})
+    btn_run = widgets.Button(description="🚀 推演能量管理动力流", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：等效因子 s 偏大时电池 SOC 为什么不降反升？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            s_val = slider_s.value
+            soc0 = slider_soc0.value
+            dist_km = np.linspace(0, 100, 201)
+
+            # CD/CS 朴素规则策略轨迹
+            soc_cd_cs = np.zeros_like(dist_km)
+            for i, d in enumerate(dist_km):
+                if soc0 - (d / 60.0) * 0.4 > 0.3:
+                    soc_cd_cs[i] = soc0 - (d / 60.0) * 0.4 # CD 纯电段
+                else:
+                    soc_cd_cs[i] = 0.30 + 0.01 * np.sin(d) # CS 保持段
+
+            # ECMS 优化策略轨迹 (等效因子 s 决定了用电 vs 用油的权重)
+            # s=2.6 为黄金平衡点 (ΔSOC ≈ 0)
+            soc_ecms = np.zeros_like(dist_km)
+            delta_slope = (2.6 - s_val) * 0.003
+            for i, d in enumerate(dist_km):
+                soc_ecms[i] = max(0.2, min(0.9, soc0 + delta_slope * d + 0.02 * np.sin(d/5.0)))
+
+            # 油耗估算
+            fuel_cd_cs = 3.65 # L/100km
+            fuel_ecms = max(1.8, 2.14 + (s_val - 2.6) * 0.9)
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(dist_km, soc_cd_cs, color="#94a3b8", linestyle="--", linewidth=2.0, label="规则策略 (CD/CS)")
+            ax1.plot(dist_km, soc_ecms, color="#2563eb", linewidth=2.2, label=f"ECMS 优化策略 (s={s_val:.1f})")
+            ax1.axhline(0.3, color="#f43f5e", linestyle=":", label="SOC 保护下限 (0.3)")
+            ax1.set_xlabel("行驶里程 (km)")
+            ax1.set_ylabel("电池荷电状态 (SOC)")
+            ax1.set_title("电池 SOC 全程演化轨迹对比")
+            ax1.set_ylim(0.2, 0.9)
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            bars = ax2.bar(["朴素 CD/CS 规则", f"ECMS 策略 (s={s_val:.1f})"], [fuel_cd_cs, fuel_ecms], color=["#94a3b8", "#2563eb"], width=0.45)
+            ax2.set_ylabel("百公里综合油耗 (L/100km)")
+            ax2.set_title("整车能耗经济性对比")
+            for b in bars:
+                ax2.text(b.get_x() + b.get_width()/2., b.get_height() + 0.1, f"{b.get_height():.2f} L", ha="center", va="bottom", fontweight="bold")
+            ax2.grid(True, axis="y", alpha=0.3, linestyle="--")
+
+            plt.tight_layout()
+            plt.show()
+
+            delta_soc = soc_ecms[-1] - soc0
+            if abs(delta_soc) <= 0.05:
+                badge_text = "🟢 SOC 终值平衡且油耗最低"
+                badge_color = "green"
+                insight = f"<b>黄金平衡</b>：等效因子 s={s_val:.1f} 完美拟合了油电边际等效汇率！全程电池 SOC 波动保持平衡（ΔSOC={delta_soc:+.2f}），百公里油耗仅 {fuel_ecms:.2f}L，节油超 35%！"
+            elif delta_soc < -0.05:
+                badge_text = "🟡 偏向用电 (SOC 亏电漂移)"
+                badge_color = "yellow"
+                insight = f"<b>用电偏向</b>：s 偏小导致算法认为‘电极度便宜’，过度透支电池电量（ΔSOC={delta_soc:+.2f}）。虽表显油耗低，但破坏了能量自持平衡。"
+            else:
+                badge_text = "🟠 偏向用油 (发动机过度发电)"
+                badge_color = "yellow"
+                insight = f"<b>用油偏向</b>：s 偏大导致算法认为‘电非常昂贵’，频繁强开辟发动机倒灌发电（ΔSOC={delta_soc:+.2f}），导致油耗恶化至 {fuel_ecms:.2f}L。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else "#b45309")}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 C4 PHEV 能量管理动力流研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else "#fef3c7")}; color: {("#15803d" if badge_color=="green" else "#b45309")}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>SOC 终值漂移</b>: {delta_soc:+.3f} (理想目标: $\approx 0.00$)；<br/>
+                    • <b>相比 CD/CS 规则节油</b>: {(fuel_cd_cs - fuel_ecms)/fuel_cd_cs*100:.1f}%；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("C4_ems_comparison", {
+                "experiment": "C4_ems_comparison",
+                "mode": "novice_preview",
+                "s_equiv": slider_s.value,
+                "init_soc": slider_soc0.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 C4 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节 ECMS 等效因子 s，观察 SOC 终值平衡与油耗对比，理解等效因子作为‘油电汇率’对动力流分配的核心作用。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_s, slider_soc0, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 21. D3: 电池 OCV-SOC 开路电压特性探索器
+# ==============================================================================
+
+def show_d3_explorer():
+    """D3 电池 OCV-SOC 静态特性曲线直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_crate = widgets.FloatSlider(value=0.05, min=0.02, max=0.40, step=0.02, description="充放电倍率 (C):", readout_format=".2f", style={"description_width": "130px"})
+    slider_relax = widgets.IntSlider(value=40, min=10, max=60, step=5, description="静置弛豫时长 (min):", style={"description_width": "140px"})
+    btn_run = widgets.Button(description="🚀 辨识准静态 OCV", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：倍率从 0.3C 降到 0.05C 时，充放电电压迟滞环如何变化？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            c = slider_crate.value
+            r_min = slider_relax.value
+            soc = np.linspace(0.05, 0.95, 201)
+
+            # 理论真实 OCV(SOC) 曲线 (NMC 三元锂体系)
+            ocv_true = 3.2 + 0.8 * soc - 0.1 * np.log(1.0 - soc) + 0.05 * np.log(soc)
+
+            # 极化过电位与内阻压降：电流越大、弛豫越短，迟滞环张开得越大
+            r0 = 0.025 # 欧姆内阻
+            eta_pol = (c * 0.15) * (1.0 - r_min / 90.0)
+            v_chg = ocv_true + c * r0 + eta_pol
+            v_dis = ocv_true - c * r0 - eta_pol
+
+            # 迟滞间距
+            gap_mv = (v_chg - v_dis) * 1000.0
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(soc * 100, v_chg, color="#dc2626", linewidth=2.0, label="充电分支端电压")
+            ax1.plot(soc * 100, v_dis, color="#2563eb", linewidth=2.0, label="放电分支端电压")
+            ax1.plot(soc * 100, ocv_true, color="#16a34a", linestyle="--", linewidth=2.2, label="真实准静态平衡 OCV")
+            ax1.set_xlabel("荷电状态 SOC (%)")
+            ax1.set_ylabel("端电压 (V)")
+            ax1.set_title(f"OCV-SOC 充放电迟滞环 ({c:.2f}C 倍率, 静置 {r_min}min)")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            ax2.plot(soc * 100, gap_mv, color="#f59e0b", linewidth=2.2)
+            ax2.axhline(20.0, color="#16a34a", linestyle="--", label="工业高精度阈值 (20 mV)")
+            ax2.set_xlabel("荷电状态 SOC (%)")
+            ax2.set_ylabel("迟滞电压差 ΔV (mV)")
+            ax2.set_title("充放电电化学极化迟滞压差")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            mean_gap = np.mean(gap_mv)
+            if mean_gap <= 25.0:
+                badge_text = f"🟢 准静态收敛达标 (平均迟滞 {mean_gap:.1f} mV)"
+                badge_color = "green"
+                insight = "<b>高精度标定达成</b>：小倍率慢充放与充分静置使电化学浓差极化基本消退，充放电曲线高度贴合，成功提取出黄金准静态 OCV 曲线！"
+            else:
+                badge_text = f"🔴 极化未消除迟滞过大 (平均迟滞 {mean_gap:.1f} mV)"
+                badge_color = "red"
+                insight = f"<b>极化残存</b>：当前倍率偏大（{c:.2f}C），电池内部锂离子浓度梯度未平复，导致充放电电压差高达 {mean_gap:.1f} mV，无法作为整车仿真基准。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else "#dc2626")}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 D3 OCV-SOC 标定品质研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else "#fee2e2")}; color: {("#15803d" if badge_color=="green" else "#dc2626")}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>平均充放电迟滞误差</b>: {mean_gap:.1f} mV (高精度阈值: ≤ 20.0$ mV)；<br/>
+                    • <b>平台区电压斜率</b>: {np.ptp(ocv_true)/0.9:.2f} V/ΔSOC；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("D3_ocv_soc_export", {
+                "experiment": "D3_ocv_soc_export",
+                "mode": "novice_preview",
+                "c_rate": slider_crate.value,
+                "relax_min": slider_relax.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 D3 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节测试倍率与静置弛豫时长，观察充放电迟滞环张开与闭合过程，理解准静态开路电压提取的电化学机理。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_crate, slider_relax, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 22. E1: 主减速器传动比动力性 vs 经济性寻优探索器
+# ==============================================================================
+
+def show_e1_explorer():
+    """E1 单目标参数寻优直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_i0 = widgets.FloatSlider(value=9.0, min=6.0, max=12.0, step=0.5, description="主减速比 i0:", readout_format=".1f", style={"description_width": "120px"})
+    btn_run = widgets.Button(description="🚀 测算动力经济性", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：满足百公里加速 < 7.5s 时，电耗最低的最优速比是多少？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            cur_i0 = slider_i0.value
+            ratios = np.linspace(6.0, 12.0, 61)
+
+            # 动力学经验推演：
+            # 0-100 加速时间随传动比增大而缩短 (扭矩放大)，但受电机最高转速与附着力限制
+            accel_times = 14.0 * (6.0 / ratios)**0.65
+            # 电耗随传动比增大而增加 (电机长期在高转速低效区工作)
+            energies = 11.2 + 0.55 * (ratios - 6.0)
+
+            cur_accel = 14.0 * (6.0 / cur_i0)**0.65
+            cur_energy = 11.2 + 0.55 * (cur_i0 - 6.0)
+
+            fig, ax1 = plt.subplots(figsize=(10, 4.0))
+            color1 = "#2563eb"
+            ax1.set_xlabel("主减速器传动比 $i_0$")
+            ax1.set_ylabel("百公里加速时间 $t_{0-100}$ (s)", color=color1)
+            line1 = ax1.plot(ratios, accel_times, color=color1, linewidth=2.2, label="加速时间 (越短越快)")
+            ax1.tick_params(axis="y", labelcolor=color1)
+            ax1.axhline(7.5, color=color1, linestyle=":", alpha=0.6, label="动力性设计上限 (7.5s)")
+
+            ax2 = ax1.twinx()
+            color2 = "#dc2626"
+            ax2.set_ylabel("百公里综合电耗 (kWh/100km)", color=color2)
+            line2 = ax2.plot(ratios, energies, color=color2, linewidth=2.2, linestyle="--", label="综合电耗 (越低越省)")
+            ax2.tick_params(axis="y", labelcolor=color2)
+
+            # 当前选择速比垂直指示线
+            ax1.axvline(cur_i0, color="#16a34a", linewidth=2.0, label=f"当前速比 ({cur_i0:.1f})")
+
+            lines = line1 + line2
+            labels = [l.get_label() for l in lines]
+            ax1.legend(lines, labels, loc="upper center")
+            ax1.set_title("电动车主减速比权衡：动力加速性 vs 百公里能耗")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+
+            plt.tight_layout()
+            plt.show()
+
+            if cur_accel <= 7.5 and cur_energy <= 13.0:
+                badge_text = "🟢 黄金平衡速比点 (动力达标且省电)"
+                badge_color = "green"
+                insight = f"<b>最优折中</b>：传动比 {cur_i0:.1f} 既将百公里加速压入 {cur_accel:.2f}s（满足动力性要求），又避免了电机过分高速运转，电耗控制在 {cur_energy:.2f} kWh！"
+            elif cur_accel > 7.5:
+                badge_text = "🟠 动力不足 (加速超过 7.5s)"
+                badge_color = "yellow"
+                insight = f"<b>速比过小</b>：传动比仅 {cur_i0:.1f} 导致轮端起步扭矩匮乏，0-100 加速耗时高达 {cur_accel:.2f}s，无法满足整车动力性设计指标。"
+            else:
+                badge_text = "🔴 过于激进 (电耗剧增)"
+                badge_color = "red"
+                insight = f"<b>速比过大</b>：传动比达到 {cur_i0:.1f} 虽然加速迅猛（{cur_accel:.2f}s），但高速电机转速过高导致摩擦损耗暴增，百公里电耗恶化至 {cur_energy:.2f} kWh。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 E1 速比单目标优化研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>0-100 km/h 加速时间</b>: {cur_accel:.2f} 秒 (指标门槛: ≤ 7.5$s)；<br/>
+                    • <b>百公里综合电耗</b>: {cur_energy:.2f} kWh/100km；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("E1_single_objective", {
+                "experiment": "E1_single_objective",
+                "mode": "novice_preview",
+                "gear_ratio": slider_i0.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 E1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节主减速比，观察动力加速性与能耗经济性的双曲线反向制约关系，找出兼顾动力性与节能的最优折中速比。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_i0, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 23. F1: FMI/FMU 模型加载与通信步长效应探索器
+# ==============================================================================
+
+def show_f1_explorer():
+    """F1 FMI 联合仿真通信步长效应直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_step = widgets.FloatSlider(value=0.02, min=0.002, max=0.10, step=0.005, description="通信步长 h (s):", readout_format=".3f", style={"description_width": "130px"})
+    btn_run = widgets.Button(description="🚀 模拟 FMU 离散积分", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：通信步长超过多少秒时数值截断误差开始显著发散？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            h = slider_step.value
+            t_total = 3.0
+            t_dense = np.linspace(0, t_total, 601)
+            # 一阶惯性系统真实解析解: y(t) = 1 - e^(-5t)
+            omega = 8.0
+            y_true = 1.0 - np.exp(-omega * t_dense)
+
+            # FMU 离散 Euler 前向通信步长采样
+            t_fmu = np.arange(0, t_total + h, h)
+            y_fmu = np.zeros_like(t_fmu)
+            for i in range(len(t_fmu) - 1):
+                y_fmu[i+1] = y_fmu[i] + h * omega * (1.0 - y_fmu[i])
+
+            # 最大绝对误差
+            y_true_interp = 1.0 - np.exp(-omega * t_fmu)
+            errs = np.abs(y_fmu - y_true_interp)
+            max_err = np.max(errs)
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(t_dense, y_true, color="#16a34a", linewidth=2.5, label="连续真实解析解")
+            ax1.step(t_fmu, y_fmu, where="post", color="#2563eb", linewidth=1.8, label=f"FMU 离散通信 (h={h:.3f}s)")
+            ax1.set_xlabel("时间 (s)")
+            ax1.set_ylabel("系统输出 y(t)")
+            ax1.set_title("FMI 联合仿真步长效应与动态跟踪")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            ax2.plot(t_fmu, errs * 1000.0, color="#dc2626", linewidth=2.0)
+            ax2.axhline(50.0, color="#f59e0b", linestyle="--", label="工业高精度门槛 (50 mV)")
+            ax2.set_xlabel("时间 (s)")
+            ax2.set_ylabel("离散截断绝对误差 (mV)")
+            ax2.set_title("通信步长引起的数值积分截断误差")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            if max_err <= 0.05:
+                badge_text = f"🟢 高精度稳定收敛 (最大误差 {max_err*1000:.1f} mV)"
+                badge_color = "green"
+                insight = f"<b>优质步长</b>：步长 h={h:.3f}s 足够精细，主算法在每一个通信点均精确捕捉到动态响应，数值截断误差微乎其微。"
+            elif max_err <= 0.20:
+                badge_text = f"🟡 精度退化 (最大误差 {max_err*1000:.1f} mV)"
+                badge_color = "yellow"
+                insight = f"<b>步长偏大</b>：通信点间隔过宽导致阶段性超调与相位滞后，误差达到 {max_err*1000:.1f} mV，建议缩小步长以防高频振荡。"
+            else:
+                badge_text = f"🔴 数值发散振荡 (最大误差 {max_err*1000:.1f} mV)"
+                badge_color = "red"
+                insight = f"<b>步长越界</b>：步长已超过稳定性理论极限 (h > 2/omega)，Euler 积分发生剧烈发散振荡！联合仿真失真！"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 F1 FMU 通信步长数值特性研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>最大截断误差</b>: {max_err*1000:.1f} mV (高精度阈值: ≤ 50.0$ mV)；<br/>
+                    • <b>联合仿真离散采样点数</b>: {len(t_fmu)} 个点；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("F1_fmu_load", {
+                "experiment": "F1_fmu_load",
+                "mode": "novice_preview",
+                "comm_step": slider_step.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 F1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节 FMI 联合仿真主通信步长 h，对比解析真值与 FMU 离散采样阶跃响应，理解协同仿真中通信步长对数值稳定性的决定性影响。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_step, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 24. F2: OpenModelica 多物理域阶跃响应探索器
+# ==============================================================================
+
+def show_f2_explorer():
+    """F2 OpenModelica 阶跃响应直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_wn = widgets.FloatSlider(value=4.0, min=1.0, max=10.0, step=0.5, description="自然频率 wn (rad/s):", readout_format=".1f", style={"description_width": "150px"})
+    slider_zeta = widgets.FloatSlider(value=0.5, min=0.1, max=1.5, step=0.1, description="阻尼比 zeta:", readout_format=".1f", style={"description_width": "130px"})
+    btn_run = widgets.Button(description="🚀 模拟二阶机电响应", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：阻尼比从 0.2 调到 0.8 时，系统的超调量和振荡如何变化？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            wn = slider_wn.value
+            z = slider_zeta.value
+            t = np.linspace(0, 4.0, 401)
+
+            # 二阶系统阶跃响应: G(s) = wn^2 / (s^2 + 2*z*wn*s + wn^2)
+            if z < 1.0:
+                wd = wn * np.sqrt(1.0 - z**2)
+                phi = np.arccos(z)
+                y = 1.0 - (np.exp(-z * wn * t) / np.sqrt(1.0 - z**2)) * np.sin(wd * t + phi)
+                overshoot = np.exp(-np.pi * z / np.sqrt(1.0 - z**2)) * 100.0
+            else:
+                s1 = -wn * (z - np.sqrt(z**2 - 1.0))
+                s2 = -wn * (z + np.sqrt(z**2 - 1.0))
+                y = 1.0 + (s2 * np.exp(s1 * t) - s1 * np.exp(s2 * t)) / (s1 - s2)
+                overshoot = 0.0
+
+            fig, ax = plt.subplots(figsize=(10, 3.8))
+            ax.plot(t, y, color="#2563eb", linewidth=2.2, label=f"系统响应 (wn={wn:.1f}, zeta={z:.1f})")
+            ax.axhline(1.0, color="#16a34a", linestyle="--", label="稳态目标值 (1.0)")
+            ax.axhline(1.0 + overshoot/100.0, color="#dc2626", linestyle=":", label=f"峰值超调 ({overshoot:.1f}%)" if overshoot>0 else "")
+            ax.set_xlabel("时间 (s)")
+            ax.set_ylabel("物理量幅值")
+            ax.set_title("OpenModelica 二阶机电系统阶跃时域响应")
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            if z < 0.4:
+                badge_text = f"🔴 欠阻尼强振荡 (超调 {overshoot:.1f}%)"
+                badge_color = "red"
+                insight = "<b>强振荡</b>：阻尼过小导致动能无法被耗散，系统发生剧烈机械超调与来回震荡，易对底盘构件造成交变疲劳损伤。"
+            elif 0.6 <= z <= 0.8:
+                badge_text = f"🟢 最佳工程阻尼 (超调 {overshoot:.1f}%, 快速收敛)"
+                badge_color = "green"
+                insight = "<b>工程黄金阻尼</b>：阻尼比处于 0.7 左右时，系统兼顾快速响应与微小超调，是机电悬架与电机扭矩闭环的标准标定点。"
+            else:
+                badge_text = "🟡 过阻尼迟缓响应 (无超调)"
+                badge_color = "yellow"
+                insight = "<b>响应迟缓</b>：阻尼过大虽然杜绝了超调，但系统动作迟钝，无法及时跟上动态控制指令。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 F2 机电动力学时域特性研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>最大超调量 Mp</b>: {overshoot:.1f}% (工程推荐: ≤ 15.0$%)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("F2_openmodelica_fmu", {
+                "experiment": "F2_openmodelica_fmu",
+                "mode": "novice_preview",
+                "wn": slider_wn.value,
+                "zeta": slider_zeta.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 F2 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节自然频率与阻尼比，观察阶跃时域响应超调与收敛速度，建立多物理域机电系统的经典阻尼直觉。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_wn, slider_zeta, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 25. F3: 多 FMU 协同 Master 算法步长与解耦探索器
+# ==============================================================================
+
+def show_f3_explorer():
+    """F3 多 FMU 协同 Master 算法直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_dt = widgets.FloatSlider(value=0.02, min=0.005, max=0.15, step=0.005, description="Master 协同周期 (s):", readout_format=".3f", style={"description_width": "150px"})
+    drp_algo = widgets.Dropdown(options=["Jacobi 并行弱耦合 (易代数环漂移)", "Gauss-Seidel 串行预测 (高精度收敛)"], value="Jacobi 并行弱耦合 (易代数环漂移)", description="协同算法:", style={"description_width": "90px"})
+    btn_run = widgets.Button(description="🚀 测算能量耦合误差", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：Gauss-Seidel 相比 Jacobi 为什么能在更大协同周期下保持能量守恒？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            dt = slider_dt.value
+            is_gs = "Gauss-Seidel" in drp_algo.value
+            t = np.linspace(0, 5.0, 201)
+
+            # 车辆动力学 FMU 与 电池总成 FMU 双向能量交换误差
+            # Jacobi 算法的代数环延迟产生虚假能量注入: E_err ~ dt^1
+            # Gauss-Seidel 包含一步内插补偿: E_err ~ dt^2
+            coef = 120.0 if not is_gs else 25.0
+            power = 1.0 if not is_gs else 2.0
+            err_curve = coef * (dt ** power) * t
+
+            fig, ax = plt.subplots(figsize=(10, 3.8))
+            ax.plot(t, err_curve, color="#2563eb" if is_gs else "#dc2626", linewidth=2.2, label=drp_algo.value.split()[0])
+            ax.axhline(5.0, color="#16a34a", linestyle="--", label="能量守恒容许门槛 (5.0 J)")
+            ax.set_xlabel("仿真时间 (s)")
+            ax.set_ylabel("代数环虚假能量漂移 (J)")
+            ax.set_title("多 FMU 协同 Master 算法数值能量守恒对比")
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            max_e = err_curve[-1]
+            if max_e <= 5.0:
+                badge_text = f"🟢 能量守恒严密 (终值漂移 {max_e:.2f} J)"
+                badge_color = "green"
+                insight = "<b>高保真协同</b>：主算法在通信点间通过预测解耦了代数环，消除了虚假能量注入，多从站联合仿真高度真实！"
+            elif max_e <= 15.0:
+                badge_text = f"🟡 存在轻微能量虚假漂移 ({max_e:.2f} J)"
+                badge_color = "yellow"
+                insight = "<b>轻度漂移</b>：主算法协同周期略大，两个 FMU 从站间的耦合变量存在单步延迟，导致出现微量非物理能量膨胀。"
+            else:
+                badge_text = f"🔴 代数环严重发散 ({max_e:.2f} J)"
+                badge_color = "red"
+                insight = "<b>代数环失稳</b>：Jacobi 并行算法无法处理紧密双向耦合，步长过大导致虚假能量无限累积，整车仿真数据失效！"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 F3 多 FMU 协同数值能量研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>能量漂移终值</b>: {max_e:.2f} 焦耳 (允许门限: ≤ 5.0$ J)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("F3_multi_fmu", {
+                "experiment": "F3_multi_fmu",
+                "mode": "novice_preview",
+                "master_step": slider_dt.value,
+                "algorithm": drp_algo.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 F3 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：切换 Master 协同解耦算法与协同周期，观察代数环带来的非物理能量漂移，体会分布式多系统联合仿真的通信机制。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_dt, drp_algo, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 26. G1: ROS 2 话题发布与 DDS QoS 网络性能探索器
+# ==============================================================================
+
+def show_g1_explorer():
+    """G1 ROS 2 话题发布与 DDS QoS 直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_freq = widgets.IntSlider(value=50, min=10, max=100, step=10, description="感知发布频率 (Hz):", style={"description_width": "140px"})
+    slider_loss = widgets.FloatSlider(value=5.0, min=0.0, max=30.0, step=2.5, description="无线丢包率 (%):", readout_format=".1f", style={"description_width": "130px"})
+    btn_run = widgets.Button(description="🚀 测算 DDS 传输延迟", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：发布频率达到 100Hz 且存在丢包时，端到端延迟抖动为何加剧？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            freq = slider_freq.value
+            loss_rate = slider_loss.value / 100.0
+
+            # 模拟 100 帧感知报文传输
+            n_packets = 100
+            delays = []
+            np.random.seed(42)
+            base_delay = 5.0 + (freq / 100.0) * 8.0 # 排队时延
+            for i in range(n_packets):
+                is_lost = np.random.rand() < loss_rate
+                if is_lost:
+                    # 重传时延
+                    delays.append(base_delay + 25.0 + np.random.exponential(10.0))
+                else:
+                    delays.append(base_delay + np.random.normal(0, 1.2))
+
+            delays = np.maximum(2.0, np.array(delays))
+            mean_d = np.mean(delays)
+            max_d = np.max(delays)
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(range(n_packets), delays, color="#2563eb", linewidth=1.2, marker="o", markersize=3, label="单帧到达时延")
+            ax1.axhline(20.0, color="#f59e0b", linestyle="--", label="实车控制延迟红线 (20ms)")
+            ax1.set_xlabel("数据包序号")
+            ax1.set_ylabel("端到端传输时延 (ms)")
+            ax1.set_title(f"ROS 2 话题实时通信时延序列 ({freq} Hz)")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            ax2.hist(delays, bins=15, color="#38bdf8", edgecolor="#0284c7")
+            ax2.axvline(mean_d, color="#dc2626", linewidth=2.0, label=f"平均时延 ({mean_d:.1f}ms)")
+            ax2.set_xlabel("时延区间 (ms)")
+            ax2.set_ylabel("频数分布")
+            ax2.set_title("DDS 网络抖动分布直方图")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            if mean_d <= 15.0 and max_d <= 35.0:
+                badge_text = "🟢 实时性优异 (满足底盘闭环)"
+                badge_color = "green"
+                insight = "<b>低延迟通信</b>：网络带宽充足且丢包率低，DDS 队列无堆积，感知数据在 15ms 内瞬时触达控制器。"
+            elif mean_d <= 25.0:
+                badge_text = "🟡 存在偶发重传抖动"
+                badge_color = "yellow"
+                insight = "<b>边缘抖动</b>：无线网络存在偶发丢包，触发了可靠性重传机制，导致个别报文时延突增至 30ms 以上。"
+            else:
+                badge_text = "🔴 严重通信拥塞超时"
+                badge_color = "red"
+                insight = "<b>严重滞后</b>：高频率与高丢包引发网络排队风暴，平均时延超标，无法满足智能驾驶纵向控制的实时性要求！"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 G1 ROS 2 话题通信 QoS 研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>平均端到端时延</b>: {mean_d:.1f} ms (峰值抖动: {max_d:.1f} ms)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("G1_ros_topics", {
+                "experiment": "G1_ros_topics",
+                "mode": "novice_preview",
+                "freq": slider_freq.value,
+                "loss": slider_loss.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 G1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节发布频率与网络丢包率，观察 DDS 通信端到端时延与抖动分布，理解智能网联自动驾驶中间件的 QoS 选型权衡。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_freq, slider_loss, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 27. G2: ROS 2 服务通信超时与重试探索器
+# ==============================================================================
+
+def show_g2_explorer():
+    """G2 ROS 2 服务通信超时重试直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_timeout = widgets.FloatSlider(value=0.2, min=0.05, max=0.6, step=0.05, description="服务超时时间 (s):", readout_format=".2f", style={"description_width": "140px"})
+    slider_retries = widgets.IntSlider(value=2, min=1, max=5, step=1, description="最大重试次数:", style={"description_width": "120px"})
+    btn_run = widgets.Button(description="🚀 模拟底盘 RPC 请求", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：超时时间设置过短为什么会导致底盘指令频繁重试风暴？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            timeout = slider_timeout.value
+            max_r = slider_retries.value
+
+            # 模拟底盘 ECU 响应时间分布 (期望 0.15s, 方差 0.08s)
+            np.random.seed(33)
+            ecu_time = 0.16 + np.random.exponential(0.06)
+
+            success = False
+            total_time = 0.0
+            attempts = 0
+
+            for r in range(max_r):
+                attempts += 1
+                if timeout >= ecu_time:
+                    success = True
+                    total_time += ecu_time
+                    break
+                else:
+                    total_time += timeout
+                    # 下一次尝试
+                    ecu_time = 0.14 + np.random.exponential(0.04)
+
+            fig, ax = plt.subplots(figsize=(10, 3.8))
+            labels = ["本次执行耗时", "超时阈值", "ECU 处理基准"]
+            vals = [total_time * 1000.0, timeout * 1000.0, 160.0]
+            colors = ["#16a34a" if success else "#dc2626", "#64748b", "#38bdf8"]
+            bars = ax.bar(labels, vals, color=colors, width=0.45)
+            ax.set_ylabel("毫秒 (ms)")
+            ax.set_title(f"ROS 2 Service 请求/响应时序剖析 (尝试次数: {attempts}/{max_r})")
+            for b in bars:
+                ax.text(b.get_x() + b.get_width()/2., b.get_height() + 5.0, f"{b.get_height():.1f}ms", ha="center", va="bottom", fontweight="bold")
+            ax.grid(True, axis="y", alpha=0.3, linestyle="--")
+
+            plt.tight_layout()
+            plt.show()
+
+            if success and attempts == 1:
+                badge_text = f"🟢 瞬时响应成功 ({total_time*1000:.1f}ms)"
+                badge_color = "green"
+                insight = "<b>高效率匹配</b>：超时阈值合理宽裕，ECU 在第 1 次调用内即返回控制确认，通信零重传、闭环控制极度流畅。"
+            elif success:
+                badge_text = f"🟡 重试后成功 (第 {attempts} 次尝试成功)"
+                badge_color = "yellow"
+                insight = f"<b>偶发重试</b>：首轮因超时未收到回执，通过第 {attempts} 次重传挽回了请求，但带来了额外的时延开销。"
+            else:
+                badge_text = "🔴 彻底超时调用失败"
+                badge_color = "red"
+                insight = "<b>通信风暴死锁</b>：超时阈值过短，所有重试全部遭遇超时截断，底盘未收到控制指令，触发系统保护机制！"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 G2 服务通信可靠性研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>闭环可用状态</b>: {"调用成功" if success else "请求超时放弃"}；<br/>
+                    • <b>总消耗时延</b>: {total_time*1000:.1f} ms (尝试 {attempts} 次)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("G2_ros_services", {
+                "experiment": "G2_ros_services",
+                "mode": "novice_preview",
+                "timeout": slider_timeout.value,
+                "retries": slider_retries.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 G2 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节 RPC 服务超时与最大重试次数，观察客户端/服务端在偶发延迟下的行为响应，理解自动驾驶高可靠服务通信机制。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_timeout, slider_retries, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 28. H1: OpenSCENARIO 参数空间网格扫描与危险度测绘探索器
+# ==============================================================================
+
+def show_h1_explorer():
+    """H1 场景参数空间危险度测绘直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_d0 = widgets.IntSlider(value=25, min=10, max=50, step=5, description="切入距离 d0 (m):", style={"description_width": "130px"})
+    slider_dv = widgets.IntSlider(value=30, min=10, max=50, step=5, description="相对速差 dv (km/h):", style={"description_width": "140px"})
+    btn_run = widgets.Button(description="🚀 测绘参数空间危险度", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：相对速差超过多少时切入距离 25m 就会落入严重碰撞红区？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            cur_d = slider_d0.value
+            cur_dv = slider_dv.value
+
+            d_grid = np.linspace(10, 50, 41)
+            dv_grid = np.linspace(10, 50, 41)
+            D, DV = np.meshgrid(d_grid, dv_grid)
+
+            # TTC 危险度计算: TTC = (D - 4.5) / (DV / 3.6)
+            TTC = (D - 4.5) / (DV / 3.6)
+            cur_ttc = (cur_d - 4.5) / (cur_dv / 3.6)
+
+            fig, ax = plt.subplots(figsize=(10, 4.0))
+            # 等高线热力图
+            cs = ax.contourf(D, DV, TTC, levels=[0.0, 1.5, 2.5, 4.0, 8.0], colors=["#f87171", "#fbbf24", "#86efac", "#38bdf8"], alpha=0.8)
+            cbar = fig.colorbar(cs, ax=ax)
+            cbar.set_label("TTC 碰撞预警时间 (秒)")
+
+            # 当前参数散点
+            ax.scatter([cur_d], [cur_dv], color="#0f172a", s=140, marker="*", zorder=5, label=f"当前采样工况 (d={cur_d}m, dv={cur_dv}km/h)")
+            ax.set_xlabel("加塞切入初始纵向间距 (m)")
+            ax.set_ylabel("两车相对逼近速度差 (km/h)")
+            ax.set_title("OpenSCENARIO 参数空间全因子危险度测绘图 (安全绿区 / 预警黄区 / 碰撞红区)")
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.legend(loc="upper right")
+
+            plt.tight_layout()
+            plt.show()
+
+            if cur_ttc <= 1.5:
+                badge_text = f"🔴 极度危险 (TTC={cur_ttc:.2f}s)"
+                badge_color = "red"
+                insight = "<b>高危死区</b>：切入间距过近且速差巨大，TTC 突破物理制动极限，常规 AEB 无法避免追尾！"
+            elif cur_ttc <= 2.5:
+                badge_text = f"🟡 临界紧迫工况 (TTC={cur_ttc:.2f}s)"
+                badge_color = "yellow"
+                insight = "<b>边缘工况</b>：处于自动紧急制动的临界触发边缘，也是算法验证与标定最关键的黄金测试用例点。"
+            else:
+                badge_text = f"🟢 宽松安全区间 (TTC={cur_ttc:.2f}s)"
+                badge_color = "green"
+                insight = "<b>安全区域</b>：两车具备充足的时空裕度，自车通过轻微减速即可实现平顺避障。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 H1 场景参数空间测绘研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>工况危险度 TTC</b>: {cur_ttc:.2f} 秒 (紧急制动门槛: ≤ 2.0$s)；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("H1_batch_generation", {
+                "experiment": "H1_batch_generation",
+                "mode": "novice_preview",
+                "cutin_dist": slider_d0.value,
+                "speed_delta": slider_dv.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 H1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节切入距离与相对速差，观察参数空间 TTC 危险度二维等高线热力图，理解批量参数泛化与场景覆盖率测绘。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_d0, slider_dv, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 29. H2: 场景模糊测试 (Fuzzing) 与 SOTIF 边界探索器
+# ==============================================================================
+
+def show_h2_explorer():
+    """H2 场景模糊测试与 SOTIF 安全边界直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    out = widgets.Output()
+
+    slider_iters = widgets.IntSlider(value=50, min=20, max=150, step=10, description="变异测试轮数:", style={"description_width": "120px"})
+    slider_sigma = widgets.FloatSlider(value=0.3, min=0.1, max=0.8, step=0.1, description="变异扰动方差:", readout_format=".1f", style={"description_width": "130px"})
+    btn_run = widgets.Button(description="🚀 执行引导式变异搜索", button_style="primary", icon="play")
+
+    txt_task = widgets.Text(placeholder="回答：变异轮数增加时，模糊测试发现隐蔽碰撞用例的概率如何提升？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            n = slider_iters.value
+            sig = slider_sigma.value
+
+            np.random.seed(42)
+            # 种子点 (25, 25)
+            pts_d = [30.0]
+            pts_dv = [20.0]
+            for _ in range(n - 1):
+                # 变异步进
+                cand_d = pts_d[-1] + np.random.normal(0, sig * 10.0)
+                cand_dv = pts_dv[-1] + np.random.normal(0, sig * 10.0)
+                cand_d = np.clip(cand_d, 10.0, 50.0)
+                cand_dv = np.clip(cand_dv, 10.0, 50.0)
+                pts_d.append(cand_d)
+                pts_dv.append(cand_dv)
+
+            pts_d = np.array(pts_d)
+            pts_dv = np.array(pts_dv)
+            ttc = (pts_d - 4.5) / (pts_dv / 3.6)
+            crashes = ttc <= 1.6
+            n_crashes = np.sum(crashes)
+
+            fig, ax = plt.subplots(figsize=(10, 4.0))
+            ax.scatter(pts_d[~crashes], pts_dv[~crashes], color="#2563eb", alpha=0.6, s=40, label="正常避让测试用例")
+            if n_crashes > 0:
+                ax.scatter(pts_d[crashes], pts_dv[crashes], color="#dc2626", s=80, marker="X", label=f"Fuzzing 捕获碰撞缺陷 ({n_crashes} 个)")
+            ax.set_xlabel("切入间距 (m)")
+            ax.set_ylabel("相对速差 (km/h)")
+            ax.set_title(f"SOTIF 模糊测试变异探索散点图 ({n} 次变异演化)")
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            crash_rate = (n_crashes / n) * 100.0
+            if n_crashes > 0:
+                badge_text = f"🎯 成功检出边界缺陷 (检出率 {crash_rate:.1f}%)"
+                badge_color = "green"
+                insight = f"<b>高效变异</b>：模糊测试在 {n} 次变异中成功捕获了 {n_crashes} 个导致系统失效的极端长尾工况 (Corner Cases)，验证了预期功能安全 (SOTIF) 边界！"
+            else:
+                badge_text = "🟡 未触发极限缺陷 (覆盖率尚不足)"
+                badge_color = "yellow"
+                insight = "<b>扰动保守</b>：当前变异轮数较少或扰动步长较小，测试点均落在安全包络内部，建议增加测试轮数以触碰未知危险区域。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else "#b45309")}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">📊 H2 模糊测试安全边界研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else "#fef3c7")}; color: {("#15803d" if badge_color=="green" else "#b45309")}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>缺陷用例检出数</b>: {n_crashes} 个 (总测试轮数: {n})；<br/>
+                    • <b>SOTIF 边界覆盖率</b>: {min(100.0, n * sig * 1.5):.1f}%；<br/>
+                    • <b>物理因果分析</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("H2_scenario_fuzzing", {
+                "experiment": "H2_scenario_fuzzing",
+                "mode": "novice_preview",
+                "iters": slider_iters.value,
+                "sigma": slider_sigma.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 H2 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节变异轮数与扰动强度，观察自适应变异点向 SOTIF 危险边界的演变过程，理解长尾极端场景挖掘的模糊测试本质。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_iters, slider_sigma, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 30. Capstone: 感-算-控-电-网一体化综合探索器
+# ==============================================================================
+
+def show_capstone_explorer():
+    """Capstone 综合大作业：智能电动汽车一体化避险与能量回收探索器"""
+    out = widgets.Output()
+    out_checkin = widgets.Output()
+
+    slider_ttc = widgets.FloatSlider(
+        value=2.2, min=1.4, max=3.5, step=0.1,
+        description="TTC避险阈值(s):", continuous_update=False,
+        style={"description_width": "140px"}, layout=widgets.Layout(width="340px")
+    )
+    slider_headway = widgets.FloatSlider(
+        value=1.6, min=1.0, max=2.5, step=0.1,
+        description="跟驰安全时距(s):", continuous_update=False,
+        style={"description_width": "140px"}, layout=widgets.Layout(width="340px")
+    )
+    slider_regen = widgets.FloatSlider(
+        value=0.50, min=0.0, max=0.85, step=0.05,
+        description="制动电回收比:", continuous_update=False,
+        style={"description_width": "140px"}, layout=widgets.Layout(width="340px")
+    )
+
+    btn_run = widgets.Button(
+        description="🚀 综合仿真推演", button_style="primary",
+        icon="play", layout=widgets.Layout(width="150px")
+    )
+    txt_task = widgets.Text(
+        placeholder="输入微任务心得：例如当 TTC=2.4s 时自车提前柔和制动，最小车距提升至 6.8m 且回收电能最高...",
+        description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="600px")
+    )
+    btn_checkin = widgets.Button(
+        description="📝 预习打卡保存", button_style="success",
+        icon="check", layout=widgets.Layout(width="150px")
+    )
+
+    def update_view(_=None):
+        ttc_thresh = slider_ttc.value
+        th = slider_headway.value
+        regen = slider_regen.value
+
+        dt = 0.1
+        t_arr = np.linspace(0, 30.0, 300)
+
+        # 运动学与物理参数
+        mass = 1650.0  # kg
+        cd_a = 0.28 * 2.2
+        f_r = 0.012
+        bat_cap_kwh = 60.0
+
+        ego_x = 0.0
+        ego_v = 14.0  # 50.4 km/h
+        soc = 0.800
+
+        lead_x = 35.0
+        lead_v = 11.0
+
+        ego_v_log = []
+        lead_v_log = []
+        gap_log = []
+        accel_log = []
+        soc_log = []
+        p_bat_log = []
+        ttc_log = []
+
+        total_regen_joules = 0.0
+        total_traction_joules = 0.0
+
+        for t in t_arr:
+            # 加塞车横向轨迹 (t=4.5s 开始变道，t=7.0s 完成加塞进入主车道)
+            if t < 4.5:
+                lead_y = 3.5
+            elif t < 7.0:
+                lead_y = 3.5 - 3.5 * ((t - 4.5) / 2.5)
+            else:
+                lead_y = 0.0
+
+            # 加塞车前向纵向减速工况 (t=12s 前车以 -0.8m/s2 减速至 8m/s)
+            if t >= 12.0 and lead_v > 8.0:
+                lead_v = max(8.0, lead_v - 0.8 * dt)
+
+            lead_x += lead_v * dt
+
+            # 间距与 TTC 计算
+            gap = lead_x - ego_x - 4.5
+            rel_v = ego_v - lead_v
+            in_lane = lead_y < 1.75
+            ttc = (gap / rel_v) if (rel_v > 0.05 and in_lane) else 99.0
+
+            # 综合控制器逻辑
+            if ttc < ttc_thresh and in_lane:
+                acc_cmd = -4.2
+            else:
+                d_des = 5.0 + th * ego_v
+                acc_cmd = 0.85 * (gap - d_des) + 1.25 * (lead_v - ego_v)
+                acc_cmd = max(-3.0, min(1.5, acc_cmd))
+
+            ego_v = max(0.0, ego_v + acc_cmd * dt)
+            ego_x += ego_v * dt
+
+            # 电动动力总成能耗与回充物理
+            f_aero = 0.5 * 1.225 * cd_a * (ego_v ** 2)
+            f_roll = mass * 9.81 * f_r
+            f_acc = mass * acc_cmd
+            f_total = f_acc + f_aero + f_roll
+            p_wheel = f_total * ego_v
+
+            if p_wheel < 0:
+                # 制动能量回收
+                p_regen = p_wheel * regen * 0.82
+                p_bat = p_regen  # 负值充电
+                total_regen_joules += (-p_regen) * dt
+            else:
+                p_bat = p_wheel / 0.88  # 驱动放电
+                total_traction_joules += p_bat * dt
+
+            delta_soc = - (p_bat * dt) / (bat_cap_kwh * 3.6e6)
+            soc += delta_soc
+
+            ego_v_log.append(ego_v * 3.6)
+            lead_v_log.append(lead_v * 3.6)
+            gap_log.append(gap)
+            accel_log.append(acc_cmd)
+            soc_log.append(soc * 100.0)
+            p_bat_log.append(p_bat / 1000.0)
+            ttc_log.append(min(15.0, ttc))
+
+        min_gap = min(gap_log)
+        min_ttc = min(ttc_log)
+        max_decel = abs(min(accel_log))
+        regen_kwh = total_regen_joules / 3.6e6
+        net_energy_kwh_100km = ((total_traction_joules - total_regen_joules) / 3.6e6) / (max(0.01, ego_x / 1000.0)) * 100.0
+
+        with out:
+            clear_output(wait=True)
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 4.2))
+
+            # 速度与车距
+            line1 = ax1.plot(t_arr, ego_v_log, color="#2563eb", linewidth=2.2, label="自车车速 (km/h)")
+            line2 = ax1.plot(t_arr, lead_v_log, color="#dc2626", linestyle="--", linewidth=2.0, label="目标加塞车 (km/h)")
+            ax1.axvspan(4.5, 7.0, color="#fef08a", alpha=0.35, label="Cut-in 加塞变道区间")
+            ax1.set_xlabel("仿真时间 (s)")
+            ax1.set_ylabel("车速 (km/h)", color="#1e293b")
+            ax1.set_title("感-算-控闭环车速与跟驰避险轨迹", fontweight="bold")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+
+            ax1_twin = ax1.twinx()
+            line3 = ax1_twin.plot(t_arr, gap_log, color="#16a34a", linestyle=":", linewidth=2.0, label="相对间距 (m)")
+            ax1_twin.set_ylabel("车距 (m)", color="#16a34a")
+
+            lines = line1 + line2 + line3
+            labels = [l.get_label() for l in lines]
+            ax1.legend(lines, labels, loc="upper right", fontsize=9)
+
+            # 加速度与瞬时功率
+            ax2.plot(t_arr, accel_log, color="#9333ea", linewidth=2.0, label="加速度 a (m/s²)")
+            ax2.axhline(0, color="#94a3b8", linestyle="--", linewidth=0.8)
+            ax2.set_xlabel("仿真时间 (s)")
+            ax2.set_ylabel("加速度 (m/s²)", color="#9333ea")
+            ax2.set_title("动力学加速度与电池能量回充响应", fontweight="bold")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+
+            ax2_twin = ax2.twinx()
+            ax2_twin.plot(t_arr, p_bat_log, color="#0891b2", linestyle="-.", linewidth=1.8, label="电池功率 (kW)")
+            ax2_twin.set_ylabel("电池功率 (kW, 负为充电)", color="#0891b2")
+
+            lines2 = ax2.get_lines() + ax2_twin.get_lines()
+            labels2 = [l.get_label() for l in lines2]
+            ax2.legend(lines2, labels2, loc="upper right", fontsize=9)
+
+            plt.tight_layout()
+            plt.show()
+
+            if min_gap < 1.0:
+                badge_text = "🚨 发生致命追尾碰撞"
+                badge_color = "red"
+                insight = f"<b>安全失效</b>：TTC 避险阈值过低 ({ttc_thresh:.1f}s)，自车制动介入过晚导致碰撞 (最小间距 {min_gap:.1f}m)！"
+            elif min_gap < 4.0:
+                badge_text = "⚠️ 避险间距过小 (惊险工况)"
+                badge_color = "yellow"
+                insight = f"<b>临界危险</b>：最小车距仅 {min_gap:.1f}m，乘员产生明显恐慌感。建议适当提高 TTC 阈值至 2.2s 以上。"
+            else:
+                badge_text = "✅ 避险成功 & 能量高效回收"
+                badge_color = "green"
+                insight = f"<b>安全与能耗平衡</b>：自车平稳化解加塞险情，最小间距稳定在 {min_gap:.1f}m；同时制动回收回收电量 {regen_kwh*1000:.1f} Wh，百公里综合能耗 {net_energy_kwh_100km:.2f} kWh/100km。"
+
+            card_html = f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: system-ui, sans-serif;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: bold; color: #0f172a;">🏆 Capstone 全域一体化集成综合研判</span>
+                    <span style="background: {("#dcfce7" if badge_color=="green" else ("#fee2e2" if badge_color=="red" else "#fef3c7"))}; color: {("#15803d" if badge_color=="green" else ("#dc2626" if badge_color=="red" else "#b45309"))}; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        {badge_text}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                    • <b>安全避险</b>: 最小间距 <b>{min_gap:.2f} m</b>，最小观测 TTC <b>{min_ttc:.2f} s</b>，最大避险减速度 <b>{max_decel:.2f} m/s²</b>；<br/>
+                    • <b>电气与能效</b>: 制动回充能量 <b>{regen_kwh*1000:.1f} Wh</b>，综合等效电耗 <b>{net_energy_kwh_100km:.2f} kWh/100km</b>；<br/>
+                    • <b>多目标协同因果</b>: {insight}
+                </div>
+            </div>
+            """
+            display(HTML(card_html))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("Capstone_iev_integrated", {
+                experiment: "Capstone_iev_integrated",
+                mode: "novice_preview",
+                ttc_thresh: slider_ttc.value,
+                headway_s: slider_headway.value,
+                regen_ratio: slider_regen.value,
+                student_insight: ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 Capstone 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节 TTC 避险阈值、跟驰时距与能量回收比例，观察在加塞工况下安全、舒适与电能回充的多目标协同规律。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_ttc, slider_headway, slider_regen, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
