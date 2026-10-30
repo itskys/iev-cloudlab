@@ -75,6 +75,13 @@ from .semester_archiver import (
     export_teacher_semester_archive,
     render_download_link_html,
 )
+from .lab_explorers import (
+    show_a2_explorer,
+    show_b4_explorer,
+    show_c3_explorer,
+    show_d4_explorer,
+    show_e2_explorer,
+)
 
 __version__ = "1.0.0"
 __all__ = [
@@ -114,4 +121,6 @@ __all__ = [
     "V2XMessage", "V2XWirelessChannel", "CACCPlatoonSimulator", "render_v2x_topology_html",
     # 学期结课总归档与毕业成就包 (P3.3)
     "export_student_portfolio", "export_teacher_semester_archive", "render_download_link_html",
+    # 新手直觉探索与课前导学交互引擎 (Phase 0)
+    "show_a2_explorer", "show_b4_explorer", "show_c3_explorer", "show_d4_explorer", "show_e2_explorer",
 ]
