@@ -28,7 +28,9 @@ except ImportError:
     from .evaluator import GRADING_SPECS, grade_metrics
 
 CHART_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'results', 'charts')
-REQUIRED_EXP_COUNT = len(GRADING_SPECS)  # 29 门必做实验基准
+# 29 门专业基础/进阶实验（A1~H2）与 1 项跨域综合大作业（Capstone）分离口径
+REGULAR_EXP_SPECS = {k: v for k, v in GRADING_SPECS.items() if k != 'Capstone_iev_integrated'}
+REQUIRED_EXP_COUNT = len(REGULAR_EXP_SPECS)  # 严格锁定为 29 门专业实验基准
 
 
 def build_grade_table(all_results, required_count=None):
@@ -38,11 +40,15 @@ def build_grade_table(all_results, required_count=None):
       username: {
         exp_id: score,
         ...,
-        'total': 综合总评得分 (缺交记 0 分，按全量 29 门折算),
-        'submitted_avg': 已提交实验均分,
-        'n_done': 完成门数,
+        'total': 平时专业实验综合得分 (缺交记 0 分，按全量 29 门折算),
+        'regular_total': 同 total (29门基准),
+        'capstone_score': Capstone 期末综合大作业得分 (None 或 0~100),
+        'capstone_done': 是否达成 Capstone 闭环合格,
+        'submitted_avg': 已提交平时实验均分,
+        'n_done': 完成平时实验门数 (0~29),
         'n_required': 必做总门数 (29),
-        'completion_rate': 完成率 (%)
+        'completion_rate': 平时实验完成率 (%),
+        'course_composite': 大纲总评参考得分 (平时60% + Capstone25% + 期中测验锚点15%)
       }
     }
     """
@@ -52,16 +58,28 @@ def build_grade_table(all_results, required_count=None):
     table = {}
     for user, exps in all_results.items():
         row = {}
-        scores = []
-        for exp_id, metrics in exps.items():
-            if exp_id not in GRADING_SPECS:
-                continue
-            r = grade_metrics(exp_id, metrics)
-            row[exp_id] = r['score']
-            scores.append(r['score'])
+        regular_scores = []
+        for exp_id in REGULAR_EXP_SPECS:
+            if exp_id in exps:
+                metrics = exps[exp_id]
+                r = grade_metrics(exp_id, metrics)
+                row[exp_id] = r['score']
+                regular_scores.append(r['score'])
 
-        n_done = len(scores)
-        sum_scores = sum(scores)
+        # 独立核验 Capstone 期末跨域综合大作业 (Week 16, 25% 权重)
+        cap_score = None
+        if 'Capstone_iev_integrated' in exps:
+            r_cap = grade_metrics('Capstone_iev_integrated', exps['Capstone_iev_integrated'])
+            cap_score = r_cap['score']
+            row['Capstone_iev_integrated'] = cap_score
+            row['capstone_score'] = cap_score
+            row['capstone_done'] = (cap_score >= 60.0)
+        else:
+            row['capstone_score'] = None
+            row['capstone_done'] = False
+
+        n_done = len(regular_scores)
+        sum_scores = sum(regular_scores)
 
         # 公平总评：未做实验按 0 分计入全课程 29 门基准分母
         total_score = round(sum_scores / required_count, 1)
@@ -69,10 +87,15 @@ def build_grade_table(all_results, required_count=None):
         comp_rate = round((n_done / required_count) * 100.0, 1)
 
         row['total'] = total_score
+        row['regular_total'] = total_score
         row['submitted_avg'] = sub_avg
         row['n_done'] = n_done
         row['n_required'] = required_count
         row['completion_rate'] = comp_rate
+
+        # 课程大纲 16 周总评参考（平时实验 60% + 期末 Capstone 25% + 期中测验 15%）
+        cap_val = cap_score if cap_score is not None else 0.0
+        row['course_composite'] = round(total_score * 0.60 + cap_val * 0.25 + 15.0, 1)
 
         table[user] = row
     return table
@@ -98,9 +121,13 @@ def statistics(table):
                 'pass_rate': round(sum(1 for v in vals if v >= 60) / len(vals) * 100, 1),
             }
 
+    cap_dones = [r for r in table.values() if r.get('capstone_done')]
+
     return {
         'n_students': len(table),
         'n_submitted': len(submitted_students),
+        'n_capstone_passed': len(cap_dones),
+        'capstone_pass_rate': round(len(cap_dones) / len(table) * 100, 1) if table else 0.0,
         'mean': round(_stats.mean(totals), 1) if totals else 0.0,
         'submitted_mean': round(_stats.mean(sub_avgs), 1) if sub_avgs else 0.0,
         'mean_completion_rate': round(_stats.mean(comp_rates), 1) if comp_rates else 0.0,

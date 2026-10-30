@@ -54,6 +54,87 @@ class ASTNormalizer(ast.NodeTransformer):
         return node
 
 
+def load_template_ast_fingerprints(exp_name: str) -> Set[Tuple[str, ...]]:
+    """加载官方母版 Notebook 的所有代码单元格 AST 语法序列指纹，用于过滤课程自带模板代码"""
+    candidates = []
+    clean_exp = exp_name.replace('.ipynb', '').replace('_pro', '')
+    src_base = os.environ.get("IEVLAB_SRC", "/opt/ievlab/scenarios")
+
+    candidates.append(os.path.join(src_base, "notebooks", f"{clean_exp}_pro.ipynb"))
+    candidates.append(os.path.join(src_base, "notebooks", f"{clean_exp}.ipynb"))
+    candidates.append(os.path.join(os.path.dirname(__file__), "..", "..", "notebooks", f"{clean_exp}_pro.ipynb"))
+    candidates.append(os.path.join(os.path.dirname(__file__), "..", "..", "notebooks", f"{clean_exp}.ipynb"))
+
+    template_fp = set()
+    master_path = None
+    for cand in candidates:
+        if os.path.exists(cand):
+            master_path = cand
+            break
+
+    if not master_path:
+        return template_fp
+
+    try:
+        with open(master_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        for c in data.get('cells', []):
+            if c.get('cell_type') == 'code':
+                src = "".join(c.get('source', [])).strip()
+                clean_lines = [l for l in src.splitlines() if not l.startswith(('%', '!'))]
+                code = "\n".join(clean_lines).strip()
+                if code:
+                    seq = get_ast_sequence(code)
+                    if seq:
+                        template_fp.add(tuple(seq))
+    except Exception:
+        pass
+    return template_fp
+
+
+def extract_custom_ast_sequence(nb_path: str, template_fp: Optional[Set[Tuple[str, ...]]] = None) -> Tuple[List[str], bool]:
+    """提取学生在 Notebook 中自主编写或实质性修改的代码单元格 AST 序列。
+
+    Returns:
+        (custom_ast_nodes, is_unmodified_template)
+    """
+    if not os.path.exists(nb_path):
+        return [], True
+    try:
+        with open(nb_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        cells = data.get('cells', [])
+        custom_nodes = []
+        has_any_code = False
+        has_custom_code = False
+
+        for c in cells:
+            if c.get('cell_type') == 'code':
+                src = "".join(c.get('source', [])).strip()
+                clean_lines = [l for l in src.splitlines() if not l.startswith(('%', '!'))]
+                code = "\n".join(clean_lines).strip()
+                if not code:
+                    continue
+                has_any_code = True
+                seq = get_ast_sequence(code)
+                if not seq:
+                    continue
+
+                # 若与母版任一单元格 AST 结构指纹完全一致，说明是课程自带模板或纯标量参数微调，排除出查重池
+                if template_fp and tuple(seq) in template_fp:
+                    continue
+
+                # 自主编写或重构的语法逻辑
+                has_custom_code = True
+                custom_nodes.extend(seq)
+
+        if not has_any_code or not has_custom_code:
+            return [], True
+        return custom_nodes, False
+    except Exception:
+        return [], True
+
+
 def extract_code_from_notebook(nb_path: str) -> str:
     """提取 Notebook 中所有非空 Python 代码单元格源码"""
     if not os.path.exists(nb_path):
@@ -151,6 +232,7 @@ def scan_class_code_plagiarism(
     exp_name: str = 'A1_cutin_aeb',
 ) -> Dict[str, Any]:
     """在全班学生目录下批量扫描指定实验的代码相似度矩阵。
+    基于母版指纹自动过滤课程自带模板与纯标量参数微调，仅比对学生自主编写/重构的算法逻辑。
 
     :param homes_base: 学生 home 根目录
     :param exp_name: 待扫描的实验名（如 'A1_cutin_aeb'）
@@ -159,7 +241,11 @@ def scan_class_code_plagiarism(
     if not os.path.exists(homes_base):
         return {'exp_name': exp_name, 'n_students': 0, 'flagged_count': 0, 'pairs': []}
 
-    student_codes = {}
+    # 提取官方母版 Notebook 的单元格 AST 指纹，严格排除课程自带模板与纯参数微调干扰
+    template_fps = load_template_ast_fingerprints(exp_name)
+
+    student_custom_ast = {}
+    unmodified_students = set()
     users = sorted(os.listdir(homes_base))
 
     for u in users:
@@ -178,13 +264,14 @@ def scan_class_code_plagiarism(
                 break
 
         if target_nb:
-            code = extract_code_from_notebook(target_nb)
-            if len(code.strip()) > 30:
-                student_codes[u] = code
+            custom_seq, is_unmodified = extract_custom_ast_sequence(target_nb, template_fps)
+            if is_unmodified or len(custom_seq) < 3:
+                unmodified_students.add(u)
+                student_custom_ast[u] = []
+            else:
+                student_custom_ast[u] = custom_seq
 
-    student_list = list(student_codes.keys())
-    # 预先缓存所有学生的 AST 语法序列，将复杂度从重复解析 O(N^2) 降至线性 O(N)
-    student_ast_seqs = {u: get_ast_sequence(student_codes[u]) for u in student_list}
+    student_list = list(student_custom_ast.keys())
     n = len(student_list)
     flagged_pairs = []
 
@@ -193,20 +280,25 @@ def scan_class_code_plagiarism(
         for j in range(i + 1, n):
             u1 = student_list[i]
             u2 = student_list[j]
-            seq_a = student_ast_seqs[u1]
-            seq_b = student_ast_seqs[u2]
+            seq_a = student_custom_ast[u1]
+            seq_b = student_custom_ast[u2]
+
+            # 核心防误判规则：若任一方为标准母版跟跑（无自主拓展算法结构），不计入雷同抄袭预警
+            if not seq_a or not seq_b:
+                continue
+
             sim = calculate_jaccard_similarity(seq_a, seq_b, n_gram=3)
             pct = sim * 100.0
 
             if pct >= 85.0:
                 st = 'CRITICAL_PLAGIARISM'
-                desc = '高度雷同：核心抽象语法树与运算流几乎完全吻合，存在重大抄袭嫌疑。'
+                desc = '高度雷同：自主编写部分的核心抽象语法树与运算流几乎完全吻合，存在重大抄袭嫌疑。'
             elif pct >= 70.0:
                 st = 'MODERATE_SIMILARITY'
-                desc = '中度相似：控制结构与算法主干逻辑相近，建议重点复核。'
+                desc = '中度相似：自主编写部分的控制结构与算法主干逻辑相近，建议重点复核。'
             else:
                 st = 'INDEPENDENT'
-                desc = '独立完成：代码语法结构具有显著差异。'
+                desc = '独立完成：自主编写代码语法结构具有显著差异。'
 
             if pct >= 65.0:  # 记录有疑似风险的点对
                 flagged_pairs.append({
@@ -222,6 +314,8 @@ def scan_class_code_plagiarism(
     return {
         'exp_name': exp_name,
         'n_students': n,
+        'n_custom_authors': n - len(unmodified_students),
+        'n_template_baseline': len(unmodified_students),
         'flagged_count': len(flagged_pairs),
         'pairs': flagged_pairs,
     }
@@ -234,11 +328,13 @@ def render_plagiarism_report_html(report: Dict[str, Any]) -> str:
     pairs = report.get('pairs', [])
 
     if not pairs:
+        n_base = report.get('n_template_baseline', 0)
+        n_cust = report.get('n_custom_authors', 0)
         return f"""
         <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px; margin: 10px 0; font-family: system-ui, sans-serif;">
             <strong style="color: #16a34a; font-size: 14px;">✅ 【{exp}】全班代码 AST 结构查重正常</strong>
             <p style="margin: 4px 0 0 0; color: #4b5563; font-size: 12px;">
-                共比对 {n_stu} 名学生提交的代码，未发现语法树异常重合现象，全员均为独立编码。
+                共比对 {n_stu} 名学生提交的代码（已自动过滤母版自带模板代码：{n_base} 人标准模板跟跑，{n_cust} 人含自主重构逻辑），未发现异常语法树雷同。
             </p>
         </div>
         """

@@ -28,6 +28,8 @@ MANIFEST_NAME = ".ievlab_manifest.json"
 
 EXCLUDE_DIRS = {"__pycache__", ".ipynb_checkpoints", "archive"}
 EXCLUDE_FILES = {"教师面板_成绩与学生管理.ipynb"}
+# 根目录下需要分发到学生 home 根目录的教学指导文档
+ROOT_FILES = ["demo_script_10min.md"]
 # results/ 只建空目录，不分发其中内容（那是学生自己的产出区）
 EMPTY_DIRS = {"labs/data/results", "labs/data/benchmarks"}
 
@@ -47,7 +49,12 @@ def _sha(path):
 
 
 def _iter_sources():
-    """产出 (相对路径, 源绝对路径)：notebooks/ 与 labs/ 下应分发的文件。"""
+    """产出 (相对路径, 源绝对路径)：根目录教学文档、notebooks/ 与 labs/ 下应分发的文件。"""
+    for fname in ROOT_FILES:
+        p = os.path.join(SRC, fname)
+        if os.path.isfile(p):
+            yield fname, p
+
     for top in ("notebooks", "labs"):
         base = os.path.join(SRC, top)
         if not os.path.isdir(base):

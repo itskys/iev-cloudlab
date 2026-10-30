@@ -70,7 +70,12 @@ def run_backup():
     if os.path.isdir(deploy_dir):
         items_to_pack.append((deploy_dir, "deploy"))
 
-    # 3. 收集所有用户的成绩结果 (results/) 与分发记录 (manifest)
+    # 3. 仿真场景与模型资产 (OpenSCENARIO, OpenDRIVE, FMU 资产，防止路网场景意外丢失)
+    scenarios_dir = os.path.join(BASE_DIR, "scenarios", "labs", "scenarios")
+    if os.path.isdir(scenarios_dir):
+        items_to_pack.append((scenarios_dir, "scenarios_assets"))
+
+    # 4. 收集所有用户的成绩结果 (results/) 与分发记录 (manifest)
     homes_dir = os.path.join(BASE_DIR, "home")
     temp_results_dir = os.path.join(BACKUP_DIR, f".tmp_homes_{now_str}")
     if os.path.isdir(homes_dir):
