@@ -81,6 +81,11 @@ from .lab_explorers import (
     show_c3_explorer,
     show_d4_explorer,
     show_e2_explorer,
+    show_a3_explorer,
+    show_b1_explorer,
+    show_c2_explorer,
+    show_d2_explorer,
+    show_e4_explorer,
 )
 
 __version__ = "1.0.0"
@@ -123,4 +128,5 @@ __all__ = [
     "export_student_portfolio", "export_teacher_semester_archive", "render_download_link_html",
     # 新手直觉探索与课前导学交互引擎 (Phase 0)
     "show_a2_explorer", "show_b4_explorer", "show_c3_explorer", "show_d4_explorer", "show_e2_explorer",
+    "show_a3_explorer", "show_b1_explorer", "show_c2_explorer", "show_d2_explorer", "show_e4_explorer",
 ]
