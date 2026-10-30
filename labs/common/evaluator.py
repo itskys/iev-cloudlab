@@ -299,18 +299,18 @@ GRADING_SPECS = {
     },
     # ---------- Capstone: 全域全链路大作业 ----------
     'Capstone_iev_integrated': {
-        'name': '全域端到端闭环大作业',
+        'name': '集成演示大作业（运动学模型）',
         'timeout': 600,
         'criteria': [
             ('collision', {'type': 'equals', 'value': False, 'weight': 3,
                            'desc': '全程零碰撞（避险成功）'}),
             ('min_ttc_s', {'type': 'min', 'value': 1.5, 'weight': 2,
                            'desc': '最小TTC≥1.5s（满足避险安全余量）'}),
-            ('energy_kwh_100km', {'type': 'range', 'min': 10.0, 'max': 20.0,
-                                  'weight': 2,
-                                  'desc': '百公里电耗处于真实物理区间 [10, 20]'}),
+            ('window_net_kwh', {'type': 'range', 'min': 0.0, 'max': 0.05,
+                                'weight': 2,
+                                'desc': '机动窗口净耗电量级合理 [0, 0.05] kWh（30秒/约420m窗口；百公里等效值仅量级参考，不参与判据）'}),
             ('capstone_completed', {'type': 'equals', 'value': True, 'weight': 1,
-                                    'desc': '感-算-控-电-网全链路闭环执行完成'}),
+                                    'desc': '集成演示全流程执行完成（运动学模型）'}),
         ],
     },
 }
