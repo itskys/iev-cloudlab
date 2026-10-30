@@ -429,3 +429,36 @@
       50% { opacity: 0.5; transform: scale(0.85); }
       100% { opacity: 1; transform: scale(1); }
     }
+
+    /* ---- 双核驾驶舱与快捷启动卡片 (v1.0) ---- */
+    .iev-launchpad-card {
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+    }
+    .iev-launchpad-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08) !important;
+    }
+    .iev-launchpad-card.student-card:hover {
+      border-color: #2563eb !important;
+    }
+    .iev-launchpad-card.capstone-card:hover {
+      border-color: #5e35b1 !important;
+    }
+    .iev-launchpad-card.teacher-card:hover {
+      border-color: #059669 !important;
+    }
+    [data-bs-theme="dark"] .iev-launchpad-card {
+      background: rgba(17, 24, 39, 0.75) !important;
+    }
+    [data-bs-theme="dark"] .iev-launchpad-card:hover {
+      box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* ---- V1.0 认证徽标 ---- */
+    .iev-pill-ver {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      line-height: 1;
+    }
+

@@ -50,7 +50,7 @@
 
 <section>
   <h2>系统架构 <span class="en">System Architecture</span></h2>
-  <p>六层架构：接入层（Cloudflare）→ 平台层（JupyterHub + GPU算力舱）→ 实验层（29个已上线 + 5个GPU规划）→ 支撑层（共享库/场景/数据）→ 仿真引擎层（全部真实开源引擎）→ 教学管理层（自动评分与教师面板）。图中虚线框为二期规划。</p>
+  <p>六层架构：接入层（Cloudflare）→ 平台层（JupyterHub + 算力沙箱）→ 实验层（29个 V1.0 标准实验 + 期末 Capstone + 智能学习驾驶舱）→ 支撑层（共享算法库/场景库/数据流）→ 仿真引擎层（全部真实开源物理引擎）→ 教学管理层（自动评分、学生驾驶舱与教师学情面板）。图中虚线框为二期规划。</p>
   <div class="figbar">
     <span>图版：</span>
     <button class="on" onclick="setFig('arch','cn',this)">中文版</button>
@@ -89,12 +89,12 @@
 <section>
   <h2>功能特色 <span class="en">Features</span></h2>
   <div class="cards">
-    <div class="card"><h3>🧪 真实仿真</h3><p>esmini、SUMO、FASTSim、PyBaMM 等真实引擎逐一实测验证；演示性内容强制标注，绝不以假充真。</p></div>
-    <div class="card"><h3>🔗 全链打通</h3><p>实验不是孤岛：换一块电池、改一个车型参数，下游整车与智驾实验自动跟随。</p></div>
-    <div class="card"><h3>📚 教学完整</h3><p>每个实验含原理、目的、任务、验证、结果分析、报错说明六段式与原理图，配学生指南、教师手册与 16 周大纲。</p></div>
-    <div class="card"><h3>✅ 自动评分</h3><p>29 套判据阈值全部取自实测值，带防作弊设计；教师面板提供成绩、统计、图表与名册管理。</p></div>
-    <div class="card"><h3>☁️ 弹性云原生</h3><p>Cloudflare 门面 + 容器隔离，按需扩容；GPU 感知层（CARLA / Autoware）已为二期预留。</p></div>
-    <div class="card"><h3>🔓 全开源</h3><p>工具链全部开源并完成 31 项许可证审计，无商业授权风险。</p></div>
+    <div class="card"><h3>🧪 真实物理仿真</h3><p>esmini、SUMO、FASTSim、PyBaMM、FMPy 等真实引擎逐一闭环实测；绝无假数据以假充真。</p></div>
+    <div class="card"><h3>🔗 四大跨域数据链</h3><p>车型设计链、算法闭环链、能量管理链与感知链贯通；换一块电池或改一个参数，下游自动跟随响应。</p></div>
+    <div class="card"><h3>📚 严谨六步导学</h3><p>数理推导、算法实现、闭环仿真、3D孪生、参数探索与自动化评测六段式，配全套教研资源。</p></div>
+    <div class="card"><h3>📊 双核智能面板</h3><p>学生端提供七维能力画像与 Copilot 调参驾驶舱；教师端提供班级总评、AST 代码查重与报告核验。</p></div>
+    <div class="card"><h3>☁️ 弹性云原生沙箱</h3><p>Cloudflare 门面 + 容器秒级隔离就绪，独立单人配额，数据持久化自动同步。</p></div>
+    <div class="card"><h3>🔓 宽松开源许可证</h3><p>全套工业工具链均采用宽松开源许可证，通过 31 项严格许可证合规性审计，零版权风险。</p></div>
   </div>
 </section>
 
@@ -109,6 +109,8 @@
     <li><b>F 模型交换（3）</b>：FMU 加载、建模导出、多模型协仿真</li>
     <li><b>G 中间件（2）</b>：ROS 2 话题通信与服务调用</li>
     <li><b>H 场景工程（2）</b>：场景批量生成、变异模糊测试</li>
+    <li><b>🏆 期末大作业 (Capstone)</b>：多物理场跨域一体化综合实验（电池机理 × FASTSim能耗 × ACC控制 × 3D数字孪生）</li>
+    <li><b>📊 智能学习驾驶舱 (Student Cockpit)</b>：学生自主画像、七维能力雷达图、IEV Copilot 智能导师与结课作品集导出</li>
     <li><b>I 感知与自动驾驶（5，二期·GPU）</b>：CARLA三维场景与传感器、YOLO目标检测、点云与融合、定位规划、Autoware完整驾驶栈——经 GPU 算力舱（RunPod 4090）按需运行</li>
   </ul>
   <div class="note">诚实边界：I 系列（感知与完整自动驾驶栈）为二期规划、尚未上线，图中以虚线框标注；A 系列中 esmini 目标车在 ctypes 模式下为冻结状态（等价静态障碍物），已在每个受影响实验中如实声明。</div>

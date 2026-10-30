@@ -631,7 +631,7 @@
     <div class="iev-page-header">
       <div class="iev-badge-chip">
         <span class="iev-status-dot"></span>
-        <span data-i18n="home_chip">学生仿真实验工作台 · ROS 2 Jazzy Core</span>
+        <span data-i18n="home_chip">IEV CloudLab v1.0 官方标准版 · ROS 2 Jazzy Core · 六层全链路闭环</span>
       </div>
       <h1 class="iev-page-title">
         <span data-i18n="home_welcome">欢迎回来</span>，<span style="color: #155eef; background: linear-gradient(135deg, #155eef 0%, #00b4ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ user.name }}</span> 👋
@@ -661,6 +661,7 @@
           <span class="iev-chip" data-i18n="home_spec_ram">🧠 2.0 GB 内存配额</span>
           <span class="iev-chip" data-i18n="home_spec_shm">💾 512 MB 共享内存</span>
           <span class="iev-chip" data-i18n="home_spec_os">🐧 Ubuntu 24.04 · ROS 2 Jazzy</span>
+          <span class="iev-chip" style="color: #10b981; border-color: rgba(16,185,129,0.3);">🌟 V1.0 官方认证标准</span>
         </div>
 
         <div>
@@ -706,7 +707,58 @@
       {% endif %}
     </div>
 
-    <!-- 系统架构与全景特色 (System Architecture & Highlights) -->
+
+    <!-- 双核驾驶舱与核心快捷通道 (Dual-Core Dashboard Launchpad) -->
+    <div class="iev-launchpad-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 24px 0;">
+      <!-- 学生面板快捷卡 -->
+      <a class="iev-launchpad-card student-card" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/学生面板_学习驾驶舱与工程自检.ipynb" target="_blank" style="text-decoration: none; color: inherit; display: block; border-radius: 14px; padding: 18px 20px; background: var(--iev-card-bg); border: 1.5px solid rgba(37,99,235,0.28); box-shadow: 0 4px 12px rgba(37,99,235,0.06); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; font-size: 20px;">📊</div>
+            <div>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #2563eb;">学生面板 · 个人学习驾驶舱</h4>
+              <span style="font-size: 11.5px; color: var(--iev-text-muted);">Student Cockpit & Self-Audit</span>
+            </div>
+          </div>
+          <span style="background: rgba(37,99,235,0.1); color: #2563eb; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;">进入面板 ↗</span>
+        </div>
+        <p style="margin: 0; font-size: 13px; color: var(--iev-text-secondary); line-height: 1.5;">29 门实验进度穿透核算 · 七维工程能力雷达图 · IEV Copilot 智能调参导师 · 报告预审与作品集导出</p>
+      </a>
+
+      <!-- Capstone 综合大作业快捷卡 -->
+      <a class="iev-launchpad-card capstone-card" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/Capstone_iev_integrated_pro.ipynb" target="_blank" style="text-decoration: none; color: inherit; display: block; border-radius: 14px; padding: 18px 20px; background: var(--iev-card-bg); border: 1.5px solid rgba(94,53,177,0.28); box-shadow: 0 4px 12px rgba(94,53,177,0.06); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(94,53,177,0.1); display: flex; align-items: center; justify-content: center; font-size: 20px;">🏆</div>
+            <div>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #5e35b1;">期末跨域综合大作业 (Capstone)</h4>
+              <span style="font-size: 11.5px; color: var(--iev-text-muted);">Multi-Physics Closed-Loop Demo</span>
+            </div>
+          </div>
+          <span style="background: rgba(94,53,177,0.1); color: #5e35b1; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;">挑战大作业 ↗</span>
+        </div>
+        <p style="margin: 0; font-size: 13px; color: var(--iev-text-secondary); line-height: 1.5;">贯通动力电池电化学（D3）、整车工况能耗（FASTSim）、ACC 巡航控制与三维数字孪生动态回放</p>
+      </a>
+
+      <!-- 教师面板快捷卡 (仅对教师和管理员展示) -->
+      {% if 'admin-ui' in parsed_scopes or user.admin or user.name in ['admin', 'teacher'] %}
+      <a class="iev-launchpad-card teacher-card" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/教师面板_成绩与学生管理.ipynb" target="_blank" style="text-decoration: none; color: inherit; display: block; border-radius: 14px; padding: 18px 20px; background: var(--iev-card-bg); border: 1.5px solid rgba(5,150,105,0.28); box-shadow: 0 4px 12px rgba(5,150,105,0.06); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(5,150,105,0.1); display: flex; align-items: center; justify-content: center; font-size: 20px;">🎓</div>
+            <div>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #059669;">教师面板 · 成绩与学情中枢</h4>
+              <span style="font-size: 11.5px; color: var(--iev-text-muted);">Teacher Dashboard & Grading</span>
+            </div>
+          </div>
+          <span style="background: rgba(5,150,105,0.1); color: #059669; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;">管理中枢 ↗</span>
+        </div>
+        <p style="margin: 0; font-size: 13px; color: var(--iev-text-secondary); line-height: 1.5;">全班成绩统计与及格率直方图 · 学生代码 AST 语法树查重 · 实验报告一致性批量核验与名册归档</p>
+      </a>
+      {% endif %}
+    </div>
+
+        <!-- 系统架构与全景特色 (System Architecture & Highlights) -->
     <div class="iev-arch-spotlight" id="arch-section">
       <div class="iev-arch-header">
         <div class="iev-arch-header-left">
@@ -819,6 +871,19 @@
           </div>
         </div>
 
+        <div class="iev-doc-card" style="border: 1.5px solid rgba(37,99,235,0.25); background: linear-gradient(180deg, var(--iev-card-bg) 0%, rgba(37,99,235,0.03) 100%);">
+          <div>
+            <span class="iev-doc-icon">📊</span>
+            <h4 class="iev-doc-title">学生学习驾驶舱与工程自检</h4>
+            <p class="iev-doc-desc">个人七维工程能力雷达图、Copilot 智能调参导师、报告预审与结课作品集导出</p>
+          </div>
+          <div>
+            <a class="iev-doc-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/学生面板_学习驾驶舱与工程自检.ipynb" target="_blank">
+              <span>打开面板 ↗</span>
+            </a>
+          </div>
+        </div>
+
         <div class="iev-doc-card">
           <div>
             <span class="iev-doc-icon">⏱️</span>
@@ -910,7 +975,7 @@
           <p class="iev-section-sub" data-i18n="home_curr_sub">8 大专业实验模块 · 29 个仿真实验 · 4 条跨领域数据协同链路</p>
         </div>
         <div class="iev-filter-bar">
-          <button type="button" class="iev-filter-btn active" data-filter="all" data-i18n="home_filter_all">全部实验 (29)</button>
+          <button type="button" class="iev-filter-btn active" data-filter="all" data-i18n="home_filter_all">全部实验 (29+1)</button>
           <button type="button" class="iev-filter-btn" data-filter="mod-a">A. 自动驾驶 (5)</button>
           <button type="button" class="iev-filter-btn" data-filter="mod-b">B. 交通流 (5)</button>
           <button type="button" class="iev-filter-btn" data-filter="mod-c">C. 整车能量 (4)</button>
@@ -944,6 +1009,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/A1_cutin_aeb_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -960,6 +1026,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/A2_acc_follow_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -976,6 +1043,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard" data-i18n="home_diff_hard">高级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/A3_aeb_closedloop_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -992,6 +1060,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/A4_intersection_yield_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1008,6 +1077,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/A5_merge_kinematic_demo_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1039,6 +1109,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/B1_idm_calibration_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1054,6 +1125,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/B2_traffic_signal_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1069,6 +1141,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard" data-i18n="home_diff_hard">高级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/B3_sumo_cacc_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1084,6 +1157,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/B4_congestion_wave_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1099,6 +1173,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/B5_green_wave_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1206,6 +1281,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/D1_pybamm_battery_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1221,6 +1297,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/D2_rate_capacity_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1236,6 +1313,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/D3_ocv_soc_export_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1251,6 +1329,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard" data-i18n="home_diff_hard">高级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/D4_lithium_plating_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1312,6 +1391,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard" data-i18n="home_diff_hard">高级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/E3_mpc_follow_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1358,6 +1438,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/F1_fmu_load_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1373,6 +1454,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/F2_openmodelica_fmu_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1388,6 +1470,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard" data-i18n="home_diff_hard">高级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/F3_multi_fmu_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1419,6 +1502,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/G1_ros_topics_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1434,6 +1518,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy" data-i18n="home_diff_easy">初级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/G2_ros_services_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1465,6 +1550,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff mid" data-i18n="home_diff_mid">中级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/H1_batch_generation_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1480,6 +1566,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard" data-i18n="home_diff_hard">高级</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel" data-i18n="home_kernel_default">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/H2_scenario_fuzzing_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1513,6 +1600,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff hard">综合</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/Capstone_iev_integrated_pro.ipynb" target="_blank" data-i18n="home_open_nb">打开 Notebook ↗</a>
@@ -1529,6 +1617,7 @@
             </div>
             <div class="iev-lab-meta">
               <span class="iev-pill-diff easy">全周期</span>
+              <span class="iev-pill-ver" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-size: 11px; padding: 2px 7px; border-radius: 12px; font-weight: 600;">v1.0</span>
               <span class="iev-pill-kernel">Python 3.12</span>
               {% if default_server.active %}
                 <a class="iev-lab-open-btn" href="{{ base_url }}user/{{ user.name }}/lab/tree/notebooks/学生面板_学习驾驶舱与工程自检.ipynb" target="_blank">打开学生面板 ↗</a>
