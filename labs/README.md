@@ -1,6 +1,10 @@
-# IEV CloudLab Labs 目录结构
+# IEV CloudLab 平台计算引擎与数据支撑库 (Platform Core SDK & Assets)
 
-## 布局
+> ⚠️ **师生使用指引**：  
+> 本 `labs/` 目录为 IEV CloudLab 平台底层**核心计算引擎、仿真场景库与数据资产区**（含 `common/` 算法库、`scenarios/` 工业仿真场景、`data/` 车辆模型与评测产物）。  
+> 👨‍🎓 **学生开展交互实验**：请进入与本目录同级的 **`notebooks/`** 目录，打开对应模块的 `*_pro.ipynb` 进行学习与代码实操。
+
+## 目录架构与布局
 
 ```
 labs/
