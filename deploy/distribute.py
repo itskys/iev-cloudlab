@@ -30,8 +30,8 @@ EXCLUDE_DIRS = {"__pycache__", ".ipynb_checkpoints", "archive"}
 EXCLUDE_FILES = {"教师面板_成绩与学生管理.ipynb"}
 # 根目录下需要分发到学生 home 根目录的教学指导文档
 ROOT_FILES = ["demo_script_10min.md"]
-# results/ 与 preview_checkins/ 只建空目录，不分发其中内容（那是学生自己的产出区）
-EMPTY_DIRS = {"labs/data/results", "labs/data/benchmarks", "labs/data/preview_checkins"}
+# results/ 与 preview_checkins/、lite/ 只建空目录，不分发其中内容（那是学生自己的产出区）
+EMPTY_DIRS = {"labs/data/results", "labs/data/benchmarks", "labs/data/preview_checkins", "labs/data/lite"}
 
 SETTINGS_REL = (
     ".jupyter/lab/user-settings/@jupyterlab/"
