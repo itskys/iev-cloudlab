@@ -42,17 +42,28 @@ def run_backup():
     hub_db = os.path.join(BASE_DIR, "hub_data", "jupyterhub.sqlite")
     temp_db_copy = os.path.join(BACKUP_DIR, f".tmp_db_{now_str}.sqlite")
     if os.path.isfile(hub_db):
+        src_conn = None
+        dst_conn = None
         try:
             src_conn = sqlite3.connect(hub_db)
             dst_conn = sqlite3.connect(temp_db_copy)
             with dst_conn:
                 src_conn.backup(dst_conn)
-            dst_conn.close()
-            src_conn.close()
             items_to_pack.append((temp_db_copy, "hub_data/jupyterhub.sqlite"))
         except Exception as e:
             print(f"[Backup Warning] SQLite online backup failed: {e}, falling back to file copy")
             items_to_pack.append((hub_db, "hub_data/jupyterhub.sqlite"))
+        finally:
+            if dst_conn:
+                try:
+                    dst_conn.close()
+                except Exception:
+                    pass
+            if src_conn:
+                try:
+                    src_conn.close()
+                except Exception:
+                    pass
 
     # 2. 部署配置与密钥清单
     deploy_dir = os.path.join(BASE_DIR, "deploy")

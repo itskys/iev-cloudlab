@@ -430,16 +430,20 @@ def grade_metrics(experiment_id, metrics, executed_ok=None):
     return res
 
 
-def grade_result_file(experiment_id):
+def grade_result_file(experiment_id, executed_ok=None):
     """读 labs/data/results/<experiment_id>.json 并评分。"""
     path = os.path.join(RESULTS_DIR, f'{experiment_id}.json')
     if not os.path.exists(path):
         return {'experiment': experiment_id, 'score': 0, 'passed': False,
                 'error': f'结果文件不存在: {path}（先运行实验）'}
-    with open(path) as f:
-        data = json.load(f)
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        return {'experiment': experiment_id, 'score': 0, 'passed': False,
+                'error': f'结果文件读取或解析失败: {e}'}
     metrics = data.get('metrics', data)
-    return grade_metrics(experiment_id, metrics)
+    return grade_metrics(experiment_id, metrics, executed_ok=executed_ok)
 
 
 def grade_notebook(notebook_path, timeout=None):
@@ -448,7 +452,8 @@ def grade_notebook(notebook_path, timeout=None):
     注意：在学生容器内运行；kernel由notebook自身metadata决定。
     """
     base = os.path.basename(notebook_path)
-    experiment_id = base.replace('.ipynb', '')
+    # 支持带 _pro 的进阶版实验名映射回基础评测规范
+    experiment_id = base.replace('.ipynb', '').replace('_pro', '')
     spec = GRADING_SPECS.get(experiment_id, {})
     timeout = timeout or spec.get('timeout', 300)
 
@@ -477,11 +482,9 @@ def grade_notebook(notebook_path, timeout=None):
         return {'experiment': experiment_id, 'score': 0, 'passed': False,
                 'error': str(e)[:300]}
 
-    result = grade_result_file(experiment_id)
+    result = grade_result_file(experiment_id, executed_ok=executed_ok)
     result['executed_ok'] = executed_ok
     if not executed_ok:
-        result['score'] = max(0.0, result.get('score', 0) - 10)
-        result['passed'] = result['score'] >= 60.0
         result['exec_error'] = err
     return result
 

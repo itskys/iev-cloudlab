@@ -54,9 +54,14 @@ class PIDController(BaseController):
         if not targets:
             return {'target_a': 1.0, 'steer_angle': 0.0}  # 无前车，加速
 
+        # 仅考虑自车前方的目标车（过滤后方跟驰车辆，避免误制动）
+        ahead = [t for t in targets if t.get('x', 0) > ego.get('x', 0)]
+        if not ahead:
+            return {'target_a': 1.0, 'steer_angle': 0.0}  # 前方无车，加速巡航
+
         # 取最近前车
-        lead = min(targets, key=lambda t: abs(t['x'] - ego['x']))
-        gap = abs(lead['x'] - ego['x']) - 4.5  # 车长补偿
+        lead = min(ahead, key=lambda t: t['x'] - ego['x'])
+        gap = (lead['x'] - ego['x']) - 4.5  # 车长补偿
         desired_gap = ego['v'] * self.target_headway
         error = gap - desired_gap
 

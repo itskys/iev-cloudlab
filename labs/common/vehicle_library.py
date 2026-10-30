@@ -76,8 +76,10 @@ def save_result(experiment_id, data):
     data['experiment'] = experiment_id
     data['timestamp'] = datetime.now().isoformat()
     path = os.path.join(RESULTS_DIR, f'{experiment_id}.json')
-    with open(path, 'w') as f:
+    tmp_path = path + '.tmp'
+    with open(tmp_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+    os.replace(tmp_path, path)
     return path
 
 

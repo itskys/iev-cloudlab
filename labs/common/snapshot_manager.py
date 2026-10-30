@@ -113,6 +113,19 @@ def create_snapshot(
             history = []
 
     history.insert(0, meta)  # 最新排在最前
+
+    # 自动安全配额控制：单文件最多保留最近 20 个快照，防止多次运行撑满磁盘
+    MAX_SNAPSHOTS_PER_NB = 20
+    if len(history) > MAX_SNAPSHOTS_PER_NB:
+        for old_snap in history[MAX_SNAPSHOTS_PER_NB:]:
+            old_file = old_snap.get('file_path')
+            if old_file and os.path.exists(old_file):
+                try:
+                    os.remove(old_file)
+                except Exception:
+                    pass
+        history = history[:MAX_SNAPSHOTS_PER_NB]
+
     with open(index_file, 'w', encoding='utf-8') as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
 

@@ -168,9 +168,11 @@ class CACCPlatoonSimulator:
             history[0]['gap_err'].append(0.0)
 
         # 弦稳定性检验：检验扰动是否沿队列向后衰减
-        max_err_car1 = max(abs(e) for e in history[1]['gap_err'][30:])
-        max_err_car4 = max(abs(e) for e in history[self.n_vehicles - 1]['gap_err'][30:])
-        is_string_stable = max_err_car4 <= max_err_car1 * 1.05
+        slice_1 = history[1]['gap_err'][30:] if len(history[1]['gap_err']) > 30 else history[1]['gap_err']
+        slice_tail = history[self.n_vehicles - 1]['gap_err'][30:] if len(history[self.n_vehicles - 1]['gap_err']) > 30 else history[self.n_vehicles - 1]['gap_err']
+        max_err_car1 = max((abs(e) for e in slice_1), default=0.0)
+        max_err_car4 = max((abs(e) for e in slice_tail), default=0.0)
+        is_string_stable = max_err_car4 <= max_err_car1 * 1.05 if max_err_car1 > 0 else True
 
         return {
             'history': history,

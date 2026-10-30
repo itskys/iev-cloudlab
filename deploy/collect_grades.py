@@ -106,8 +106,10 @@ def main():
     for out_dir in outs:
         os.makedirs(out_dir, exist_ok=True)
         out_path = os.path.join(out_dir, 'all_results.json')
-        with open(out_path, 'w') as f:
+        tmp_path = out_path + '.tmp'
+        with open(tmp_path, 'w', encoding='utf-8') as f:
             json.dump(all_results, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, out_path)
         # [权限收紧 - 2026-10-25 Muse 复核]：
         # Host cron 通常以 root 身份运行，写入的文件属主若为 root:root 且仅 0644，
         # teacher 容器（以 jovyan UID 1000 运行）在调用 gradebook 或归档时会报 PermissionDenied。

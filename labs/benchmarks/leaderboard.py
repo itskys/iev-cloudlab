@@ -6,7 +6,9 @@
   3. render_leaderboard(): 渲染可视化 HTML 天梯榜单（支持勋章、段位胶囊、高亮当前用户）
 """
 
+import fcntl
 import hashlib
+import html as html_lib
 import json
 import os
 import time
@@ -58,63 +60,81 @@ def submit_score(
       dict: 包含当前用户排名、超越百分比及完整榜单记录
     """
     filepath = _get_benchmark_file(benchmark_name)
-    data = {"benchmark": benchmark_name, "records": []}
+    lock_file = filepath + ".lock"
 
-    if os.path.isfile(filepath):
+    # 使用文件排他锁保证并发读写一致性，若环境受限则优雅降级为无锁写入
+    lf = None
+    try:
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            data = {"benchmark": benchmark_name, "records": []}
+            lf = open(lock_file, "w")
+            fcntl.flock(lf, fcntl.LOCK_EX)
+        except (OSError, PermissionError):
+            lf = None
 
-    records = data.get("records", [])
+        data = {"benchmark": benchmark_name, "records": []}
 
-    if not nickname:
-        nickname = _generate_pseudonym(user_id)
+        if os.path.isfile(filepath):
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                data = {"benchmark": benchmark_name, "records": []}
 
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        records = data.get("records", [])
 
-    # 检查该用户是否已有记录：若新成绩更优则更新，否则保留更优成绩
-    existing_idx = None
-    for idx, r in enumerate(records):
-        if r.get("user_id") == user_id:
-            existing_idx = idx
-            break
+        if not nickname:
+            nickname = _generate_pseudonym(user_id)
 
-    new_record = {
-        "user_id": user_id,
-        "nickname": nickname,
-        "score": round(float(score), 2),
-        "metrics": {k: round(float(v), 3) if isinstance(v, (int, float)) else str(v) for k, v in metrics.items()},
-        "timestamp": now_str,
-    }
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    if existing_idx is not None:
-        old_score = records[existing_idx].get("score", 0.0)
-        is_better = (score > old_score) if higher_is_better else (score < old_score)
-        if is_better:
-            records[existing_idx] = new_record
-    else:
-        records.append(new_record)
+        # 检查该用户是否已有记录：若新成绩更优则更新，否则保留更优成绩
+        existing_idx = None
+        for idx, r in enumerate(records):
+            if r.get("user_id") == user_id:
+                existing_idx = idx
+                break
 
-    # 排序
-    records.sort(key=lambda x: x["score"], reverse=higher_is_better)
+        new_record = {
+            "user_id": user_id,
+            "nickname": nickname,
+            "score": round(float(score), 2),
+            "metrics": {k: round(float(v), 3) if isinstance(v, (int, float)) else str(v) for k, v in metrics.items()},
+            "timestamp": now_str,
+        }
 
-    # 赋予排名
-    user_rank = 1
-    for rank, r in enumerate(records, 1):
-        r["rank"] = rank
-        if r.get("user_id") == user_id:
-            user_rank = rank
+        if existing_idx is not None:
+            old_score = records[existing_idx].get("score", 0.0)
+            is_better = (score > old_score) if higher_is_better else (score < old_score)
+            if is_better:
+                records[existing_idx] = new_record
+        else:
+            records.append(new_record)
 
-    data["records"] = records
-    data["updated_at"] = now_str
+        # 排序
+        records.sort(key=lambda x: x["score"], reverse=higher_is_better)
 
-    # 原子写入
-    tmp_path = filepath + ".tmp"
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    os.replace(tmp_path, filepath)
+        # 赋予排名
+        user_rank = 1
+        for rank, r in enumerate(records, 1):
+            r["rank"] = rank
+            if r.get("user_id") == user_id:
+                user_rank = rank
+
+        data["records"] = records
+        data["updated_at"] = now_str
+
+        # 原子写入
+        tmp_path = filepath + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, filepath)
+    finally:
+        if lf:
+            try:
+                fcntl.flock(lf, fcntl.LOCK_UN)
+                lf.close()
+            except Exception:
+                pass
 
     total_participants = len(records)
     beat_pct = round(((total_participants - user_rank) / max(1, total_participants - 1)) * 100, 1)
@@ -161,9 +181,12 @@ def render_leaderboard(
 
     top_records = records[:top_n]
 
-    # 确定要展示的指标列
-    first_metrics = top_records[0].get("metrics", {})
-    metric_keys = list(first_metrics.keys())
+    # 确定要展示的指标列：遍历 TOP 记录收集所有指标键，防止因记录间键名不一致导致部分列缺失
+    metric_keys = []
+    for r in top_records:
+        for k in r.get("metrics", {}).keys():
+            if k not in metric_keys:
+                metric_keys.append(k)
     if not metric_labels:
         metric_labels = {k: k for k in metric_keys}
 
@@ -202,8 +225,10 @@ def render_leaderboard(
         metric_tds = ""
         for mk in metric_keys:
             val = r.get("metrics", {}).get(mk, "--")
-            metric_tds += f"<td style='padding: 10px; font-family: monospace; text-align: center; color: #C9D1D9;'>{val}</td>"
+            val_escaped = html_lib.escape(str(val))
+            metric_tds += f"<td style='padding: 10px; font-family: monospace; text-align: center; color: #C9D1D9;'>{val_escaped}</td>"
 
+        nick_escaped = html_lib.escape(str(r.get('nickname', '')))
         rows_html += f"""
         <tr style="
             background: {row_bg}; border-bottom: 1px solid #21262D; border-left: {border_left};
@@ -211,7 +236,7 @@ def render_leaderboard(
         ">
             <td style="padding: 10px 14px; font-weight: 700; color: #F0F6FC; font-size: 13px;">{medal}</td>
             <td style="padding: 10px 14px; font-weight: 600; color: {'#58A6FF' if is_me else '#E6EDF3'};">
-                {r.get('nickname')} {'<span style="font-size: 10px; background: #388BFD; color: #fff; padding: 1px 6px; border-radius: 8px; margin-left: 6px;">YOU</span>' if is_me else ''}
+                {nick_escaped} {'<span style="font-size: 10px; background: #388BFD; color: #fff; padding: 1px 6px; border-radius: 8px; margin-left: 6px;">YOU</span>' if is_me else ''}
             </td>
             <td style="padding: 10px 14px;">
                 <span style="

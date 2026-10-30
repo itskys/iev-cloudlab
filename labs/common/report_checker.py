@@ -281,7 +281,7 @@ def verify_report_consistency(
 
     # 确定 experiment_id
     if not experiment_id:
-        experiment_id = actual_dict.get('experiment_id', actual_dict.get('exp_id'))
+        experiment_id = actual_dict.get('experiment_id', actual_dict.get('exp_id', actual_dict.get('experiment')))
     if not experiment_id:
         # 从文本寻找匹配的实验编号
         for exp_k in GRADING_SPECS.keys():

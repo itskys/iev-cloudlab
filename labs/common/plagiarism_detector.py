@@ -183,6 +183,8 @@ def scan_class_code_plagiarism(
                 student_codes[u] = code
 
     student_list = list(student_codes.keys())
+    # 预先缓存所有学生的 AST 语法序列，将复杂度从重复解析 O(N^2) 降至线性 O(N)
+    student_ast_seqs = {u: get_ast_sequence(student_codes[u]) for u in student_list}
     n = len(student_list)
     flagged_pairs = []
 
@@ -191,14 +193,28 @@ def scan_class_code_plagiarism(
         for j in range(i + 1, n):
             u1 = student_list[i]
             u2 = student_list[j]
-            res = check_code_similarity(student_codes[u1], student_codes[u2])
-            if res['similarity_pct'] >= 65.0:  # 记录有疑似风险的点对
+            seq_a = student_ast_seqs[u1]
+            seq_b = student_ast_seqs[u2]
+            sim = calculate_jaccard_similarity(seq_a, seq_b, n_gram=3)
+            pct = sim * 100.0
+
+            if pct >= 85.0:
+                st = 'CRITICAL_PLAGIARISM'
+                desc = '高度雷同：核心抽象语法树与运算流几乎完全吻合，存在重大抄袭嫌疑。'
+            elif pct >= 70.0:
+                st = 'MODERATE_SIMILARITY'
+                desc = '中度相似：控制结构与算法主干逻辑相近，建议重点复核。'
+            else:
+                st = 'INDEPENDENT'
+                desc = '独立完成：代码语法结构具有显著差异。'
+
+            if pct >= 65.0:  # 记录有疑似风险的点对
                 flagged_pairs.append({
                     'student_a': u1,
                     'student_b': u2,
-                    'similarity_pct': res['similarity_pct'],
-                    'status': res['status'],
-                    'description': res['description'],
+                    'similarity_pct': round(pct, 1),
+                    'status': st,
+                    'description': desc,
                 })
 
     flagged_pairs.sort(key=lambda x: x['similarity_pct'], reverse=True)
