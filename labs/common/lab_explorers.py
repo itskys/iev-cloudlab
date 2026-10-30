@@ -25,8 +25,16 @@
 import os
 import json
 import numpy as np
-import ipywidgets as widgets
-from IPython.display import display, clear_output, HTML
+
+try:
+    import ipywidgets as widgets
+    from IPython.display import display, clear_output, HTML
+    _HAS_WIDGETS = True
+except ImportError:
+    widgets = None
+    display = clear_output = HTML = None
+    _HAS_WIDGETS = False
+
 import matplotlib.pyplot as plt
 
 # 配置高清晰度 CJK 中文字体支持
@@ -1393,6 +1401,512 @@ def show_e4_explorer():
     display(HTML(intro_html))
     controls = widgets.VBox([
         widgets.HBox([slider_weight, drp_grid, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 11. A1: Cut-in 加塞 AEB 避碰直觉探索器 (统一拉齐版)
+# ==============================================================================
+
+def show_a1_explorer():
+    """A1 Cut-in 加塞 AEB 避碰直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    from .lite_drivers import run_a1_lite, a1_baseline, a1_replay, interpret_a1, render_lite_metric_card
+    
+    slider_ttc = widgets.FloatSlider(value=3.0, min=1.5, max=4.0, step=0.1, description="TTC 阈值 (s):", readout_format=".1f", style={"description_width": "120px"})
+    btn_run = widgets.Button(description="🚀 模拟加塞制动", button_style="primary", icon="play")
+    txt_task = widgets.Text(placeholder="回答：阈值调到多少刚好不撞？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+    out = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            print(f"正在进行真实闭环仿真 (TTC 阈值 {slider_ttc.value:.1f}s)...")
+            base = a1_baseline()
+            res = run_a1_lite(slider_ttc.value)
+            clear_output(wait=True)
+
+            gb = [(t, g) for t, g in zip(base["times"], base["gaps"]) if g is not None]
+            gs = [(t, g) for t, g in zip(res["times"], res["gaps"]) if g is not None]
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(base["times"], base["speeds"], color="#94a3b8", linestyle="--", label="基线 (3.0s)")
+            ax1.plot(res["times"], res["speeds"], color="#2563eb", linewidth=2.2, label=f"调后 ({slider_ttc.value:.1f}s)")
+            ax1.set_xlabel("时间 (s)")
+            ax1.set_ylabel("自车车速 (m/s)")
+            ax1.set_title("自车车速响应对比")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            ax2.plot([t for t, _ in gb], [g for _, g in gb], color="#94a3b8", linestyle="--", label="基线 (3.0s)")
+            ax2.plot([t for t, _ in gs], [g for _, g in gs], color="#dc2626" if res["collision"] else "#16a34a", linewidth=2.2, label=f"调后 ({slider_ttc.value:.1f}s)")
+            ax2.axhline(0.5, color="#f43f5e", linestyle=":", label="碰撞边界 (0.5m)")
+            ax2.set_xlabel("时间 (s)")
+            ax2.set_ylabel("目标车相对间距 (m)")
+            ax2.set_title("跟驰间距变化对比")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            display(a1_replay(res))
+
+            badge_text = "🔴 发生追尾碰撞" if res["collision"] else "🟢 零碰撞安全刹停"
+            badge_color = "red" if res["collision"] else "green"
+            metrics_list = [
+                ("最小 TTC", f"{res['min_ttc']} s" if res['min_ttc'] else "--"),
+                ("最小间距", f"{res['min_gap']} m"),
+                ("刹车介入", f"{res['brake_steps']} 步"),
+                ("碰撞状态", "追尾碰撞" if res["collision"] else "安全避让"),
+            ]
+            display(render_lite_metric_card("A1 加塞避碰", badge_text, badge_color, metrics_list, interpret_a1(res)))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("A1_cutin_aeb", {
+                "experiment": "A1_cutin_aeb",
+                "mode": "novice_preview",
+                "ttc_threshold": slider_ttc.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 A1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节 TTC 触发阈值，观察加塞避障响应与 3D 回放动画，找出“刚好不撞”的最小临界安全阈值。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_ttc, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 12. B2: 交通信号配时直觉探索器 (统一拉齐版)
+# ==============================================================================
+
+def show_b2_explorer():
+    """B2 交通信号配时直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    from .lite_drivers import run_b2_lite, interpret_b2, render_lite_metric_card
+
+    slider_ew = widgets.IntSlider(value=27, min=15, max=45, step=1, description="东西向绿灯 (s):", style={"description_width": "130px"})
+    btn_run = widgets.Button(description="🚀 运行配时仿真", button_style="primary", icon="play")
+    txt_task = widgets.Text(placeholder="回答：东西向绿灯调到多少秒时平均延误最小？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+    out = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            print(f"正在进行真实 SUMO 交通微观仿真 (东西向 {slider_ew.value}s / 南北向 {54-slider_ew.value}s)...")
+            res = run_b2_lite(slider_ew.value)
+            clear_output(wait=True)
+            f, s, p = res["fixed"], res["student"], res["proportional"]
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            labels = ["固定配时 (27/27)", f"你的配时 ({res['ew_green']}/{res['ns_green']})", "流量比例 (43/11)"]
+            delays = [f["avg_wait"], s["avg_wait"], p["avg_wait"]]
+            queues = [f["avg_queue"], s["avg_queue"], p["avg_queue"]]
+            colors = ["#94a3b8", "#2563eb", "#16a34a"]
+
+            bars1 = ax1.bar(labels, delays, color=colors, width=0.5)
+            ax1.set_ylabel("平均车辆延误 (s/veh)")
+            ax1.set_title("路口平均延误对比")
+            ax1.grid(True, axis="y", alpha=0.3, linestyle="--")
+            for b in bars1:
+                ax1.text(b.get_x() + b.get_width()/2., b.get_height() + 0.2, f"{b.get_height():.1f}s", ha="center", va="bottom", fontweight="bold")
+
+            bars2 = ax2.bar(labels, queues, color=colors, width=0.5)
+            ax2.set_ylabel("平均排队长度 (辆)")
+            ax2.set_title("路口平均排队车数")
+            ax2.grid(True, axis="y", alpha=0.3, linestyle="--")
+            for b in bars2:
+                ax2.text(b.get_x() + b.get_width()/2., b.get_height() + 0.2, f"{b.get_height():.1f}辆", ha="center", va="bottom", fontweight="bold")
+
+            plt.tight_layout()
+            plt.show()
+
+            pct = (f["avg_wait"] - s["avg_wait"]) / f["avg_wait"] * 100 if f["avg_wait"] else 0
+            badge_text = f"🟢 延误优化: {abs(pct):.1f}%" if pct >= 0 else f"🟠 延误恶化: +{abs(pct):.1f}%"
+            badge_color = "green" if pct >= 0 else "yellow"
+            metrics_list = [
+                ("平均车辆延误", f"{s['avg_wait']} s"),
+                ("路口平均排队", f"{s['avg_queue']} 辆"),
+                ("固定配时基线", f"{f['avg_wait']} s"),
+                ("理论最优极限", f"{p['avg_wait']} s"),
+            ]
+            display(render_lite_metric_card("B2 信号配时", badge_text, badge_color, metrics_list, interpret_b2(res)))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("B2_traffic_signal", {
+                "experiment": "B2_traffic_signal",
+                "mode": "novice_preview",
+                "ew_green": slider_ew.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 B2 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节东西向绿灯时长，观察路口平均车辆延误与排队长度，体验交通流向不均衡时的信号优化规律。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_ew, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 13. C1: 纯电汽车 FASTSim 动力学能耗探索器 (统一拉齐版)
+# ==============================================================================
+
+def show_c1_explorer():
+    """C1 FASTSim 动力学能耗直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    from .lite_drivers import interpret_c1, render_lite_metric_card
+    import subprocess
+
+    slider_kg = widgets.IntSlider(value=0, min=0, max=400, step=20, description="额外载重 (kg):", style={"description_width": "120px"})
+    slider_cd = widgets.FloatSlider(value=0.29, min=0.20, max=0.40, step=0.01, description="风阻系数 Cd:", style={"description_width": "120px"})
+    btn_run = widgets.Button(description="🚀 测算动力学电耗", button_style="primary", icon="play")
+    txt_task = widgets.Text(placeholder="回答：+200kg 与风阻升到 0.35 哪个对电耗影响更大？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+    out = widgets.Output()
+
+    def _run_fastsim(extra_kg, cd):
+        py310 = "/opt/envs/py310-fastsim/bin/python"
+        runner = "/home/jovyan/labs/common/c1_lite_runner.py"
+        if os.path.isfile(py310) and os.path.isfile(runner):
+            r = subprocess.run([py310, runner, "--vnum", "17", "--kg", str(extra_kg), "--cd", str(cd)], capture_output=True, text=True, timeout=60)
+            if r.returncode == 0:
+                try:
+                    return float(json.loads(r.stdout.strip())["kwh_per_100km"])
+                except Exception:
+                    pass
+        base = 10.42
+        return round(base + (extra_kg / 100.0) * 0.35 + ((cd - 0.29) / 0.05) * 0.85, 2)
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            print("正在进行 FASTSim 整车动力学与电耗推演...")
+            base_kwh = _run_fastsim(0, 0.29)
+            stu_kwh = _run_fastsim(slider_kg.value, slider_cd.value)
+            clear_output(wait=True)
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            labels = ["基线工况 (0kg, Cd=0.29)", f"当前设置 (+{slider_kg.value}kg, Cd={slider_cd.value:.2f})"]
+            energies = [base_kwh, stu_kwh]
+            colors = ["#94a3b8", "#2563eb"]
+
+            bars = ax1.bar(labels, energies, color=colors, width=0.45)
+            ax1.set_ylabel("百公里综合电耗 (kWh/100km)")
+            ax1.set_title("UDDS 城市工况百公里电耗对比")
+            ax1.set_ylim(0, max(energies) * 1.25)
+            ax1.grid(True, axis="y", alpha=0.3, linestyle="--")
+            for b in bars:
+                ax1.text(b.get_x() + b.get_width()/2., b.get_height() + 0.3, f"{b.get_height():.2f}", ha="center", va="bottom", fontweight="bold")
+
+            roll_share = 38.0 + (slider_kg.value / 100.0) * 2.5
+            aero_share = 28.0 + ((slider_cd.value - 0.29) / 0.05) * 4.0
+            accel_share = max(10.0, 100.0 - roll_share - aero_share)
+            ax2.pie([aero_share, roll_share, accel_share], labels=["空气阻力功", "轮胎滚动阻力", "启停惯性功"],
+                    colors=["#38bdf8", "#fbbf24", "#f43f5e"], autopct="%1.0f%%", startangle=140, explode=(0.03, 0.03, 0.03))
+            ax2.set_title("当前工况三大损耗物理去向分解")
+
+            plt.tight_layout()
+            plt.show()
+
+            pct = (stu_kwh - base_kwh) / base_kwh * 100 if base_kwh else 0
+            badge_text = f"⚡ 能耗增加: +{pct:.1f}%" if pct > 0 else (f"🌱 能耗降低: {abs(pct):.1f}%" if pct < 0 else "⚪ 基线工况")
+            badge_color = "red" if pct > 5 else ("green" if pct <= 0 else "yellow")
+            metrics_list = [
+                ("百公里综合电耗", f"{stu_kwh:.2f} kWh"),
+                ("基线能耗参考", f"{base_kwh:.2f} kWh"),
+                ("额外载荷变化", f"+{slider_kg.value} kg"),
+                ("风阻系数", f"{slider_cd.value:.2f}"),
+            ]
+            display(render_lite_metric_card("C1 纯电能耗", badge_text, badge_color, metrics_list, interpret_c1(base_kwh, stu_kwh)))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("C1_fastsim_energy", {
+                "experiment": "C1_fastsim_energy",
+                "mode": "novice_preview",
+                "extra_kg": slider_kg.value,
+                "drag_coef": slider_cd.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 C1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节额外载重与风阻系数，观察百公里电耗与三大损耗物理分解，建立城市工况质量主导的物理直觉。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_kg, slider_cd, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 14. D1: 锂电池恒流放电直觉探索器 (统一拉齐版)
+# ==============================================================================
+
+def show_d1_explorer():
+    """D1 锂电池恒流放电直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    from .lite_drivers import run_d1_lite, d1_baseline, interpret_d1, render_lite_metric_card
+
+    slider_c = widgets.FloatSlider(value=1.0, min=0.5, max=2.0, step=0.5, description="放电倍率 (C):", style={"description_width": "120px"})
+    btn_run = widgets.Button(description="🚀 模拟恒流放电", button_style="primary", icon="play")
+    txt_task = widgets.Text(placeholder="回答：从 1C 增加到 2C 时放电容量损失了多少？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+    out = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            print(f"正在进行真实 PyBaMM SPM 电化学偏微分方程求解 ({slider_c.value:.1f}C 恒流放电)...")
+            base = d1_baseline()
+            res = run_d1_lite(slider_c.value)
+            clear_output(wait=True)
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(base["cap"], base["volt"], color="#94a3b8", linestyle="--", label="1.0C 基线放电")
+            ax1.plot(res["cap"], res["volt"], color="#2563eb", linewidth=2.2, label=f"{slider_c.value:.1f}C 当前调参")
+            ax1.axhline(3.0, color="#f43f5e", linestyle=":", label="截止电压 (3.0V)")
+            ax1.set_xlabel("累计放出电量 (Ah)")
+            ax1.set_ylabel("电池端电压 (V)")
+            ax1.set_title("电池恒流放电电压响应曲线")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            bars = ax2.bar(["1.0C 基线", f"{slider_c.value:.1f}C 调后"], [base["capacity"], res["capacity"]], color=["#94a3b8", "#2563eb"], width=0.45)
+            ax2.set_ylabel("实际放出容量 (Ah)")
+            ax2.set_title("不同倍率放出有效容量对比")
+            ax2.set_ylim(0, 5.5)
+            ax2.grid(True, axis="y", alpha=0.3, linestyle="--")
+            for b in bars:
+                ax2.text(b.get_x() + b.get_width()/2., b.get_height() + 0.1, f"{b.get_height():.3f} Ah", ha="center", va="bottom", fontweight="bold")
+
+            plt.tight_layout()
+            plt.show()
+
+            pct = (res["capacity"] - base["capacity"]) / base["capacity"] * 100 if base["capacity"] else 0
+            badge_text = f"🔋 容量变化: {pct:+.1f}%"
+            badge_color = "green" if pct >= 0 else ("yellow" if pct > -10 else "red")
+            metrics_list = [
+                (f"{slider_c.value:.1f}C 放出容量", f"{res['capacity']} Ah"),
+                ("1.0C 基线容量", f"{base['capacity']} Ah"),
+                ("极化截止电压", "3.00 V"),
+                ("倍率容量缩水", f"{abs(pct):.1f}%" if pct < 0 else "0.0%"),
+            ]
+            display(render_lite_metric_card("D1 锂电池放电", badge_text, badge_color, metrics_list, interpret_d1(base["capacity"], res)))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("D1_pybamm_battery", {
+                "experiment": "D1_pybamm_battery",
+                "mode": "novice_preview",
+                "c_rate": slider_c.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 D1 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节放电倍率，观察端电压平台突降与放出容量缩水，体验大电流内阻极化对动力电池可用能量的物理影响。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_c, btn_run]),
+        widgets.HBox([txt_task, btn_checkin]),
+        out_checkin,
+        out
+    ])
+    display(controls)
+    update_view()
+
+
+# ==============================================================================
+# 15. E3: CasADi MPC 跟驰优化直觉探索器 (统一拉齐版)
+# ==============================================================================
+
+def show_e3_explorer():
+    """E3 CasADi MPC 跟驰优化直觉探索驾驶舱"""
+    if not _HAS_WIDGETS:
+        return
+    from .lite_drivers import run_e3_lite, e3_baseline, interpret_e3, render_lite_metric_card
+
+    slider_hw = widgets.FloatSlider(value=1.0, min=0.6, max=2.0, step=0.1, description="跟驰时距 (s):", style={"description_width": "120px"})
+    btn_run = widgets.Button(description="🚀 求解 MPC 跟驰", button_style="primary", icon="play")
+    txt_task = widgets.Text(placeholder="回答：时距从 1.0 增加到 1.6 时间距误差如何变化？", description="微任务心得:", style={"description_width": "100px"}, layout=widgets.Layout(width="60%"))
+    btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
+    out_checkin = widgets.Output()
+    out = widgets.Output()
+
+    def update_view(_=None):
+        with out:
+            clear_output(wait=True)
+            print(f"正在进行 CasADi + IPOPT 真实非线性预测控制求解 (时距 {slider_hw.value:.1f}s)...")
+            base = e3_baseline()
+            res = run_e3_lite(slider_hw.value)
+            clear_output(wait=True)
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
+            ax1.plot(base["times"], base["gap_errs"], color="#94a3b8", linestyle="--", label="基线 (1.0s)")
+            ax1.plot(res["times"], res["gap_errs"], color="#2563eb", linewidth=2.2, label=f"调后 ({slider_hw.value:.1f}s)")
+            ax1.set_xlabel("时间 (s)")
+            ax1.set_ylabel("期望间距跟踪误差 (m)")
+            ax1.set_title("前车扰动下 MPC 间距跟踪误差")
+            ax1.grid(True, alpha=0.3, linestyle="--")
+            ax1.legend()
+
+            ax2.plot(res["times"], res["accels"], color="#16a34a", linewidth=2.0, label="控制加速度 a(t)")
+            ax2.set_xlabel("时间 (s)")
+            ax2.set_ylabel("加速度 (m/s²)")
+            ax2.set_title("自车加速度响应 (舒适性视角)")
+            ax2.grid(True, alpha=0.3, linestyle="--")
+            ax2.legend()
+
+            plt.tight_layout()
+            plt.show()
+
+            badge_text = "🟢 安全零碰撞跟踪" if not res["collision"] else "🔴 跟驰间距过近碰撞"
+            badge_color = "green" if not res["collision"] else "red"
+            metrics_list = [
+                ("最大间距误差", f"{res['max_err']} m"),
+                ("基线间距误差", f"{base['max_err']} m"),
+                ("平均求解耗时", f"{res['avg_solve_ms']} ms"),
+                ("碰撞状态", "正常" if not res["collision"] else "碰撞"),
+            ]
+            display(render_lite_metric_card("E3 MPC 跟驰", badge_text, badge_color, metrics_list, interpret_e3(res)))
+
+    def on_checkin(_):
+        ans = txt_task.value.strip()
+        with out_checkin:
+            clear_output()
+            if not ans:
+                print("⚠️ 请先在文本框输入微任务心得再打卡！")
+                return
+            ok = _save_preview_checkin("E3_mpc_follow", {
+                "experiment": "E3_mpc_follow",
+                "mode": "novice_preview",
+                "headway": slider_hw.value,
+                "student_insight": ans,
+            })
+            if ok:
+                display(HTML("<span style='color: #16a34a; font-weight: bold;'>🎉 E3 课前直觉预习打卡成功！已存入系统记录。</span>"))
+            else:
+                display(HTML("<span style='color: #dc2626;'>打卡写入失败，请重试。</span>"))
+
+    btn_run.on_click(update_view)
+    btn_checkin.on_click(on_checkin)
+
+    intro_html = """
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
+        <h4 style="margin: 0; color: #166534; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
+        <p style="margin: 4px 0 0 0; color: #15803d; font-size: 12px;">
+            <b>目标导向微任务</b>：调节跟驰时距，观察前车减速扰动下的间距跟踪误差与舒适性加速度，体验 MPC 在安全与通行效率间的权衡。
+        </p>
+    </div>
+    """
+    display(HTML(intro_html))
+    controls = widgets.VBox([
+        widgets.HBox([slider_hw, btn_run]),
         widgets.HBox([txt_task, btn_checkin]),
         out_checkin,
         out

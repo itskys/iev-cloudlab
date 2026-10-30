@@ -76,15 +76,20 @@ from .semester_archiver import (
     render_download_link_html,
 )
 from .lab_explorers import (
+    show_a1_explorer,
     show_a2_explorer,
-    show_b4_explorer,
-    show_c3_explorer,
-    show_d4_explorer,
-    show_e2_explorer,
     show_a3_explorer,
     show_b1_explorer,
+    show_b2_explorer,
+    show_b4_explorer,
+    show_c1_explorer,
     show_c2_explorer,
+    show_c3_explorer,
+    show_d1_explorer,
     show_d2_explorer,
+    show_d4_explorer,
+    show_e2_explorer,
+    show_e3_explorer,
     show_e4_explorer,
 )
 
@@ -126,7 +131,10 @@ __all__ = [
     "V2XMessage", "V2XWirelessChannel", "CACCPlatoonSimulator", "render_v2x_topology_html",
     # 学期结课总归档与毕业成就包 (P3.3)
     "export_student_portfolio", "export_teacher_semester_archive", "render_download_link_html",
-    # 新手直觉探索与课前导学交互引擎 (Phase 0)
-    "show_a2_explorer", "show_b4_explorer", "show_c3_explorer", "show_d4_explorer", "show_e2_explorer",
-    "show_a3_explorer", "show_b1_explorer", "show_c2_explorer", "show_d2_explorer", "show_e4_explorer",
+    # 新手直觉探索与课前导学交互引擎 (Phase 0: 全矩阵 15 门)
+    "show_a1_explorer", "show_a2_explorer", "show_a3_explorer",
+    "show_b1_explorer", "show_b2_explorer", "show_b4_explorer",
+    "show_c1_explorer", "show_c2_explorer", "show_c3_explorer",
+    "show_d1_explorer", "show_d2_explorer", "show_d4_explorer",
+    "show_e2_explorer", "show_e3_explorer", "show_e4_explorer",
 ]
