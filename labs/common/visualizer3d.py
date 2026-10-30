@@ -1,8 +1,8 @@
-"""IEV CloudLab 轻量数字孪生与 2D/3D 轨迹动态回放组件 | Interactive Digital Twin Replay
+"""IEV CloudLab 轻量数字孪生与双视角轨迹回放组件（2D 画布：俯视 + 斜视角投影） | Interactive Digital Twin Replay
 
 功能：
   1. 纯前端零外部依赖（原生 HTML5 Canvas + WebGL 视效，无第三方 npm/pip 依赖）
-  2. 支持双模视角无缝切换：BEV 鸟瞰俯视图 与 2.5D/3D 沉浸式斜视角
+  2. 支持双模视角无缝切换：BEV 鸟瞰俯视图与斜视角投影（2D 画布 oblique 投影，非真三维渲染）
   3. 全功能回放控制台：播放/暂停、进度拖拽条、0.5x/1x/2x/5x 倍速切换、单步步进
   4. 实时动态车载 HUD 仪表盘：
      - 数字时速表 (km/h) 与加速度/急动度仪表
@@ -144,7 +144,7 @@ def render_trajectory_replay(
         <div style="display: flex; align-items: center; gap: 10px;">
             <div style="background: #21262D; border-radius: 6px; padding: 2px; display: flex; gap: 2px;">
                 <button id="{widget_id}_view_bev" class="iev-btn active" style="padding: 3px 10px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; background: #388BFD; color: #fff;">BEV 鸟瞰</button>
-                <button id="{widget_id}_view_3d" class="iev-btn" style="padding: 3px 10px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; background: transparent; color: #8B949E;">3D 透视</button>
+                <button id="{widget_id}_view_3d" class="iev-btn" style="padding: 3px 10px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; background: transparent; color: #8B949E;">斜视角</button>
             </div>
             <button id="{widget_id}_btn_reset" style="background: #21262D; border: 1px solid #30363D; color: #C9D1D9; border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer;">复位视点</button>
         </div>
@@ -584,7 +584,7 @@ def render_trajectory_replay(
         ctx.fillText(label, hx, hy - 6);
     }}
 
-    // ==================== 2. 3D 透视沉浸视角绘制 ====================
+    // ==================== 2. 斜视角投影绘制 ====================
     function draw3D(W, H) {{
         const egoX = data.ego.x[currentFrame];
         const egoY = data.ego.y[currentFrame];
@@ -625,7 +625,7 @@ def render_trajectory_replay(
         ctx.moveTo(cx + roadTopW * 0.5, horizonY); ctx.lineTo(cx + roadBotW * 0.5, H);
         ctx.stroke();
 
-        // 3D 纵深投影函数
+        // 斜视角投影函数
         function project3D(xRel, yRel, zRel = 0) {{
             // xRel 为相对主车纵向距离 (米), yRel 为横向偏移 (米)
             const d = Math.max(1.0, xRel + 12.0); // 视距
@@ -636,7 +636,7 @@ def render_trajectory_replay(
             return {{ x: px, y: py, scale: pScale, depth: d }};
         }}
 
-        // 3D 车道虚线绘制
+        // 斜视角车道虚线绘制
         const numLanes = data.road.num_lanes;
         for (let l = 1; l < numLanes; l++) {{
             const laneOffset = (l - numLanes * 0.5) * data.road.lane_width;
@@ -654,7 +654,7 @@ def render_trajectory_replay(
             }}
         }}
 
-        // 绘制 3D 目标车辆
+        // 绘制斜视角目标车辆
         if (data.targets) {{
             data.targets.forEach(tgt => {{
                 const relDist = tgt.x[currentFrame] - egoX;
