@@ -16,12 +16,63 @@ import sys
 
 SKIP_FILES = {'test_chain.json'}
 
+# 非学生账号：即使其 home 下有结果文件也不计入成绩（2026-10-29 P0 修复：
+# 教师成绩曾混入 admin / teacher / testuser 三个测试账号）。
+SKIP_USERS = {'admin', 'teacher', 'testuser'}
+# 名册文件（教师端 student_admin.py 维护，宿主机路径）：
+# 若存在且能读出非空用户名单，则只收名册内用户；否则退化为 SKIP_USERS 黑名单。
+ROSTER_PATHS = [
+    '/opt/ievlab/home/teacher/labs/data/students.json',
+    '/opt/ievlab/home/admin/labs/data/students.json',
+]
+
+
+def load_roster():
+    """容忍多种名册格式，返回用户名集合；读不到/为空时返回 None。"""
+    for path in ROSTER_PATHS:
+        try:
+            with open(path, encoding='utf-8') as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+        users = set()
+        items = None
+        if isinstance(data, list):
+            items = data
+        elif isinstance(data, dict):
+            for key in ('students', 'roster', 'users'):
+                if isinstance(data.get(key), list):
+                    items = data[key]
+                    break
+            if items is None and data:
+                # 字典本身以用户名为键
+                users = {str(k) for k in data.keys()}
+                items = []
+        if items:
+            for it in items:
+                if isinstance(it, str):
+                    users.add(it)
+                elif isinstance(it, dict):
+                    for key in ('username', 'name', 'id', 'student_id'):
+                        if it.get(key):
+                            users.add(str(it[key]))
+                            break
+        if users:
+            return users
+    return None
+
 
 def collect(home_root):
     all_results = {}
     if not os.path.isdir(home_root):
         return all_results
+    roster = load_roster()
     for user in sorted(os.listdir(home_root)):
+        if roster is not None:
+            if user not in roster:
+                continue
+        elif user in SKIP_USERS:
+            continue
         rdir = os.path.join(home_root, user, 'labs', 'data', 'results')
         if not os.path.isdir(rdir):
             continue
