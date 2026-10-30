@@ -157,7 +157,7 @@ def scan_class_code_plagiarism(
     :return: 查重分析总结字典
     """
     if not os.path.exists(homes_base):
-        return {'n_students': 0, 'pairs': []}
+        return {'exp_name': exp_name, 'n_students': 0, 'flagged_count': 0, 'pairs': []}
 
     student_codes = {}
     users = sorted(os.listdir(homes_base))
