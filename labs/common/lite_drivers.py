@@ -6,72 +6,43 @@
   PyBaMM（D1）、CasADi MPC（E3）。新手本里看到的数字，和完整模式是同一口径。
 - 基线缓存：每个实验的“默认参数”结果在同一 kernel 内只算一次，
   学生拖动滑杆后只需重算自己那一组，交互不卡顿。
-- 成绩隔离：新手本只写 labs/data/lite/ 与 labs/data/preview_checkins/ 下的完成记录，
-  绝不写 labs/data/results/，不进教师成绩册（见 save_lite_record）。
-- 体验升级（Antigravity 优化）：
-  1. 增加 silence_stdio() 抑制 esmini 与 SUMO 底层 C++ / TraCI 告警，还学生清爽界面；
-  2. 自动挂载 CJK 中文字体，图表全面中文化；
-  3. 提供统一的高质感 HTML 指标卡与物理因果解读。
+- 成绩隔离：新手本只写 labs/data/lite/ 下的完成记录，绝不写
+  labs/data/results/，不进教师成绩册（见 save_lite_record）。
+
+注意两处与基础版不同的诚实处理（新手本里会明说）：
+- A1：基础版控制器的触发阈值写死为 3.0（改 config 不生效）；
+  新手版控制器把滑杆值真正作为触发阈值使用。
+- E3：基础版运动学验证的期望间距写死为 headway=1.0；
+  新手版按滑杆的 headway 计算期望间距。
+- C1：新手版关闭 D3 电池链路（apply_chained_battery=False），
+  只看“车重/风阻 -> 电耗”这一条因果，避免链路失败干扰新手。
 """
 
-import os
-import sys
 import json
+import os
 import tempfile
-import warnings
-import datetime
-import contextlib
+
 import numpy as np
 
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-
-# 配置高清晰度 CJK 中文字体支持
-for _font_path in [
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
-    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-]:
-    if os.path.isfile(_font_path):
+# CJK 图字体（与 Gemini lab_explorers 一致）：注册 Noto Sans CJK，图题与标签可用中文。
+try:
+    import matplotlib.font_manager as _fm
+    import matplotlib.pyplot as _plt
+    for _fp in ["/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf"]:
         try:
-            fm.fontManager.addfont(_font_path)
+            _fm.fontManager.addfont(_fp)
         except Exception:
             pass
+    _plt.rcParams["font.family"] = "sans-serif"
+    _plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "Noto Sans CJK JP", "DejaVu Sans"]
+except Exception:
+    pass
 
-plt.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'WenQuanYi Zen Hei', 'WenQuanYi Micro Hei', 'DejaVu Sans', 'sans-serif']
-plt.rcParams['axes.unicode_minus'] = False
 
 LITE_DIR = "/home/jovyan/labs/data/lite"
 _CACHE = {}
-
-
-@contextlib.contextmanager
-def silence_stdio():
-    """静默 C/C++ 底层 stdout/stderr 输出与警告（避免 esmini/SUMO/IPOPT 打印底层日志干扰初学者）"""
-    sys.stdout.flush()
-    sys.stderr.flush()
-    try:
-        devnull_fd = os.open(os.devnull, os.O_RDWR)
-        saved_stdout_fd = os.dup(1)
-        saved_stderr_fd = os.dup(2)
-        os.dup2(devnull_fd, 1)
-        os.dup2(devnull_fd, 2)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            yield
-    except Exception:
-        yield
-    finally:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        try:
-            os.dup2(saved_stdout_fd, 1)
-            os.dup2(saved_stderr_fd, 2)
-            os.close(saved_stdout_fd)
-            os.close(saved_stderr_fd)
-            os.close(devnull_fd)
-        except Exception:
-            pass
 
 
 # ---------------------------------------------------------------- A1
@@ -109,49 +80,44 @@ def run_a1_lite(ttc_threshold, scenario=None, road=None):
         from common.esmini_env import EsminiEnv
     except ImportError:  # pragma: no cover
         from .esmini_env import EsminiEnv
-
     scenario = scenario or "/home/jovyan/labs/scenarios/A_esmini/A1_cutin/cutin.xosc"
     road = road or "/home/jovyan/labs/scenarios/A_esmini/A1_cutin/cutin.xodr"
     controller = _a1_controller_class()(config={"ttc_threshold": float(ttc_threshold)})
-
+    env = EsminiEnv(scenario=scenario, road=road, dt=0.05)
+    obs = env.reset(ego_x=10.0, ego_y=0.0, ego_yaw=0.0, ego_v=14.0)
+    controller.reset()
     times, speeds, gaps = [], [], []
     replay_ego, replay_tgt = [], []
     min_ttc, min_gap, is_collision, brake_steps = float("inf"), float("inf"), False, 0
-
-    with silence_stdio():
-        env = EsminiEnv(scenario=scenario, road=road, dt=0.05)
-        obs = env.reset(ego_x=10.0, ego_y=0.0, ego_yaw=0.0, ego_v=14.0)
-        controller.reset()
-        for _ in range(400):
-            action = controller.step(obs)
-            if action["target_a"] < -0.5:
-                brake_steps += 1
-            obs, done, _info = env.step(action)
-            t = obs["sim_time"]
-            ego = obs["ego"]
-            times.append(t)
-            speeds.append(ego["v"])
-            replay_ego.append({"x": round(ego["x"], 2), "y": round(ego.get("y", 0.0), 2),
-                               "speed": round(ego["v"], 2)})
-            tgts = obs.get("targets", [])
-            gap_step = None
-            if tgts:
-                tgt = tgts[0]
-                replay_tgt.append({"x": round(tgt["x"], 2), "y": round(tgt.get("y", 0.0), 2),
-                                   "speed": round(tgt["v"], 2)})
-                rel_d = abs(tgt["x"] - ego["x"]) - 4.5
-                gap_step = rel_d
-                min_gap = min(min_gap, rel_d)
-                rel_v = ego["v"] - tgt["v"]
-                if rel_v > 0.1:
-                    min_ttc = min(min_ttc, rel_d / rel_v)
-                if rel_d < 0.5:
-                    is_collision = True
-            gaps.append(gap_step)
-            if done or is_collision:
-                break
-        env.close()
-
+    for _ in range(400):
+        action = controller.step(obs)
+        if action["target_a"] < -0.5:
+            brake_steps += 1
+        obs, done, _info = env.step(action)
+        t = obs["sim_time"]
+        ego = obs["ego"]
+        times.append(t)
+        speeds.append(ego["v"])
+        replay_ego.append({"x": round(ego["x"], 2), "y": round(ego.get("y", 0.0), 2),
+                           "speed": round(ego["v"], 2)})
+        tgts = obs.get("targets", [])
+        gap_step = None
+        if tgts:
+            tgt = tgts[0]
+            replay_tgt.append({"x": round(tgt["x"], 2), "y": round(tgt.get("y", 0.0), 2),
+                               "speed": round(tgt["v"], 2)})
+            rel_d = abs(tgt["x"] - ego["x"]) - 4.5
+            gap_step = rel_d
+            min_gap = min(min_gap, rel_d)
+            rel_v = ego["v"] - tgt["v"]
+            if rel_v > 0.1:
+                min_ttc = min(min_ttc, rel_d / rel_v)
+            if rel_d < 0.5:
+                is_collision = True
+        gaps.append(gap_step)
+        if done or is_collision:
+            break
+    env.close()
     return {
         "times": times, "speeds": speeds, "gaps": gaps,
         "replay_ego": replay_ego, "replay_tgt": replay_tgt,
@@ -226,7 +192,8 @@ def _b2_network():
 def _b2_run(ew_green, ns_green, tag):
     """一次真 TraCI 仿真，返回（平均延误秒，平均排队辆，完成车辆数）。"""
     import xml.etree.ElementTree as ET
-    os.environ["SUMO_HOME"] = "/usr/share/sumo"
+    import traci
+    from traci import trafficlight
     workdir = _b2_network()
     tripfile = os.path.join(workdir, f"trip_{tag}.xml")
     cfg = ("\n".join([
@@ -238,32 +205,27 @@ def _b2_run(ew_green, ns_green, tag):
         "</configuration>"]))
     with open(os.path.join(workdir, "sumo.sumocfg"), "w") as f:
         f.write(cfg)
-
-    with silence_stdio():
-        import traci
-        from traci import trafficlight
-        traci.start(["sumo", "-c", os.path.join(workdir, "sumo.sumocfg"),
-                     "--no-warnings", "--no-step-log", "--seed", "42"])
-        orig = traci.trafficlight.getCompleteRedYellowGreenDefinition("B1")[0]
-        new_phases = []
-        for i, ph in enumerate(orig.phases):
-            dur = ph.duration
-            if i == 0:
-                dur = float(ew_green)
-            elif i == 2:
-                dur = float(ns_green)
-            new_phases.append(trafficlight.Phase(dur, ph.state, ph.minDur, ph.maxDur))
-        traci.trafficlight.setCompleteRedYellowGreenDefinition(
-            "B1", trafficlight.Logic("custom", 0, 0, new_phases))
-        queue_samples = []
-        for step in range(600):
-            traci.simulationStep()
-            if step % 20 == 0:
-                q = sum(traci.lane.getLastStepHaltingNumber(lane)
-                        for lane in traci.trafficlight.getControlledLanes("B1"))
-                queue_samples.append(q)
-        traci.close()
-
+    traci.start(["sumo", "-c", os.path.join(workdir, "sumo.sumocfg"),
+                 "--no-warnings", "--no-step-log", "--seed", "42"])
+    orig = traci.trafficlight.getCompleteRedYellowGreenDefinition("B1")[0]
+    new_phases = []
+    for i, ph in enumerate(orig.phases):
+        dur = ph.duration
+        if i == 0:
+            dur = float(ew_green)
+        elif i == 2:
+            dur = float(ns_green)
+        new_phases.append(trafficlight.Phase(dur, ph.state, ph.minDur, ph.maxDur))
+    traci.trafficlight.setCompleteRedYellowGreenDefinition(
+        "B1", trafficlight.Logic("custom", 0, 0, new_phases))
+    queue_samples = []
+    for step in range(600):
+        traci.simulationStep()
+        if step % 20 == 0:
+            q = sum(traci.lane.getLastStepHaltingNumber(lane)
+                    for lane in traci.trafficlight.getControlledLanes("B1"))
+            queue_samples.append(q)
+    traci.close()
     tree = ET.parse(tripfile)
     waits = [float(t.get("waitingTime", 0)) for t in tree.getroot().iter("tripinfo")]
     return {
@@ -340,8 +302,7 @@ def run_d1_lite(c_rate):
     param = pybamm.ParameterValues("Chen2020")
     exp = pybamm.Experiment([f"Discharge at {c_rate} C until 3V"])
     sim = pybamm.Simulation(model, parameter_values=param, experiment=exp)
-    with silence_stdio():
-        sim.solve()
+    sim.solve()
     sol = sim.solution
     cap = np.asarray(sol["Discharge capacity [A.h]"].entries, dtype=float)
     volt = np.asarray(sol["Terminal voltage [V]"].entries, dtype=float)
@@ -411,8 +372,7 @@ def _e3_controller_class():
             for k in range(N):
                 cost += self.R * U[0, k] ** 2
             opti.minimize(cost)
-            # 添加 ipopt.sb='yes' 消除开源许可证 Banner 打印
-            opts = {"print_time": False, "ipopt.print_level": 0, "ipopt.sb": "yes",
+            opts = {"print_time": False, "ipopt.print_level": 0,
                     "ipopt.tol": 1e-4, "ipopt.max_iter": 50}
             opti.solver("ipopt", opts)
             self.opti, self.X, self.U = opti, X, U
@@ -478,6 +438,8 @@ def run_e3_lite(headway):
     max_err, collision = 0.0, False
     for step in range(200):
         t_now = step * dt
+        # 扰动（新手本明说）：前车在第 3-5 秒减速到 10 m/s，之后恢复 14 m/s。
+        # 没有扰动时理想匀速跟驰的误差恒为 0，时距滑杆拉动了也看不出区别。
         lead_v = 10.0 if 3.0 <= t_now < 5.0 else 14.0
         obs = {"ego": {"x": ego_x, "v": ego_v},
                "targets": [{"x": lead_x, "v": lead_v}], "dt": dt}
@@ -517,100 +479,45 @@ def interpret_e3(res):
             "时距太大，跟车又松。试着找到误差最小又不撞的时距。")
 
 
-# ---------------------------------------------------------------- 通用可视化与打卡
+# ---------------------------------------------------------------- 通用
 def plot_curves(series, xlabel, ylabel, title, figsize=(10, 4)):
-    """series: [(x, y, label, style), ...]，画对比曲线（全面支持高清晰度中文字体）。"""
+    """series: [(x, y, label, style), ...]，画对比曲线。图题与标签可用中文（模块顶部已注册 Noto Sans CJK）。"""
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=figsize)
     for x, y, label, style in series:
-        ax.plot(x, y, style, label=label, linewidth=2.2)
-    ax.set_xlabel(xlabel, fontsize=10.5)
-    ax.set_ylabel(ylabel, fontsize=10.5)
-    ax.set_title(title, fontsize=12, fontweight="bold")
-    ax.grid(True, alpha=0.3, linestyle="--")
-    ax.legend(frameon=True, facecolor="#f8fafc", framealpha=0.9)
-    plt.tight_layout()
+        ax.plot(x, y, style, label=label, linewidth=2)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
     return fig
 
 
 def plot_bars(labels, values, ylabel, title, figsize=(8, 4)):
-    """柱状对比图（带高对比度色带与数值标签）。"""
+    """柱状对比图。"""
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=figsize)
-    colors = ["#94a3b8", "#2563eb", "#16a34a"] if len(labels) == 3 else ["#94a3b8", "#2563eb"]
-    bars = ax.bar(labels, values, color=colors[:len(labels)], width=0.5)
-    ax.set_ylabel(ylabel, fontsize=10.5)
-    ax.set_title(title, fontsize=12, fontweight="bold")
+    bars = ax.bar(labels, values, color=["#9aa0a6", "#1a73e8", "#34a853"])
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
     for b in bars:
-        h = b.get_height()
-        ax.text(b.get_x() + b.get_width() / 2, h + 0.1,
-                f"{h:.1f}", ha="center", va="bottom", fontweight="bold", fontsize=10)
-    ax.grid(True, axis="y", alpha=0.3, linestyle="--")
-    plt.tight_layout()
+        ax.text(b.get_x() + b.get_width() / 2, b.get_height(),
+                f"{b.get_height():.1f}", ha="center", va="bottom")
+    ax.grid(True, axis="y", alpha=0.3)
     return fig
 
 
-def render_lite_metric_card(exp: str, badge_text: str, badge_color: str, metrics_list: list, insight: str):
-    """生成具有统一工业质感的富文本 HTML 指标卡与物理增量解读"""
-    from IPython.display import HTML
-
-    badge_bg = "#dcfce7" if badge_color == "green" else ("#fee2e2" if badge_color == "red" else "#fef3c7")
-    badge_fg = "#15803d" if badge_color == "green" else ("#b91c1c" if badge_color == "red" else "#b45309")
-
-    metrics_html = "".join([
-        f'<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; margin: 4px; min-width: 120px;">'
-        f'<div style="font-size: 11px; color: #64748b;">{m[0]}</div>'
-        f'<div style="font-size: 14px; font-weight: bold; color: #1e293b;">{m[1]}</div>'
-        f'</div>'
-        for m in metrics_list
-    ])
-
-    card_html = f"""
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {badge_fg}; border-radius: 8px; padding: 14px 16px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: system-ui, sans-serif;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 8px;">
-            <span style="font-weight: bold; font-size: 14px; color: #0f172a;">📊 {exp} 探索结果即时研判</span>
-            <span style="background: {badge_bg}; color: {badge_fg}; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
-                {badge_text}
-            </span>
-        </div>
-        <div style="display: flex; flex-wrap: wrap; margin: 6px -4px;">
-            {metrics_html}
-        </div>
-        <div style="margin-top: 10px; font-size: 13px; color: #334155; line-height: 1.6; background: #f8fafc; padding: 10px 12px; border-radius: 6px;">
-            💡 <b>物理因果与工程解读</b>：<br/>{insight}
-        </div>
-    </div>
-    """
-    return HTML(card_html)
-
-
 def save_lite_record(exp, params, metrics, note=""):
-    """新手完成记录：同时写 labs/data/lite/ 与 labs/data/preview_checkins/，不进教师正式成绩册。"""
+    """新手完成记录：只写 labs/data/lite/，不进教师成绩册。"""
     os.makedirs(LITE_DIR, exist_ok=True)
-    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    rec = {
-        "experiment": exp,
-        "mode": "novice_preview",
-        "params": params,
-        "metrics": metrics,
-        "student_insight": note,
-        "note": note,
-        "timestamp": now_str
-    }
+    rec = {"experiment": exp, "params": params, "metrics": metrics,
+            "note": note, "mode": "lite"}
     path = os.path.join(LITE_DIR, f"{exp}_lite.json")
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(rec, f, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
-
-    # 统一存入 preview_checkins，打通后续教师面板预习核查
-    preview_dir = os.path.expanduser("~/labs/data/preview_checkins")
-    try:
-        os.makedirs(preview_dir, exist_ok=True)
-        p_path = os.path.join(preview_dir, f"{exp}_preview.json")
-        with open(p_path + ".tmp", "w", encoding="utf-8") as f:
-            json.dump(rec, f, ensure_ascii=False, indent=2)
-        os.replace(p_path + ".tmp", p_path)
-    except Exception:
-        pass
     return path
 
 
