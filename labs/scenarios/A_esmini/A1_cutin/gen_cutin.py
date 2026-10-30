@@ -10,8 +10,8 @@ from scenariogeneration import xosc as OSC
 from scenariogeneration.xodr import OpenDrive
 from scenariogeneration.xodr.generators import create_straight_road
 
-# ---------- 1. 路网：200m 双车道直道 ----------
-road = create_straight_road(road_id=0, length=200, n_lanes=2, lane_offset=3)
+# ---------- 1. 路网：600m 双车道直道（200m 时自车在路尽头追尾停住的前车，交互无法完成） ----------
+road = create_straight_road(road_id=0, length=600, n_lanes=2, lane_offset=3)
 odr = OpenDrive("cutin_road")
 odr.add_road(road)
 odr.adjust_roads_and_lanes()
