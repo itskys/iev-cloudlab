@@ -2436,7 +2436,7 @@ def show_b5_explorer():
             if bandwidth > 0:
                 ax.fill_betweenx([0.0, 800.0], [t_band_start, t_band_start + 800.0/v_des], [t_band_end, t_band_end + 800.0/v_des], color="#86efac", alpha=0.35, label=f"畅行绿波带 ({bandwidth:.1f}s)")
 
-            # 车辆真实轨迹
+            # 车辆巡航轨迹
             ax.plot(t_traj, x_traj, color="#1e40af", linewidth=2.5, linestyle="--", label=f"车辆巡航轨迹 ({slider_speed.value} km/h)")
 
             ax.set_xlim(0, 80)
@@ -2683,7 +2683,7 @@ def show_d3_explorer():
             r_min = slider_relax.value
             soc = np.linspace(0.05, 0.95, 201)
 
-            # 理论真实 OCV(SOC) 曲线 (NMC 三元锂体系)
+            # 理论 OCV(SOC) 曲线 (NMC 三元锂体系）
             ocv_true = 3.2 + 0.8 * soc - 0.1 * np.log(1.0 - soc) + 0.05 * np.log(soc)
 
             # 极化过电位与内阻压降：电流越大、弛豫越短，迟滞环张开得越大
@@ -2698,7 +2698,7 @@ def show_d3_explorer():
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 3.8))
             ax1.plot(soc * 100, v_chg, color="#dc2626", linewidth=2.0, label="充电分支端电压")
             ax1.plot(soc * 100, v_dis, color="#2563eb", linewidth=2.0, label="放电分支端电压")
-            ax1.plot(soc * 100, ocv_true, color="#16a34a", linestyle="--", linewidth=2.2, label="真实准静态平衡 OCV")
+            ax1.plot(soc * 100, ocv_true, color="#16a34a", linestyle="--", linewidth=2.2, label="理论准静态平衡 OCV")
             ax1.set_xlabel("荷电状态 SOC (%)")
             ax1.set_ylabel("端电压 (V)")
             ax1.set_title(f"OCV-SOC 充放电迟滞环 ({c:.2f}C 倍率, 静置 {r_min}min)")
@@ -3208,7 +3208,7 @@ def show_f3_explorer():
             if max_e <= 5.0:
                 badge_text = f"🟢 能量守恒严密 (终值漂移 {max_e:.2f} J)"
                 badge_color = "green"
-                insight = "<b>高保真协同</b>：主算法在通信点间通过预测解耦了代数环，消除了虚假能量注入，多从站联合仿真高度真实！"
+                insight = "<b>协同稳定</b>：主算法在通信点间通过预测解耦了代数环，消除了虚假能量注入，多从站联合仿真协同稳定！"
             elif max_e <= 15.0:
                 badge_text = f"🟡 存在轻微能量虚假漂移 ({max_e:.2f} J)"
                 badge_color = "yellow"
