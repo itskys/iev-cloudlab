@@ -191,7 +191,13 @@ def export_teacher_semester_archive(
                     rel_p = os.path.relpath(full_p, temp_dir)
                     zipf.write(full_p, rel_p)
 
-        return {'success': True, 'zip_path': output_zip_path}
+        size_bytes = os.path.getsize(output_zip_path)
+        return {
+            'success': True,
+            'zip_path': output_zip_path,
+            'size_bytes': size_bytes,
+            'size_mb': round(size_bytes / (1024.0 * 1024.0), 3),
+        }
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
