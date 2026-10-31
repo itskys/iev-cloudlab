@@ -374,6 +374,8 @@ def show_b4_explorer():
 
 def show_c3_explorer():
     """C3 整车三维能耗灵敏度与工况主导权翻转探索器"""
+    if not _HAS_WIDGETS:
+        return
     out = widgets.Output()
 
     slider_mass = widgets.IntSlider(value=0, min=-20, max=20, step=5, description="车重变化 ΔM (%):", style={'description_width': '130px'})
@@ -625,6 +627,8 @@ def show_d4_explorer():
 
 def show_e2_explorer():
     """E2 动力性 vs 成本 Pareto 决策探针与膝点决策探索器"""
+    if not _HAS_WIDGETS:
+        return
     out = widgets.Output()
 
     slider_accel = widgets.FloatSlider(value=5.5, min=3.6, max=7.8, step=0.1, description="目标零百加速 (s):", readout_format=".1f", style={'description_width': '130px'})
@@ -1056,6 +1060,8 @@ def show_b1_explorer():
 
 def show_c2_explorer():
     """C2 6 款量产标杆纯电汽车能耗与分项阻力对比探索器"""
+    if not _HAS_WIDGETS:
+        return
     out = widgets.Output()
 
     vehicles_data = {
@@ -1305,6 +1311,8 @@ def show_d2_explorer():
 
 def show_e4_explorer():
     """E4 混动汽车动态规划 (DP) 上帝视角全局最优探索器"""
+    if not _HAS_WIDGETS:
+        return
     out = widgets.Output()
 
     slider_weight = widgets.FloatSlider(value=2.0, min=1.0, max=5.0, step=0.5, description="SOC 终值惩罚权重:", readout_format=".1f", style={'description_width': '140px'})
