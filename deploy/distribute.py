@@ -30,8 +30,8 @@ EXCLUDE_DIRS = {"__pycache__", ".ipynb_checkpoints", "archive"}
 EXCLUDE_FILES = {"教师面板_成绩与学生管理.ipynb"}
 # 根目录下需要分发到学生 home 根目录的教学指导文档
 ROOT_FILES = ["demo_script_10min.md"]
-# results/ 与 preview_checkins/ 只建空目录，不分发其中内容（那是学生自己的产出区）
-EMPTY_DIRS = {"labs/data/results", "labs/data/benchmarks", "labs/data/preview_checkins", "labs/data/lite"}
+# results/ 与 preview_checkins/、lite/、reports/ 只建空目录，不分发其中内容（那是学生自己的产出区）
+EMPTY_DIRS = {"labs/data/results", "labs/data/benchmarks", "labs/data/preview_checkins", "labs/data/lite", "reports"}
 
 SETTINGS_REL = (
     ".jupyter/lab/user-settings/@jupyterlab/"
@@ -48,12 +48,17 @@ def _sha(path):
     return h.hexdigest()
 
 
-def _iter_sources():
+def _iter_sources(for_user=None):
     """产出 (相对路径, 源绝对路径)：根目录教学文档、notebooks/ 与 labs/ 下应分发的文件。"""
     for fname in ROOT_FILES:
         p = os.path.join(SRC, fname)
         if os.path.isfile(p):
             yield fname, p
+
+    # 普通学生账号排除教师面板；教师和管理员账号正常分发教师面板
+    effective_exclude = set(EXCLUDE_FILES)
+    if for_user in ("teacher", "admin"):
+        effective_exclude.discard("教师面板_成绩与学生管理.ipynb")
 
     for top in ("notebooks", "labs"):
         base = os.path.join(SRC, top)
@@ -65,7 +70,7 @@ def _iter_sources():
             if rel_root.replace(os.sep, "/") in EMPTY_DIRS:
                 files = []
             for name in files:
-                if name in EXCLUDE_FILES:
+                if name in effective_exclude:
                     continue
                 rel = os.path.join(rel_root, name).replace(os.sep, "/")
                 yield rel, os.path.join(root, name)
@@ -92,7 +97,7 @@ def distribute(username):
         except Exception:
             manifest = {}
 
-    for rel, src_path in _iter_sources():
+    for rel, src_path in _iter_sources(for_user=username):
         dst = os.path.join(home, rel.replace("/", os.sep))
         src_hash = _sha(src_path)
         if not os.path.exists(dst):

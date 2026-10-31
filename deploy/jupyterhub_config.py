@@ -47,6 +47,10 @@ c.DockerSpawner.cpu_limit = 1.0
 c.DockerSpawner.cpu_guarantee = 0.2
 # 铁律4b：/dev/shm 512m，防 Gazebo/Rerun SIGBUS
 c.DockerSpawner.extra_host_config = {"shm_size": "512m"}
+# 环境变量注入：静默 PyBaMM 首轮交互遥测提示，加速电化学仿真内核初始化
+c.DockerSpawner.environment = {
+    "PYBAMM_DISABLE_TELEMETRY": "true",
+}
 # 用户卷：dict 形式 mode="z" 即 docker CLI 的 :z（SELinux 共享标签，已验 dockerspawner 14.x 源码）
 c.DockerSpawner.volumes = {
     "/opt/ievlab/home/{username}": {"bind": "/home/jovyan", "mode": "z"},
@@ -58,6 +62,12 @@ def _ensure_home(spawner):
     d = f"/opt/ievlab/home/{spawner.user.name}"
     os.makedirs(d, exist_ok=True)
     os.system(f"chown 1000:1000 {d}")
+
+    # 教师与管理员特权：只读挂载全班主目录镜像，支持实时代码查重与报告核验
+    if spawner.user.name in ("teacher", "admin"):
+        vols = dict(spawner.volumes)
+        vols["/opt/ievlab/home"] = {"bind": "/opt/ievlab/home", "mode": "ro"}
+        spawner.volumes = vols
 
     # [Bug修复与课件分发 - 2026-10-25 给 Muse 说明]：
     # 原逻辑仅创建了空目录，学生首次登录时工作区完全空白无课件。

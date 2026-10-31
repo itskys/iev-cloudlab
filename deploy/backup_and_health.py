@@ -70,12 +70,20 @@ def run_backup():
     if os.path.isdir(deploy_dir):
         items_to_pack.append((deploy_dir, "deploy"))
 
-    # 3. 仿真场景与模型资产 (OpenSCENARIO, OpenDRIVE, FMU 资产，防止路网场景意外丢失)
+    # 3. 仿真场景、核心库与标准课件资产 (OpenSCENARIO, OpenDRIVE, FMU, Notebooks)
     scenarios_dir = os.path.join(BASE_DIR, "scenarios", "labs", "scenarios")
     if os.path.isdir(scenarios_dir):
         items_to_pack.append((scenarios_dir, "scenarios_assets"))
 
-    # 4. 收集所有用户的成绩结果 (results/) 与分发记录 (manifest)
+    common_dir = os.path.join(BASE_DIR, "scenarios", "labs", "common")
+    if os.path.isdir(common_dir):
+        items_to_pack.append((common_dir, "common_libs"))
+
+    notebooks_dir = os.path.join(BASE_DIR, "scenarios", "notebooks")
+    if os.path.isdir(notebooks_dir):
+        items_to_pack.append((notebooks_dir, "notebooks_master"))
+
+    # 4. 收集所有用户的成绩结果 (results/)、预习打卡 (preview_checkins/)、报告与分发记录
     homes_dir = os.path.join(BASE_DIR, "home")
     temp_results_dir = os.path.join(BACKUP_DIR, f".tmp_homes_{now_str}")
     if os.path.isdir(homes_dir):
@@ -89,6 +97,14 @@ def run_backup():
             u_res = os.path.join(user_path, "labs", "data", "results")
             if os.path.isdir(u_res):
                 shutil.copytree(u_res, os.path.join(user_out, "results"), dirs_exist_ok=True)
+            # 复制 preview_checkins (Phase 0 打卡)
+            u_prev = os.path.join(user_path, "labs", "data", "preview_checkins")
+            if os.path.isdir(u_prev):
+                shutil.copytree(u_prev, os.path.join(user_out, "preview_checkins"), dirs_exist_ok=True)
+            # 复制 reports (学生实验报告)
+            u_rep = os.path.join(user_path, "reports")
+            if os.path.isdir(u_rep):
+                shutil.copytree(u_rep, os.path.join(user_out, "reports"), dirs_exist_ok=True)
             # 复制 manifest
             u_man = os.path.join(user_path, ".ievlab_manifest.json")
             if os.path.isfile(u_man):

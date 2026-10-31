@@ -64,32 +64,90 @@ def load_roster():
 
 def collect(home_root):
     all_results = {}
+    all_previews = {}
+    reports_manifest = {}
     if not os.path.isdir(home_root):
-        return all_results
+        return all_results, all_previews, reports_manifest
+
     roster = load_roster()
+    ignore_md_files = {
+        'readme.md', 'teacher_guide.md', 'syllabus_16weeks.md',
+        '学生快速上手指南.md', '教师指导手册.md', '课程大纲_16周.md', '实验手册.md',
+        'demo_script_10min.md', 'student_quickstart.md', '实验报告模板_示例.md'
+    }
+
     for user in sorted(os.listdir(home_root)):
         if roster is not None:
             if user not in roster:
                 continue
         elif user in SKIP_USERS:
             continue
-        rdir = os.path.join(home_root, user, 'labs', 'data', 'results')
-        if not os.path.isdir(rdir):
+
+        u_home = os.path.join(home_root, user)
+        if not os.path.isdir(u_home):
             continue
-        exps = {}
-        for fname in os.listdir(rdir):
-            if not fname.endswith('.json') or fname in SKIP_FILES:
-                continue
-            exp_id = fname[:-5]
-            try:
-                with open(os.path.join(rdir, fname)) as f:
-                    data = json.load(f)
-                exps[exp_id] = data.get('metrics', data)
-            except (json.JSONDecodeError, OSError):
-                continue
-        if exps:
-            all_results[user] = exps
-    return all_results
+
+        # 1. 收集客观实验仿真结果 (results/)
+        rdir = os.path.join(u_home, 'labs', 'data', 'results')
+        if os.path.isdir(rdir):
+            exps = {}
+            for fname in os.listdir(rdir):
+                if not fname.endswith('.json') or fname in SKIP_FILES:
+                    continue
+                exp_id = fname[:-5]
+                try:
+                    with open(os.path.join(rdir, fname), encoding='utf-8') as f:
+                        data = json.load(f)
+                    exps[exp_id] = data.get('metrics', data)
+                except (json.JSONDecodeError, OSError):
+                    continue
+            if exps:
+                all_results[user] = exps
+
+        # 2. 收集 Phase 0 新手直觉预习打卡 (preview_checkins/ 与 lite/)
+        p_dirs = [
+            os.path.join(u_home, 'labs', 'data', 'preview_checkins'),
+            os.path.join(u_home, 'labs', 'data', 'lite')
+        ]
+        user_previews = {}
+        for pdir in p_dirs:
+            if os.path.isdir(pdir):
+                for fname in os.listdir(pdir):
+                    if not fname.endswith('.json'):
+                        continue
+                    exp_id = fname.replace('_preview.json', '').replace('.json', '')
+                    try:
+                        with open(os.path.join(pdir, fname), encoding='utf-8') as f:
+                            pdata = json.load(f)
+                        user_previews[exp_id] = pdata
+                    except (json.JSONDecodeError, OSError):
+                        continue
+        if user_previews:
+            all_previews[user] = user_previews
+
+        # 3. 收集学生撰写的实验报告 Markdown
+        search_dirs = [
+            os.path.join(u_home, 'reports'),
+            os.path.join(u_home, 'notebooks'),
+            u_home
+        ]
+        user_reports = []
+        for sdir in search_dirs:
+            if os.path.isdir(sdir):
+                for fname in os.listdir(sdir):
+                    if fname.lower().endswith('.md') and fname.lower() not in ignore_md_files:
+                        full_p = os.path.join(sdir, fname)
+                        if os.path.isfile(full_p):
+                            user_reports.append({
+                                'file_name': fname,
+                                'source_path': full_p,
+                                'size_bytes': os.path.getsize(full_p),
+                                'mtime': os.path.getmtime(full_p)
+                            })
+        if user_reports:
+            reports_manifest[user] = user_reports
+
+    return all_results, all_previews, reports_manifest
 
 
 def main():
@@ -98,33 +156,69 @@ def main():
     ap.add_argument('--out', default='/opt/ievlab/home/teacher/grades')
     args = ap.parse_args()
 
-    all_results = collect(args.home_root)
+    all_results, all_previews, reports_manifest = collect(args.home_root)
     outs = [args.out]
     if args.out.endswith('/teacher/grades'):
         outs.append(args.out.replace('/teacher/grades', '/admin/grades'))
-    out_path = None
+
     for out_dir in outs:
         os.makedirs(out_dir, exist_ok=True)
+
+        # 写入 1: all_results.json
         out_path = os.path.join(out_dir, 'all_results.json')
         tmp_path = out_path + '.tmp'
         with open(tmp_path, 'w', encoding='utf-8') as f:
             json.dump(all_results, f, ensure_ascii=False, indent=2)
         os.replace(tmp_path, out_path)
-        # [权限收紧 - 2026-10-25 Muse 复核]：
-        # Host cron 通常以 root 身份运行，写入的文件属主若为 root:root 且仅 0644，
-        # teacher 容器（以 jovyan UID 1000 运行）在调用 gradebook 或归档时会报 PermissionDenied。
-        # chown 到 1000:1000 已足够保证教师面板读写；0666/0775 属于过度放宽，
-        # 故收紧为文件 0644、目录 0755（属主可写，他人只读）。
+
+        # 写入 2: all_previews.json (Phase 0 打卡汇总)
+        prev_path = os.path.join(out_dir, 'all_previews.json')
+        tmp_prev = prev_path + '.tmp'
+        with open(tmp_prev, 'w', encoding='utf-8') as f:
+            json.dump(all_previews, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_prev, prev_path)
+
+        # 写入 3: all_reports_manifest.json (学生报告索引与实体归集)
+        rep_dir = os.path.join(out_dir, 'submitted_reports')
+        os.makedirs(rep_dir, exist_ok=True)
+        for user, rlist in reports_manifest.items():
+            u_rep_dest = os.path.join(rep_dir, user)
+            os.makedirs(u_rep_dest, exist_ok=True)
+            for rinfo in rlist:
+                try:
+                    import shutil
+                    shutil.copy2(rinfo['source_path'], os.path.join(u_rep_dest, rinfo['file_name']))
+                except Exception:
+                    pass
+
+        rep_manifest_path = os.path.join(out_dir, 'all_reports_manifest.json')
+        tmp_rep = rep_manifest_path + '.tmp'
+        with open(tmp_rep, 'w', encoding='utf-8') as f:
+            json.dump(reports_manifest, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_rep, rep_manifest_path)
+
+        # 递归修复权限为 1000:1000
         try:
-            os.chown(out_path, 1000, 1000)
+            for root, dirs, files in os.walk(out_dir):
+                for d in dirs:
+                    dp = os.path.join(root, d)
+                    os.chown(dp, 1000, 1000)
+                    os.chmod(dp, 0o755)
+                for fn in files:
+                    fp = os.path.join(root, fn)
+                    os.chown(fp, 1000, 1000)
+                    os.chmod(fp, 0o644)
             os.chown(out_dir, 1000, 1000)
-            os.chmod(out_path, 0o644)
             os.chmod(out_dir, 0o755)
         except (PermissionError, OSError):
             pass
+
     n_exp = sum(len(v) for v in all_results.values())
-    print(f'Collected: {len(all_results)} students, {n_exp} experiment '
-          f'results -> {out_path}')
+    n_prev = sum(len(v) for v in all_previews.values())
+    n_rep = sum(len(v) for v in reports_manifest.values())
+    print(f'Collected: {len(all_results)} students with {n_exp} results, '
+          f'{len(all_previews)} students with {n_prev} previews, '
+          f'{len(reports_manifest)} students with {n_rep} reports -> {outs[0]}')
     return 0
 
 

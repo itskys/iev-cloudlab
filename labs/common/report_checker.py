@@ -534,7 +534,7 @@ def format_verification_html(summary: Dict[str, Any]) -> str:
     return html
 
 
-def check_student_directory(student_home: str) -> Dict[str, Any]:
+def check_student_directory(student_home: str, user_metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """扫描指定学生主目录下的报告 Markdown 文件，并与结果 JSON 进行核验。
 
     :param student_home: 学生主目录路径（如 /home/jovyan 或 /opt/ievlab/home/testuser）
@@ -585,14 +585,20 @@ def check_student_directory(student_home: str) -> Dict[str, Any]:
         if not matched_exp:
             continue
 
-        # 寻找对应的仿真结果 JSON
+        # 寻找对应的仿真结果 JSON 或从传入的已归档字典提取
+        target_res = None
         target_json = os.path.join(results_dir, f"{matched_exp}.json")
-        if not os.path.exists(target_json):
-            # 尝试 export 别名
-            target_json = os.path.join(results_dir, f"{matched_exp}_export.json")
-
         if os.path.exists(target_json):
-            summary = verify_report_consistency(content, target_json, experiment_id=matched_exp)
+            target_res = target_json
+        else:
+            target_export = os.path.join(results_dir, f"{matched_exp}_export.json")
+            if os.path.exists(target_export):
+                target_res = target_export
+            elif user_metrics and matched_exp in user_metrics:
+                target_res = user_metrics[matched_exp]
+
+        if target_res is not None:
+            summary = verify_report_consistency(content, target_res, experiment_id=matched_exp)
             summary['report_path'] = md_path
             verified_results[matched_exp] = summary
 
@@ -600,23 +606,58 @@ def check_student_directory(student_home: str) -> Dict[str, Any]:
 
 
 def check_class_reports(home_base_dir: str = '/opt/ievlab/home') -> Dict[str, Dict[str, Any]]:
-    """全班实验报告批量核验。
+    """全班实验报告批量核验。支持直接扫描 /opt/ievlab/home，或在单用户容器内自动回退至已归档的 submitted_reports 目录。
 
     :param home_base_dir: 学生 home 根目录
     :return: {username: {exp_id: summary}}
     """
     class_summaries = {}
-    if not os.path.exists(home_base_dir):
-        return class_summaries
 
-    for user in os.listdir(home_base_dir):
-        if user in ('admin', 'lost+found') or user.startswith('.'):
-            continue
-        u_home = os.path.join(home_base_dir, user)
-        if os.path.isdir(u_home):
-            user_reports = check_student_directory(u_home)
-            if user_reports:
-                class_summaries[user] = user_reports
+    # 加载已汇聚的全班成绩数据 (备用对齐)
+    all_results = {}
+    for res_candidate in [
+        '/home/jovyan/grades/all_results.json',
+        '/opt/ievlab/home/teacher/grades/all_results.json',
+        os.path.expanduser('~/grades/all_results.json')
+    ]:
+        if os.path.isfile(res_candidate):
+            try:
+                with open(res_candidate, 'r', encoding='utf-8') as f:
+                    all_results = json.load(f)
+                break
+            except Exception:
+                pass
+
+    # 1. 尝试直接扫描主目录 (如教师容器已挂载 /opt/ievlab/home 或在宿主机运行)
+    if os.path.isdir(home_base_dir):
+        for user in os.listdir(home_base_dir):
+            if user in ('admin', 'lost+found') or user.startswith('.'):
+                continue
+            u_home = os.path.join(home_base_dir, user)
+            if os.path.isdir(u_home):
+                u_metrics = all_results.get(user)
+                user_reports = check_student_directory(u_home, user_metrics=u_metrics)
+                if user_reports:
+                    class_summaries[user] = user_reports
+        if class_summaries:
+            return class_summaries
+
+    # 2. 容器沙箱回退：扫描 collect_grades 自动归档的 submitted_reports 目录
+    for rep_base in [
+        '/home/jovyan/grades/submitted_reports',
+        '/opt/ievlab/home/teacher/grades/submitted_reports',
+        os.path.expanduser('~/grades/submitted_reports')
+    ]:
+        if os.path.isdir(rep_base):
+            for user in os.listdir(rep_base):
+                if user.startswith('.'):
+                    continue
+                u_rep_dir = os.path.join(rep_base, user)
+                if os.path.isdir(u_rep_dir):
+                    u_metrics = all_results.get(user)
+                    user_reports = check_student_directory(u_rep_dir, user_metrics=u_metrics)
+                    if user_reports:
+                        class_summaries[user] = user_reports
 
     return class_summaries
 

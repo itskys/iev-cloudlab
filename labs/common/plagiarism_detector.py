@@ -56,8 +56,22 @@ class ASTNormalizer(ast.NodeTransformer):
 
 def load_template_ast_fingerprints(exp_name: str) -> Set[Tuple[str, ...]]:
     """加载官方母版 Notebook 的所有代码单元格 AST 语法序列指纹，用于过滤课程自带模板代码"""
-    candidates = []
     clean_exp = exp_name.replace('.ipynb', '').replace('_pro', '')
+    template_fp = set()
+
+    # 1. 优先从同目录预生成的 template_fingerprints.json 读取官方母版指纹（快且不受沙箱挂载限制）
+    json_cache = os.path.join(os.path.dirname(__file__), "template_fingerprints.json")
+    if os.path.isfile(json_cache):
+        try:
+            with open(json_cache, "r", encoding="utf-8") as f:
+                all_fps = json.load(f)
+            if clean_exp in all_fps:
+                return {tuple(seq) for seq in all_fps[clean_exp]}
+        except Exception:
+            pass
+
+    # 2. 动态扫描备选母版路径
+    candidates = []
     src_base = os.environ.get("IEVLAB_SRC", "/opt/ievlab/scenarios")
 
     candidates.append(os.path.join(src_base, "notebooks", f"{clean_exp}_pro.ipynb"))
@@ -65,7 +79,6 @@ def load_template_ast_fingerprints(exp_name: str) -> Set[Tuple[str, ...]]:
     candidates.append(os.path.join(os.path.dirname(__file__), "..", "..", "notebooks", f"{clean_exp}_pro.ipynb"))
     candidates.append(os.path.join(os.path.dirname(__file__), "..", "..", "notebooks", f"{clean_exp}.ipynb"))
 
-    template_fp = set()
     master_path = None
     for cand in candidates:
         if os.path.exists(cand):
@@ -249,7 +262,7 @@ def scan_class_code_plagiarism(
     users = sorted(os.listdir(homes_base))
 
     for u in users:
-        if u in ('admin', 'lost+found') or u.startswith('.'):
+        if u in ('admin', 'teacher', 'lost+found') or u.startswith('.'):
             continue
         u_nb_dir = os.path.join(homes_base, u, 'notebooks')
         if not os.path.exists(u_nb_dir):
