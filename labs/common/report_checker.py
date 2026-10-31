@@ -631,7 +631,7 @@ def check_class_reports(home_base_dir: str = '/opt/ievlab/home') -> Dict[str, Di
     # 1. 尝试直接扫描主目录 (如教师容器已挂载 /opt/ievlab/home 或在宿主机运行)
     if os.path.isdir(home_base_dir):
         for user in os.listdir(home_base_dir):
-            if user in ('admin', 'lost+found') or user.startswith('.'):
+            if user in ('admin', 'teacher', 'lost+found') or user.startswith('.'):
                 continue
             u_home = os.path.join(home_base_dir, user)
             if os.path.isdir(u_home):
