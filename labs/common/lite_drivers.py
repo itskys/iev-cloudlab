@@ -544,3 +544,38 @@ def a1_replay(res):
         metrics=None,
         title="A1 新手回放 · Cut-in 加塞",
         subtitle="你调的 TTC 阈值，决定了自车什么时候刹车")
+
+
+# ---------------------------------------------------------------- 指标卡片
+def render_lite_metric_card(title, badge_text, badge_color, metrics_list, interpretation):
+    """新手探索器的结果指标卡片（2026-10-31 补：此前 lab_explorers 引用但未定义）。
+
+    title: 实验标题，如 "A1 加塞避碰"。
+    badge_text: 结论徽章文字，如 "🟢 零碰撞安全刹停"。
+    badge_color: "red" / "green" / "yellow"（调用点现状）；未知值回落灰色。
+    metrics_list: [(指标名, 指标值字符串), ...]。
+    interpretation: 解读文字（纯文本；内部含 "<0.5m" 这类字符，必须转义）。
+    返回 IPython.display.HTML；无 IPython 环境时回落为 HTML 字符串。
+    """
+    import html as _html
+
+    _COLORS = {"red": "#dc2626", "green": "#16a34a", "yellow": "#d97706"}
+    _color = _COLORS.get(str(badge_color).lower(), "#64748b")
+    _rows = "".join(
+        f"<tr><td style=\"padding:3px 12px 3px 0;color:#475569;\">{_html.escape(str(k))}</td>"
+        f"<td style=\"padding:3px 0;font-weight:600;\">{_html.escape(str(v))}</td></tr>"
+        for k, v in (metrics_list or []))
+    _html_code = (
+        f"<div style=\"border:1px solid #e2e8f0;border-left:5px solid {_color};"
+        f"border-radius:8px;padding:12px 16px;margin:8px 0;background:#f8fafc;\">"
+        f"<div style=\"display:flex;align-items:center;gap:10px;\">"
+        f"<span style=\"font-size:16px;font-weight:700;\">{_html.escape(str(title))}</span>"
+        f"<span style=\"background:{_color};color:#fff;border-radius:999px;"
+        f"padding:2px 10px;font-size:13px;\">{_html.escape(str(badge_text))}</span></div>"
+        f"<table style=\"margin:8px 0 4px 0;border-collapse:collapse;\">{_rows}</table>"
+        f"<div style=\"color:#334155;font-size:14px;\">{_html.escape(str(interpretation))}</div></div>")
+    try:
+        from IPython.display import HTML as _HTML
+        return _HTML(_html_code)
+    except Exception:
+        return _html_code
