@@ -172,6 +172,26 @@ def _parse_number(val_str: str) -> Optional[float]:
     return None
 
 
+# 目标/要求类措辞：出现在指标名前，说明后面跟的是考核要求而非实测结果。
+# 报告常把要求和实测写在一起（如“目标最小TTC 1.5s，实际 2.57s”），
+# 若把要求误当实测提取，就会制造虚假不一致。2026-10-31 P1 修复。
+_TARGET_WORDS = ("目标", "要求", "标准")
+
+
+def _has_target_prefix(text: str, match_start: int, window: int = 8) -> bool:
+    """匹配点前 window 字内是否有目标/要求类措辞。"""
+    before = text[max(0, match_start - window):match_start]
+    return any(w in before for w in _TARGET_WORDS)
+
+
+def _search_not_target(pattern: str, text: str, flags: int = 0):
+    """返回第一个非目标措辞前缀的匹配；全部带目标前缀则返回 None。"""
+    for m in re.finditer(pattern, text, flags):
+        if not _has_target_prefix(text, m.start()):
+            return m
+    return None
+
+
 def extract_claims_from_markdown(markdown_text: str) -> Dict[str, Any]:
     """从 Markdown 报告中提取所有提及的量化指标和布尔状态。
     
@@ -189,6 +209,9 @@ def extract_claims_from_markdown(markdown_text: str) -> Dict[str, Any]:
                 # 遍历可能的列，尝试找出指标名称和对应数值
                 name_cell = cells[0]
                 val_cell = cells[1]
+                # 目标/要求行（如“目标最小TTC”）不是实测陈述，跳过
+                if any(w in name_cell for w in _TARGET_WORDS):
+                    continue
                 norm_name = _clean_str(name_cell)
 
                 # 匹配 canonical key
@@ -210,6 +233,9 @@ def extract_claims_from_markdown(markdown_text: str) -> Dict[str, Any]:
     kv_pattern = re.compile(r'[-*•]?\s*([^:\n=]{2,25})\s*[:=：]\s*([^\n,，;；]+)')
     for match in kv_pattern.finditer(markdown_text):
         key_raw, val_raw = match.groups()
+        # 目标/要求键（如“目标最小TTC: 1.5s”）不是实测陈述，跳过
+        if any(w in key_raw for w in _TARGET_WORDS):
+            continue
         norm_key = _clean_str(key_raw)
 
         for canonical_key, keywords in METRIC_KEYWORD_MAP.items():
@@ -227,19 +253,20 @@ def extract_claims_from_markdown(markdown_text: str) -> Dict[str, Any]:
                     break
 
     # 3. 解析叙述性自然语言模式（针对高频核心指标的兜底）
+    #    目标措辞前缀的匹配（如“目标最小TTC 1.5s”）不是实测陈述，跳过取下一处。
     if 'min_ttc_s' not in claims:
-        ttc_m = re.search(r'(?:最小ttc|ttc最小(?:值)?)[为达到是：:\s]*([0-9]+\.?[0-9]*)', markdown_text, re.I)
+        ttc_m = _search_not_target(r'(?:最小ttc|ttc最小(?:值)?)[为达到是了：:\s]*([0-9]+\.?[0-9]*)', markdown_text, re.I)
         if ttc_m:
             claims['min_ttc_s'] = float(ttc_m.group(1))
 
     if 'collision' not in claims:
-        if re.search(r'(?:无碰撞|未发生碰撞|零碰撞|未碰撞|全程无撞击)', markdown_text):
+        if _search_not_target(r'(?:无碰撞|未发生碰撞|零碰撞|未碰撞|全程无撞击)', markdown_text):
             claims['collision'] = False
-        elif re.search(r'(?:发生碰撞|造成碰撞|出现撞击|发生追尾)', markdown_text):
+        elif _search_not_target(r'(?:发生碰撞|造成碰撞|出现撞击|发生追尾)', markdown_text):
             claims['collision'] = True
 
     if 'energy_kwh_100km' not in claims:
-        energy_m = re.search(r'(?:电耗|百公里电耗|百公里耗电)[为达到是：:\s]*([0-9]+\.?[0-9]*)\s*(?:kwh)?', markdown_text, re.I)
+        energy_m = _search_not_target(r'(?:电耗|百公里电耗|百公里耗电)[为达到是了：:\s]*([0-9]+\.?[0-9]*)\s*(?:kwh)?', markdown_text, re.I)
         if energy_m:
             claims['energy_kwh_100km'] = float(energy_m.group(1))
 
