@@ -522,7 +522,7 @@ def show_d4_explorer():
         t_kelvin = temp + 273.15
         arrhenius = np.exp(35000 / 8.314 * (1.0 / 298.15 - 1.0 / t_kelvin))
 
-        # DFN 近隔膜负极界面电位差动态方程 (随电流倍率与内阻欧姆极化压降)
+        # 简化解析模型：Arrhenius 温度修正 + 指数弛豫极化压降（非 DFN 全模型）
         # 1C 常温平衡电位 ~0.08V，大倍率剧烈下坠
         polarization = (c_rate * 0.22) * arrhenius
         v_drop = 0.12 - polarization * (1.0 - np.exp(-t / 12.0))
@@ -552,7 +552,7 @@ def show_d4_explorer():
 
             ax.set_xlabel("快充持续时间 Time (s)")
             ax.set_ylabel("负极/隔膜交界固液电位差 Φs - Φe (V)")
-            ax.set_title(f"负极界面电化学析锂热力学走势 (Chen2020 电芯)")
+            ax.set_title(f"负极界面电化学析锂热力学走势（简化解析模型）")
             ax.legend(loc="lower left", fontsize=9)
             ax.grid(True, alpha=0.3)
             ax.set_ylim(-0.8, 0.2)
@@ -638,7 +638,7 @@ def show_e2_explorer():
     btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
     out_checkin = widgets.Output()
 
-    # 预先生成 60 个真实 NSGA-II 物理 Pareto 解点
+    # 生成 60 个公式+随机扰动示意 Pareto 解点（非真实 NSGA-II 优化结果）
     np.random.seed(42)
     t_pareto = np.linspace(3.5, 8.0, 60)
     # 物理反比：加速越快，所需电机功率 P 越大，整备质量 M 与 BOM 成本剧增
@@ -668,7 +668,7 @@ def show_e2_explorer():
             clear_output(wait=True)
             fig, ax = plt.subplots(figsize=(10, 4.2))
 
-            ax.plot(t_pareto, cost_pareto, color="#94a3b8", lw=2, linestyle="-", label="Pareto 最优前沿 (NSGA-II 解集)")
+            ax.plot(t_pareto, cost_pareto, color="#94a3b8", lw=2, linestyle="-", label="Pareto 示意前沿（公式生成，非 NSGA-II 优化结果）")
             ax.scatter(t_pareto, cost_pareto, color="#38bdf8", s=35, alpha=0.7)
 
             # 黄金膝点
@@ -939,13 +939,13 @@ def show_a3_explorer():
 # ==============================================================================
 
 def show_b1_explorer():
-    """B1 IDM 跟车模型真实数据拟合标定探索器"""
+    """B1 IDM 跟车模型标定探索器（合成基准轨迹）"""
     out = widgets.Output()
 
     slider_t = widgets.FloatSlider(value=1.5, min=0.6, max=2.4, step=0.1, description="车头时距 T (s):", readout_format=".1f", style={'description_width': '120px'})
     slider_b = widgets.FloatSlider(value=1.5, min=0.8, max=3.0, step=0.1, description="舒适减速 b (m/s²):", readout_format=".1f", style={'description_width': '140px'})
     slider_a = widgets.FloatSlider(value=1.2, min=0.5, max=2.5, step=0.1, description="最大加速 a (m/s²):", readout_format=".1f", style={'description_width': '140px'})
-    btn_run = widgets.Button(description="🚀 拟合实测轨迹", button_style="primary", icon="play")
+    btn_run = widgets.Button(description="🚀 拟合基准轨迹", button_style="primary", icon="play")
 
     txt_task = widgets.Text(placeholder="记录：调节时距 T 与减速度 b，使拟合误差 RMSE 降到 0.6 以下（达标）时的参数组合", description="微任务心得:", style={'description_width': '100px'}, layout=widgets.Layout(width='60%'))
     btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
@@ -984,7 +984,7 @@ def show_b1_explorer():
             clear_output(wait=True)
             fig, ax = plt.subplots(figsize=(10, 4.2))
 
-            ax.plot(t_gt, gt_dist, label="真实路测采集跟驰轨迹 (Ground Truth)", color="#0f172a", lw=2.5, marker="o", markersize=4)
+            ax.plot(t_gt, gt_dist, label="合成基准跟驰轨迹（公式生成，供标定对照）", color="#0f172a", lw=2.5, marker="o", markersize=4)
             ax.plot(t_gt, s_sim, label=f"当前 IDM 标定拟合 (T={T_val:.1f}s, b={b_val:.1f}, RMSE={rmse:.3f})", color="#2563eb", lw=2.2, ls="--")
 
             ax.set_xlabel("时间 Time (s)")
@@ -1008,7 +1008,7 @@ def show_b1_explorer():
                 </div>
                 <div style="margin-top: 8px; font-size: 13px; color: #334155; line-height: 1.6;">
                     • <b>参数物理意义</b>：车头时距 <b>T</b> 决定了驾驶员期望保持的时距余量；舒适减速度 <b>b</b> 决定了在减速制动时的刹车狠度。<br/>
-                    • <b>标定机理</b>：{'当前参数与真实驾驶员行为高度吻合，成功复现了真实减速跟驰响应！' if passed else '当前拟合曲线偏差较大，提示驾驶员时距或减速偏好设定不准。'}
+                    • <b>标定机理</b>：{'当前参数与合成基准轨迹高度吻合，成功复现了基准减速跟驰响应！' if passed else '当前拟合曲线偏差较大，提示驾驶员时距或减速偏好设定不准。'}
                 </div>
             </div>
             """
@@ -1039,7 +1039,7 @@ def show_b1_explorer():
     <div style="background: #f8fafc; border-left: 4px solid #64748b; padding: 10px 14px; margin-bottom: 12px; font-family: system-ui, sans-serif;">
         <h4 style="margin: 0; color: #1e293b; font-size: 15px;">🌟 模式 A：新手直觉探索驾驶舱 (直观调参 · 无需写代码)</h4>
         <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">
-            <b>目标导向微任务</b>：体会“用数据反推模型参数”的标定范式。调节安全车头时距 T 与舒适减速度 b，让仿真红线贴合黑色真实路测散点，使 RMSE 误差压到 0.6 以下。
+            <b>目标导向微任务</b>：体会“用数据反推模型参数”的标定范式。调节安全车头时距 T 与舒适减速度 b，让仿真红线贴合黑色合成基准散点，使 RMSE 误差压到 0.6 以下。
         </p>
     </div>
     """
@@ -1196,7 +1196,7 @@ def show_d2_explorer():
     slider_crate = widgets.SelectionSlider(options=[0.2, 0.5, 1.0, 2.0, 3.0, 5.0], value=1.0, description="放电倍率 (C):", style={'description_width': '120px'})
     btn_run = widgets.Button(description="🚀 模拟大倍率放电", button_style="primary", icon="play")
 
-    txt_task = widgets.Text(placeholder="记录：从 0.5C 切换到 3.0C 放电时，电池放出的实际电量缩水了百分之几？", description="微任务心得:", style={'description_width': '100px'}, layout=widgets.Layout(width='60%'))
+    txt_task = widgets.Text(placeholder="记录：从 0.5C 切换到 3.0C 放电时，模型估算的放出电量缩水了百分之几？", description="微任务心得:", style={'description_width': '100px'}, layout=widgets.Layout(width='60%'))
     btn_checkin = widgets.Button(description="📝 预习打卡保存", button_style="success", icon="check")
     out_checkin = widgets.Output()
 
@@ -1254,7 +1254,7 @@ def show_d2_explorer():
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
                     <span style="font-size: 14px; font-weight: 700; color: #0f172a;">📊 电池倍率容量评估卡 (标称 5.0 Ah)</span>
                     <span style="background: {'#dcfce7; color: #15803d' if retention >= 90 else '#fee2e2; color: #b91c1c'}; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">
-                        容量保持率: {retention:.1f}% (实测放出 {act_cap:.2f} Ah)
+                        容量保持率: {retention:.1f}% (模型估算放出 {act_cap:.2f} Ah)
                     </span>
                 </div>
                 <div style="margin-top: 8px; font-size: 13px; color: #334155; line-height: 1.6;">
@@ -3085,10 +3085,24 @@ def show_f2_explorer():
                 y = 1.0 + (s2 * np.exp(s1 * t) - s1 * np.exp(s2 * t)) / (s1 - s2)
                 overshoot = 0.0
 
+            # 调节时间 ts：进入 ±2% 稳态带并保持的时刻（4.0s 窗口内未收敛则记为 >4.0s）
+            _outside = np.where(np.abs(y - 1.0) > 0.02)[0]
+            if len(_outside) == 0:
+                ts_val = 0.0
+                ts_text = "0.00 s（初始即在带内）"
+            elif _outside[-1] + 1 < len(t):
+                ts_val = float(t[_outside[-1] + 1])
+                ts_text = f"{ts_val:.2f} s"
+            else:
+                ts_val = float('inf')
+                ts_text = ">4.00 s（窗口内未收敛）"
+
             fig, ax = plt.subplots(figsize=(10, 3.8))
             ax.plot(t, y, color="#2563eb", linewidth=2.2, label=f"系统响应 (wn={wn:.1f}, zeta={z:.1f})")
             ax.axhline(1.0, color="#16a34a", linestyle="--", label="稳态目标值 (1.0)")
             ax.axhline(1.0 + overshoot/100.0, color="#dc2626", linestyle=":", label=f"峰值超调 ({overshoot:.1f}%)" if overshoot>0 else "")
+            if np.isfinite(ts_val) and ts_val > 0:
+                ax.axvline(ts_val, color="#b45309", linestyle="--", linewidth=1.2, label=f"调节时间 ts={ts_val:.2f}s")
             ax.set_xlabel("时间 (s)")
             ax.set_ylabel("物理量幅值")
             ax.set_title("OpenModelica 二阶机电系统阶跃时域响应")
@@ -3121,6 +3135,7 @@ def show_f2_explorer():
                 </div>
                 <div style="font-size: 13px; color: #334155; line-height: 1.6;">
                     • <b>最大超调量 Mp</b>: {overshoot:.1f}% (工程推荐: ≤ 15.0$%)；<br/>
+                    • <b>调节时间 ts</b>: {ts_text}（进入 ±2% 稳态带并保持；任务参考：找 ts<2.5s 的阻尼区间）；<br/>
                     • <b>物理因果分析</b>: {insight}
                 </div>
             </div>
