@@ -65,7 +65,12 @@ def scan_personal_results(results_dir: Optional[str] = None) -> Dict[str, Any]:
             metrics = data.get('metrics', data)
             if canonical_exp in GRADING_SPECS:
                 graded = grade_metrics(canonical_exp, metrics)
-                personal_scores[canonical_exp] = graded['score']
+                personal_scores[canonical_exp] = {
+                    'score': graded['score'],
+                    'passed': graded['passed'],
+                    'c_track_verified': bool(metrics.get('c_track_verified')),
+                    'metrics': metrics
+                }
         except Exception:
             continue
 
@@ -78,7 +83,7 @@ def get_student_study_progress(results_dir: Optional[str] = None) -> Dict[str, A
     n_required = len(GRADING_SPECS) if GRADING_SPECS else 29
     n_done = len(scores)
 
-    sum_scores = sum(scores.values())
+    sum_scores = sum(v['score'] if isinstance(v, dict) else v for v in scores.values())
     fair_total = round(sum_scores / n_required, 1) if n_required > 0 else 0.0
     submitted_avg = round(sum_scores / n_done, 1) if n_done > 0 else 0.0
     comp_rate = round((n_done / n_required) * 100.0, 1) if n_required > 0 else 0.0
@@ -152,7 +157,7 @@ def render_student_cockpit_html(progress: Dict[str, Any], student_name: str = "�
                     数据驱动闭环，实时观测自身 7 大核心工程能力演进轨迹
                 </p>
             </div>
-            <div style="display: flex; gap: 14px; text-align: center;">
+            <div style="display: flex; gap: 14px; text-align: center; flex-wrap: wrap;">
                 <div style="background: #f8fafc; padding: 6px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div style="font-size: 11px; color: #64748b; font-weight: 600;">已完成实验</div>
                     <div style="font-size: 18px; font-weight: 700; color: #2563eb;">{n_done} <span style="font-size: 12px; color: #94a3b8;">/ {n_req}</span></div>
@@ -160,6 +165,11 @@ def render_student_cockpit_html(progress: Dict[str, Any], student_name: str = "�
                 <div style="background: #f8fafc; padding: 6px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div style="font-size: 11px; color: #64748b; font-weight: 600;">课程总评成绩</div>
                     <div style="font-size: 18px; font-weight: 700; color: #10b981;">{total_score:.1f} <span style="font-size: 12px; color: #94a3b8;">分</span></div>
+                </div>
+                <div style="background: #f5f3ff; padding: 6px 14px; border-radius: 8px; border: 1.5px solid #c7d2fe;">
+                    <div style="font-size: 11px; color: #6366f1; font-weight: 700;">⚡ 车规 C 轨成就</div>
+                    <div style="font-size: 14px; font-weight: 700; color: #4338ca; margin-top: 1px;">{p.get('c_track', {}).get('badge', '未解锁')}</div>
+                    <div style="font-size: 11px; color: #6b7280;">已达成 {p.get('c_track', {}).get('done_count', 0)}/6 项 (+{p.get('c_track', {}).get('bonus_points', 0)}分)</div>
                 </div>
             </div>
         </div>

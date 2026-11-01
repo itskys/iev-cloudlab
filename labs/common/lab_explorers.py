@@ -76,6 +76,33 @@ def _save_preview_checkin(exp_id: str, payload: dict):
         return False
 
 
+def _wrap_hbox(children, gap="10px", margin="4px 0"):
+    """创建自适应弹性换行 HBox 容器，在小屏/分屏下自动折行，防止截断运行与打卡按钮"""
+    if widgets is None:
+        return children
+    for c in children:
+        if hasattr(c, 'layout'):
+            if isinstance(c, (widgets.IntSlider, widgets.FloatSlider, widgets.Dropdown)):
+                c.layout.min_width = '200px'
+                c.layout.flex = '1 1 220px'
+            elif isinstance(c, widgets.Text):
+                c.layout.min_width = '240px'
+                c.layout.flex = '2 1 300px'
+            elif isinstance(c, widgets.Button):
+                c.layout.flex = '0 0 auto'
+    return widgets.HBox(
+        children,
+        layout=widgets.Layout(
+            display='flex',
+            flex_flow='row wrap',
+            align_items='center',
+            gap=gap,
+            margin=margin,
+            width='100%'
+        )
+    )
+
+
 # ==============================================================================
 # 1. A2: 自适应巡航 (ACC) 直觉探索器
 # ==============================================================================
@@ -229,8 +256,8 @@ def show_a2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_th, slider_kp, slider_kd, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_th, slider_kp, slider_kd, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -359,8 +386,8 @@ def show_b4_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_qin, slider_cneck, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_qin, slider_cneck, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -490,8 +517,8 @@ def show_c3_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_mass, slider_cd, drp_cycle, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_mass, slider_cd, drp_cycle, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -612,8 +639,8 @@ def show_d4_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_crate, slider_temp, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_crate, slider_temp, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -742,8 +769,8 @@ def show_e2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_accel, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_accel, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -925,8 +952,8 @@ def show_a3_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_alead, slider_ttc, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_alead, slider_ttc, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1045,8 +1072,8 @@ def show_b1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_t, slider_b, slider_a, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_t, slider_b, slider_a, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1176,8 +1203,8 @@ def show_c2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([drp_veh, drp_cycle, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([drp_veh, drp_cycle, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1296,8 +1323,8 @@ def show_d2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_crate, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_crate, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1408,8 +1435,8 @@ def show_e4_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_weight, drp_grid, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_weight, drp_grid, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1509,8 +1536,8 @@ def show_a1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_ttc, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_ttc, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1608,8 +1635,8 @@ def show_b2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_ew, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_ew, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1723,8 +1750,8 @@ def show_c1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_kg, slider_cd, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_kg, slider_cd, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1820,8 +1847,8 @@ def show_d1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_c, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_c, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -1914,8 +1941,8 @@ def show_e3_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_hw, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_hw, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2084,8 +2111,8 @@ def show_a4_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_gap, slider_opp_v, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_gap, slider_opp_v, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2222,8 +2249,8 @@ def show_a5_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_accel, slider_gap, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_accel, slider_gap, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2372,8 +2399,8 @@ def show_b3_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_delay, slider_gap, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_delay, slider_gap, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2520,8 +2547,8 @@ def show_b5_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_offset, slider_speed, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_offset, slider_speed, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2657,8 +2684,8 @@ def show_c4_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_s, slider_soc0, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_s, slider_soc0, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2783,8 +2810,8 @@ def show_d3_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_crate, slider_relax, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_crate, slider_relax, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -2911,8 +2938,8 @@ def show_e1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_i0, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_i0, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3039,8 +3066,8 @@ def show_f1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_step, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_step, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3174,8 +3201,8 @@ def show_f2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_wn, slider_zeta, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_wn, slider_zeta, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3289,8 +3316,8 @@ def show_f3_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_dt, drp_algo, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_dt, drp_algo, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3420,8 +3447,8 @@ def show_g1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_freq, slider_loss, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_freq, slider_loss, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3548,8 +3575,8 @@ def show_g2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_timeout, slider_retries, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_timeout, slider_retries, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3667,8 +3694,8 @@ def show_h1_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_d0, slider_dv, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_d0, slider_dv, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -3791,8 +3818,8 @@ def show_h2_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_iters, slider_sigma, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_iters, slider_sigma, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])
@@ -4038,8 +4065,8 @@ def show_capstone_explorer():
     """
     display(HTML(intro_html))
     controls = widgets.VBox([
-        widgets.HBox([slider_ttc, slider_headway, slider_regen, btn_run]),
-        widgets.HBox([txt_task, btn_checkin]),
+        _wrap_hbox([slider_ttc, slider_headway, slider_regen, btn_run]),
+        _wrap_hbox([txt_task, btn_checkin]),
         out_checkin,
         out
     ])

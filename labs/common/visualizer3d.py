@@ -276,14 +276,21 @@ def render_trajectory_replay(
     let camOffsetY = 0;
 
     function resize() {{
+        if (!container || !container.isConnected) return;
         const dpr = window.devicePixelRatio || 1;
         const rect = container.getBoundingClientRect();
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        ctx.scale(dpr, dpr);
+        if (rect.width === 0 || rect.height === 0) return;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         draw();
     }}
-    window.addEventListener('resize', resize);
+    if (typeof ResizeObserver !== 'undefined') {{
+        const ro = new ResizeObserver(() => resize());
+        ro.observe(container);
+    }} else {{
+        window.addEventListener('resize', resize);
+    }}
 
     // 视角切换
     btnViewBev.addEventListener('click', () => {{
@@ -338,7 +345,10 @@ def render_trajectory_replay(
     }});
 
     function tick(now) {{
-        if (!isPlaying) return;
+        if (!isPlaying || !canvas.isConnected) {{
+            isPlaying = false;
+            return;
+        }}
         if (!lastAnimTime) lastAnimTime = now;
         const dt = (now - lastAnimTime) / 1000.0 * playbackSpeed;
         lastAnimTime = now;

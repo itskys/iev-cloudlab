@@ -153,11 +153,44 @@ def compute_student_skill_profile(user_scores: Dict[str, Union[float, int, Dict]
 
     composite_average = round(sum(d['score'] for d in dimensions_output.values()) / len(dimensions_output), 1)
 
+    # 统计车规量产 C 轨 (Production C Track) 挑战完成度
+    c_track_exps = ['A1_cutin_aeb', 'A3_aeb_closedloop', 'B1_idm_calibration', 'C4_ems_comparison', 'D3_ocv_soc_export', 'E3_mpc_follow']
+    c_done_count = 0
+    c_done_list = []
+    for cid in c_track_exps:
+        val = user_scores.get(cid)
+        if isinstance(val, dict):
+            met = val.get('metrics', val)
+            if met.get('c_track_verified'):
+                c_done_count += 1
+                c_done_list.append(cid)
+
+    if c_done_count >= 5:
+        c_badge = "🥇 车规 C 嵌入式专家工程师 (ASIL-D)"
+        c_badge_color = "#f59e0b"
+    elif c_done_count >= 3:
+        c_badge = "🥈 车规 C 嵌入式资深工程师"
+        c_badge_color = "#8b5cf6"
+    elif c_done_count >= 1:
+        c_badge = "🥉 车规 C 嵌入式初级学者"
+        c_badge_color = "#3b82f6"
+    else:
+        c_badge = "未解锁 (待挑战)"
+        c_badge_color = "#94a3b8"
+
     return {
         'composite_score': composite_average,
         'dimensions': dimensions_output,
         'strongest_skill': {'key': strongest[0], 'score': strongest[1], 'name': strongest[2]},
         'weakest_skill': {'key': weakest[0], 'score': weakest[1], 'name': weakest[2]},
+        'c_track': {
+            'done_count': c_done_count,
+            'total_count': len(c_track_exps),
+            'badge': c_badge,
+            'badge_color': c_badge_color,
+            'done_list': c_done_list,
+            'bonus_points': min(5.0, round(c_done_count * 1.0, 1))
+        }
     }
 
 

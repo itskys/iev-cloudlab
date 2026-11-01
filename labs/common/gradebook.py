@@ -95,10 +95,99 @@ def build_grade_table(all_results, required_count=None):
 
         # 课程大纲 16 周总评参考（平时实验 60% + 期末 Capstone 25% + 期中测验 15%）
         cap_val = cap_score if cap_score is not None else 0.0
-        row['course_composite'] = round(total_score * 0.60 + cap_val * 0.25 + 15.0, 1)
+
+        # 核验车规量产 C 轨 (Production C Track) 挑战完成度
+        # 6 大官方 C 轨模块：A1, A3, B1, C4, D3, E3
+        c_track_ids = ['A1_cutin_aeb', 'A3_aeb_closedloop', 'B1_idm_calibration', 'C4_ems_comparison', 'D3_ocv_soc_export', 'E3_mpc_follow']
+        c_done_count = 0
+        c_details = []
+        for cid in c_track_ids:
+            if cid in exps:
+                m = exps[cid]
+                met = m.get('metrics', m) if isinstance(m, dict) else {}
+                if met.get('c_track_verified'):
+                    c_done_count += 1
+                    c_details.append(cid)
+
+        # 荣誉加分（每项 C 轨 1 分，总评封顶 +5.0 分）
+        c_bonus = min(5.0, round(c_done_count * 1.0, 1))
+        row['c_tracks_count'] = c_done_count
+        row['c_bonus'] = c_bonus
+        row['c_details'] = c_details
+
+        # 综合大纲总评参考得分（含 C 轨荣誉加分，上限 100 分）
+        row['course_composite'] = round(min(100.0, total_score * 0.60 + cap_val * 0.25 + 15.0 + c_bonus), 1)
 
         table[user] = row
     return table
+
+
+def render_teacher_grade_table_html(table: dict) -> str:
+    """生成具备现代工程质感、彻底解决中文排版错位的响应式 HTML 成绩表"""
+    if not table:
+        return "<div style='color: #64748b; padding: 12px;'>暂无学生成绩数据。请先执行后台汇总或等待学生提交实验。</div>"
+
+    rows_html = ""
+    for user, row in sorted(table.items()):
+        n_done = row.get("n_done", 0)
+        n_req = row.get("n_required", 29)
+        comp_rate = row.get("completion_rate", 0.0)
+        total = row.get("total", 0.0)
+        sub_avg = row.get("submitted_avg", 0.0)
+        cap_score = row.get("capstone_score")
+        composite = row.get("course_composite", 0.0)
+        c_count = row.get("c_tracks_count", 0)
+        c_bonus = row.get("c_bonus", 0.0)
+
+        # 动态配色胶囊
+        badge_comp = "#10b981" if comp_rate >= 80 else ("#f59e0b" if comp_rate >= 50 else "#ef4444")
+        badge_tot = "#10b981" if total >= 75 else ("#f59e0b" if total >= 60 else "#ef4444")
+
+        cap_text = f"<span style='background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 11px;'>✓ {cap_score:.1f}</span>" if cap_score is not None else "<span style='color: #94a3b8; font-size: 11px;'>未提交</span>"
+
+        if c_count > 0:
+            c_badge = f"<span style='background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;'>⚡ {c_count}/6 (+{c_bonus}分)</span>"
+        else:
+            c_badge = "<span style='color: #94a3b8; font-size: 11px;'>-</span>"
+
+        rows_html += f"""
+        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+            <td style="padding: 10px 14px; font-weight: 600; color: #0f172a; font-family: monospace;">{user}</td>
+            <td style="padding: 10px 14px; color: #334155;">{n_done} / {n_req}</td>
+            <td style="padding: 10px 14px;">
+                <span style="background: {badge_comp}18; color: {badge_comp}; border: 1px solid {badge_comp}44; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                    {comp_rate:.1f}%
+                </span>
+            </td>
+            <td style="padding: 10px 14px; font-weight: 700; color: {badge_tot};">{total:.1f}</td>
+            <td style="padding: 10px 14px; color: #475569;">{sub_avg:.1f}</td>
+            <td style="padding: 10px 14px;">{cap_text}</td>
+            <td style="padding: 10px 14px;">{c_badge}</td>
+            <td style="padding: 10px 14px; font-weight: 800; color: #2563eb; font-size: 14px;">{composite:.1f}</td>
+        </tr>
+        """
+
+    return f"""
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); margin: 12px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; text-align: left;">
+            <thead>
+                <tr style="background: #f8fafc; color: #475569; border-bottom: 1px solid #e2e8f0; font-weight: 600;">
+                    <th style="padding: 12px 14px;">学生用户名 / 学号</th>
+                    <th style="padding: 12px 14px;">平时完成</th>
+                    <th style="padding: 12px 14px;">完成率</th>
+                    <th style="padding: 12px 14px;">综合平时分 (29基准)</th>
+                    <th style="padding: 12px 14px;">已做实验均分</th>
+                    <th style="padding: 12px 14px;">Capstone 大作业</th>
+                    <th style="padding: 12px 14px;">⚡ 车规 C 轨加分</th>
+                    <th style="padding: 12px 14px;">大纲总评参考</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+        </table>
+    </div>
+    """
 
 
 def statistics(table):
