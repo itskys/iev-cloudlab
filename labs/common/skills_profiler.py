@@ -1,7 +1,7 @@
 """IEV CloudLab 核心工程能力雷达画像与班级短板诊断 | Skills Profiler
 
 功能说明：
-  将课程 29 门实验结构化映射至 7 大核心智能网联新能源汽车工程能力维度：
+  将课程 29 门实验结构化映射至 8 大核心智能网联新能源汽车工程能力维度：
     1. 纵向跟驰与安全控制 (Longitudinal & Safety Control)
     2. 交通流动力学与协同编队 (Traffic Flow & Cooperative Platooning)
     3. 整车能耗与动力总成匹配 (Powertrain & Energy Consumption)
@@ -9,9 +9,10 @@
     5. 智能能量管理与全局优化 (EMS & Optimal Control)
     6. 跨域联合仿真与 FMI/FMU (Cross-Domain Co-Simulation & FMI)
     7. 车载通信与极端场景测试 (Vehicle Network & Edge-Case Testing)
+    8. 车规嵌入式量产软件 (Production C & Embedded ECU)
 
 主要接口：
-  - compute_student_skill_profile(): 单生 7 大维度能力量化与强弱项诊断
+  - compute_student_skill_profile(): 单生 8 大维度能力量化与强弱项诊断
   - render_student_radar_svg(): 生成轻量级高保真原生 SVG/HTML 能力雷达图（零字体依赖，移动端自适应）
   - plot_student_radar_png(): 生成 Matplotlib 静态高分雷达图（PNG 归档）
   - compute_class_skills_matrix(): 全班能力画像矩阵与离散度分析
@@ -30,7 +31,7 @@ except ImportError:
     except ImportError:
         GRADING_SPECS = {}
 
-# 7 大工程能力维度定义
+# 8 大工程能力维度定义
 SKILL_DIMENSIONS = {
     'longitudinal_safety': {
         'name': '纵向跟驰与安全控制',
@@ -81,6 +82,13 @@ SKILL_DIMENSIONS = {
         'desc': 'ROS2 DDS 话题/服务交互、组态场景参数空间批量生成与模糊对抗测试',
         'experiments': ['G1_ros_topics', 'G2_ros_services', 'H1_batch_generation', 'H2_scenario_fuzzing'],
     },
+    'production_c_embedded': {
+        'name': '车规嵌入式量产软件',
+        'en_name': 'Production C & Embedded ECU',
+        'color': '#6366f1',  # 靛青蓝/车规紫
+        'desc': 'MISRA-C 车规编码规范、微秒级硬实时确定性、零动态内存与 Linux 动态共享库注入',
+        'experiments': ['A1_cutin_aeb', 'A3_aeb_closedloop', 'B1_idm_calibration', 'C4_ems_comparison', 'D3_ocv_soc_export', 'E3_mpc_follow'],
+    },
 }
 
 
@@ -98,7 +106,7 @@ def _get_mastery_level(score: float, completion_rate: float) -> Tuple[str, str]:
 
 
 def compute_student_skill_profile(user_scores: Dict[str, Union[float, int, Dict]]) -> Dict[str, Any]:
-    """计算单个学生在 7 大工程能力维度上的画像得分与掌握度。
+    """计算单个学生在 8 大工程能力维度上的画像得分与掌握度。
 
     :param user_scores: {experiment_id: score_or_dict}
     :return: 结构化能力画像字典
@@ -119,8 +127,17 @@ def compute_student_skill_profile(user_scores: Dict[str, Union[float, int, Dict]
         achieved_scores = []
 
         for exp_id in exps:
-            if exp_id in clean_scores:
-                achieved_scores.append(clean_scores[exp_id])
+            if dim_key == 'production_c_embedded':
+                val = user_scores.get(exp_id)
+                if val is not None:
+                    met = val.get('metrics', val) if isinstance(val, dict) else {}
+                    if met.get('c_track_verified'):
+                        achieved_scores.append(100.0)
+                    elif exp_id in clean_scores:
+                        achieved_scores.append(60.0)
+            else:
+                if exp_id in clean_scores:
+                    achieved_scores.append(clean_scores[exp_id])
 
         n_done = len(achieved_scores)
         completion_pct = round((n_done / n_total) * 100.0, 1) if n_total > 0 else 0.0
@@ -277,7 +294,7 @@ def render_student_radar_svg(
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;">
             <div>
                 <h4 style="margin: 0; font-size: 15px; color: #0f172a; font-family: system-ui, sans-serif;">
-                    📊 {student_name} - 7 大工程能力画像雷达图
+                    📊 {student_name} - 8 大核心工程能力画像雷达图
                 </h4>
                 <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b; font-family: system-ui, sans-serif;">
                     综合能力均分: <strong style="color: #2563eb;">{skill_profile['composite_score']:.1f}</strong> | 最优: {skill_profile['strongest_skill']['name']} | 需强化: {skill_profile['weakest_skill']['name']}
@@ -299,7 +316,7 @@ def render_student_radar_svg(
 
 
 def compute_class_skills_matrix(grade_table: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    """基于 gradebook 成绩汇总表，计算全班 7 大能力的均分、及格率与离散度。
+    """基于 gradebook 成绩汇总表，计算全班 8 大核心能力的均分、及格率与离散度。
 
     :param grade_table: build_grade_table 的输出字典 {username: row}
     :return: 全班能力画像矩阵字典
@@ -401,7 +418,7 @@ def render_class_weakness_html(class_matrix: Dict[str, Any]) -> str:
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">
             <div>
                 <h3 style="margin: 0; color: #0f172a; font-size: 17px; font-weight: 700;">
-                    🎯 全班 7 大核心工程能力短板诊断看板 ({class_matrix['n_students']} 名学生)
+                    🎯 全班 8 大核心工程能力短板诊断看板 ({class_matrix['n_students']} 名学生)
                 </h3>
                 <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">
                     识别全班共性工程盲区，驱动精准课堂答疑与随堂测验策略

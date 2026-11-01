@@ -2,23 +2,26 @@
 
 功能说明：
   针对学生间修改变量名、增删无用注释、调整空行以规避传统文本查重的行为，
-  基于 Python 原生抽象语法树 (AST) 进行代码骨干结构规范化与相似度比对。
+  基于 Python 原生抽象语法树 (AST) 进行代码骨干结构规范化、核心算法子树差分与相似度比对。
 
 核心技术：
   1. AST 结构化清洗 (AST Structural Normalization):
      - 剥离所有注释 (Comments)、文档字符串 (Docstrings) 与格式换行差异；
      - 符号映射脱敏：将局部变量名、函数形参抽象为标准化标记 (ID_1, ID_2, ...)，使重命名无效；
-  2. N-Gram 结构指纹与 Jaccard / Levenshtein 相似度融合算法：
-     - 抽取 AST 语法节点演变序列（如 [Assign, BinOp, If, Call]），计算加权 Jaccard 相似度；
-  3. 班级全网比对与异常聚类：
-     - 扫描所有学生 Home 目录下的目标 Notebook 代码单元格，输出两两比对相似度矩阵；
-  4. 风险分级预警看板 (HTML):
-     - 🚨 重度疑似抄袭 (相似度 >= 85%)
-     - ⚠️ 中度结构相似 (相似度 70% ~ 84%)
-     - 🟢 独立完成 (相似度 < 70%)
+  2. 核心算法子树差分抽取 (Core Algorithm Subtree Extraction):
+     - 深度遍历过滤掉绘图 (plt/ax/fig)、日志打印 (print/logging) 与模块导入 (import) 等外围展示代码；
+     - 提取决策分支 (If/While/For)、数学运算符 (BinOp/UnaryOp/Compare) 与控制返回值 (Return) 组成的核心计算流；
+  3. 双轨融合查重与最长公共子序列 (LCS / SequenceMatcher) 判定：
+     - 核心算法子树相似度 (Core Algo Sim) 与整体工程框架相似度 (Framework Sim) 双轨并进；
+  4. 智能 4 级风险诊断看板 (HTML):
+     - 🚨 核心算法抄袭 (CRITICAL_PLAGIARISM, 核心算法相似度 >= 85%)
+     - ⚠️ 算法逻辑相似 (MODERATE_SIMILARITY, 核心算法相似度 70% ~ 84%)
+     - 📘 框架自然收敛 (TEMPLATE_CONVERGENCE, 框架同源但核心算法独立，排除抄袭)
+     - 🟢 独立自研 (INDEPENDENT, 核心算法相似度 < 70%)
 """
 
 import ast
+import difflib
 import json
 import os
 import re
@@ -26,7 +29,7 @@ from typing import Dict, Any, List, Optional, Tuple, Set
 
 
 class ASTNormalizer(ast.NodeTransformer):
-    """AST 访问器：消除变量名命名差异，保留纯语法结构"""
+    """AST 访问器：消除变量名与函数名命名差异，保留纯语法结构"""
 
     def __init__(self):
         super().__init__()
@@ -52,6 +55,40 @@ class ASTNormalizer(ast.NodeTransformer):
             node.name = self.var_map[node.name]
         self.generic_visit(node)
         return node
+
+
+class BoilerplateStripper(ast.NodeTransformer):
+    """AST 访问器：剥离绘图、控制台打印、模块导入等脚手架代码"""
+
+    def visit_Expr(self, node):
+        if isinstance(node.value, ast.Call):
+            func = node.value.func
+            attr_or_id = ''
+            if isinstance(func, ast.Attribute):
+                attr_or_id = func.attr
+            elif isinstance(func, ast.Name):
+                attr_or_id = func.id
+            if attr_or_id in (
+                'plot', 'show', 'figure', 'subplots', 'legend', 'xlabel', 'ylabel',
+                'title', 'grid', 'print', 'clf', 'savefig', 'close', 'suptitle',
+                'tight_layout', 'display', 'HTML', 'save_result'
+            ):
+                return None
+        return node
+
+    def visit_Import(self, node):
+        return None
+
+    def visit_ImportFrom(self, node):
+        return None
+
+
+def clean_ast_for_algo(tree: ast.AST) -> ast.AST:
+    """从 AST 中剔除外围脚手架与展示代码"""
+    stripper = BoilerplateStripper()
+    cleaned = stripper.visit(tree)
+    ast.fix_missing_locations(cleaned)
+    return cleaned
 
 
 def load_template_ast_fingerprints(exp_name: str) -> Set[Tuple[str, ...]]:
@@ -105,72 +142,8 @@ def load_template_ast_fingerprints(exp_name: str) -> Set[Tuple[str, ...]]:
     return template_fp
 
 
-def extract_custom_ast_sequence(nb_path: str, template_fp: Optional[Set[Tuple[str, ...]]] = None) -> Tuple[List[str], bool]:
-    """提取学生在 Notebook 中自主编写或实质性修改的代码单元格 AST 序列。
-
-    Returns:
-        (custom_ast_nodes, is_unmodified_template)
-    """
-    if not os.path.exists(nb_path):
-        return [], True
-    try:
-        with open(nb_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        cells = data.get('cells', [])
-        custom_nodes = []
-        has_any_code = False
-        has_custom_code = False
-
-        for c in cells:
-            if c.get('cell_type') == 'code':
-                src = "".join(c.get('source', [])).strip()
-                clean_lines = [l for l in src.splitlines() if not l.startswith(('%', '!'))]
-                code = "\n".join(clean_lines).strip()
-                if not code:
-                    continue
-                has_any_code = True
-                seq = get_ast_sequence(code)
-                if not seq:
-                    continue
-
-                # 若与母版任一单元格 AST 结构指纹完全一致，说明是课程自带模板或纯标量参数微调，排除出查重池
-                if template_fp and tuple(seq) in template_fp:
-                    continue
-
-                # 自主编写或重构的语法逻辑
-                has_custom_code = True
-                custom_nodes.extend(seq)
-
-        if not has_any_code or not has_custom_code:
-            return [], True
-        return custom_nodes, False
-    except Exception:
-        return [], True
-
-
-def extract_code_from_notebook(nb_path: str) -> str:
-    """提取 Notebook 中所有非空 Python 代码单元格源码"""
-    if not os.path.exists(nb_path):
-        return ""
-    try:
-        with open(nb_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        cells = data.get('cells', [])
-        code_blocks = []
-        for c in cells:
-            if c.get('cell_type') == 'code':
-                src = "".join(c.get('source', [])).strip()
-                # 过滤掉魔法命令和纯 import 语句
-                clean_lines = [l for l in src.splitlines() if not l.startswith(('%', '!'))]
-                if clean_lines:
-                    code_blocks.append("\n".join(clean_lines))
-        return "\n\n".join(code_blocks)
-    except Exception:
-        return ""
-
-
 def get_ast_sequence(code_str: str) -> List[str]:
-    """将 Python 源码解析为归一化的 AST 语法标记序列"""
+    """将 Python 源码解析为归一化的 AST 语法标记序列（保持与官方指纹库完全一致的 12 种骨干类型）"""
     if not code_str.strip():
         return []
     try:
@@ -179,19 +152,49 @@ def get_ast_sequence(code_str: str) -> List[str]:
         normalized_tree = normalizer.visit(parsed)
         ast.fix_missing_locations(normalized_tree)
 
-        # 遍历节点类型
         nodes = []
         for n in ast.walk(normalized_tree):
             node_type = type(n).__name__
-            # 记录关键语法结构节点
             if node_type in ('Assign', 'BinOp', 'UnaryOp', 'Compare', 'If', 'For', 'While',
                              'Call', 'FunctionDef', 'Return', 'Attribute', 'Subscript'):
                 nodes.append(node_type)
         return nodes
     except Exception:
-        # 语法解析容错：若含有 Jupyter 未定义符号，退化为正则词法分析
         tokens = re.findall(r'[a-zA-Z_]\w+|==|!=|<=|>=|[+\-*/=<>]', code_str)
         return tokens
+
+
+def get_core_algorithm_sequence(code_str: str) -> List[str]:
+    """提取代码中纯算法决策、控制流与数学运算子树的 DFS 深度优先语法序列（剔除外围展示代码）"""
+    if not code_str.strip():
+        return []
+    try:
+        parsed = ast.parse(code_str)
+        cleaned_tree = clean_ast_for_algo(parsed)
+        normalizer = ASTNormalizer()
+        normalized_tree = normalizer.visit(cleaned_tree)
+        ast.fix_missing_locations(normalized_tree)
+    except Exception:
+        # 容错：退化为控制流与运算符匹配
+        return [tok for tok in re.findall(r'[+\-*/=<>!]+|\b(?:if|while|for|return|break|continue)\b', code_str)]
+
+    tokens = []
+
+    def _dfs_collect(node):
+        if node is None:
+            return
+
+        node_type = type(node).__name__
+        if node_type in ('If', 'While', 'For', 'Return', 'BinOp', 'UnaryOp', 'Compare', 'AugAssign', 'Subscript'):
+            tokens.append(node_type)
+        elif node_type in ('Add', 'Sub', 'Mult', 'Div', 'FloorDiv', 'Mod', 'Pow', 'Lt', 'Gt', 'LtE', 'GtE', 'Eq', 'NotEq'):
+            tokens.append(node_type)
+
+        for child in ast.iter_child_nodes(node):
+            _dfs_collect(child)
+
+    _dfs_collect(normalized_tree)
+    return tokens
 
 
 def calculate_jaccard_similarity(seq_a: List[str], seq_b: List[str], n_gram: int = 3) -> float:
@@ -214,29 +217,127 @@ def calculate_jaccard_similarity(seq_a: List[str], seq_b: List[str], n_gram: int
     return round(intersection / union, 3)
 
 
+def calculate_sequence_ratio(seq_a: List[str], seq_b: List[str]) -> float:
+    """基于最长公共子序列 (LCS) 计算语法序列的编辑距离匹配比率 (0.0 ~ 1.0)"""
+    if not seq_a or not seq_b:
+        return 0.0
+    matcher = difflib.SequenceMatcher(None, seq_a, seq_b)
+    return round(matcher.ratio(), 3)
+
+
+def extract_custom_code_profiles(
+    nb_path: str,
+    template_fp: Optional[Set[Tuple[str, ...]]] = None
+) -> Dict[str, Any]:
+    """提取学生在 Notebook 中自主编写或实质性修改的代码单元格特征（含整体 AST 与核心算法子树）。"""
+    if not os.path.exists(nb_path):
+        return {'custom_nodes': [], 'custom_core_nodes': [], 'is_unmodified': True}
+    try:
+        with open(nb_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        cells = data.get('cells', [])
+        custom_nodes = []
+        custom_core_nodes = []
+        has_any_code = False
+        has_custom_code = False
+
+        for c in cells:
+            if c.get('cell_type') == 'code':
+                src = "".join(c.get('source', [])).strip()
+                clean_lines = [l for l in src.splitlines() if not l.startswith(('%', '!'))]
+                code = "\n".join(clean_lines).strip()
+                if not code:
+                    continue
+                has_any_code = True
+                seq = get_ast_sequence(code)
+                if not seq:
+                    continue
+
+                # 若与母版任一单元格 AST 结构指纹完全一致，说明是课程自带模板，排除出查重池
+                if template_fp and tuple(seq) in template_fp:
+                    continue
+
+                has_custom_code = True
+                custom_nodes.extend(seq)
+                core_seq = get_core_algorithm_sequence(code)
+                custom_core_nodes.extend(core_seq)
+
+        if not has_any_code or not has_custom_code:
+            return {'custom_nodes': [], 'custom_core_nodes': [], 'is_unmodified': True}
+        return {
+            'custom_nodes': custom_nodes,
+            'custom_core_nodes': custom_core_nodes,
+            'is_unmodified': False
+        }
+    except Exception:
+        return {'custom_nodes': [], 'custom_core_nodes': [], 'is_unmodified': True}
+
+
+def extract_custom_ast_sequence(nb_path: str, template_fp: Optional[Set[Tuple[str, ...]]] = None) -> Tuple[List[str], bool]:
+    """保持向后兼容：提取学生在 Notebook 中自主编写的代码单元格 AST 序列。"""
+    prof = extract_custom_code_profiles(nb_path, template_fp)
+    return prof['custom_nodes'], prof['is_unmodified']
+
+
+def extract_code_from_notebook(nb_path: str) -> str:
+    """提取 Notebook 中所有非空 Python 代码单元格源码"""
+    if not os.path.exists(nb_path):
+        return ""
+    try:
+        with open(nb_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        cells = data.get('cells', [])
+        code_blocks = []
+        for c in cells:
+            if c.get('cell_type') == 'code':
+                src = "".join(c.get('source', [])).strip()
+                clean_lines = [l for l in src.splitlines() if not l.startswith(('%', '!'))]
+                if clean_lines:
+                    code_blocks.append("\n".join(clean_lines))
+        return "\n\n".join(code_blocks)
+    except Exception:
+        return ""
+
+
 def check_code_similarity(code_a: str, code_b: str) -> Dict[str, Any]:
-    """比对两段代码的 AST 结构相似度"""
+    """比对两段代码的 AST 结构与核心算法子树相似度"""
+    # 整体 AST 比对
     seq_a = get_ast_sequence(code_a)
     seq_b = get_ast_sequence(code_b)
+    overall_jaccard = calculate_jaccard_similarity(seq_a, seq_b, n_gram=3)
+    overall_pct = overall_jaccard * 100.0
 
-    sim = calculate_jaccard_similarity(seq_a, seq_b, n_gram=3)
-    pct = sim * 100.0
+    # 核心算法子树比对
+    core_a = get_core_algorithm_sequence(code_a)
+    core_b = get_core_algorithm_sequence(code_b)
 
-    if pct >= 85.0:
+    if core_a and core_b:
+        core_jaccard = calculate_jaccard_similarity(core_a, core_b, n_gram=2)
+        core_ratio = calculate_sequence_ratio(core_a, core_b)
+        core_pct = round((0.3 * core_jaccard + 0.7 * core_ratio) * 100.0, 1)
+    else:
+        core_pct = 0.0
+
+    if core_pct >= 85.0:
         status = 'CRITICAL_PLAGIARISM'
-        desc = '高度雷同：核心抽象语法树与运算流几乎完全吻合，存在重大抄袭嫌疑。'
-    elif pct >= 70.0:
+        desc = f'高度雷同：核心决策算法与数学运算流几乎完全吻合 ({core_pct:.1f}%)，存在重大抄袭嫌疑。'
+    elif core_pct >= 70.0:
         status = 'MODERATE_SIMILARITY'
-        desc = '中度相似：控制结构与算法主干逻辑相近，建议重点复核。'
+        desc = f'中度相似：核心控制结构与算法主干逻辑相近 ({core_pct:.1f}%)，建议重点复核。'
+    elif overall_pct >= 65.0 and core_pct < 55.0:
+        status = 'TEMPLATE_CONVERGENCE'
+        desc = f'框架自然收敛：整体模板骨架同源 ({overall_pct:.1f}%)，但核心算法子树独立自研 ({core_pct:.1f}%)，排除抄袭。'
     else:
         status = 'INDEPENDENT'
-        desc = '独立完成：代码语法结构具有显著差异。'
+        desc = f'独立完成：代码语法结构与算法子树具有显著差异 (算法相似度 {core_pct:.1f}%)。'
 
     return {
-        'similarity_pct': round(pct, 1),
+        'similarity_pct': core_pct,
+        'core_algo_pct': core_pct,
+        'overall_pct': round(overall_pct, 1),
         'status': status,
         'description': desc,
-        'nodes_count': (len(seq_a), len(seq_b)),
+        'nodes_count': (len(core_a), len(core_b)),
     }
 
 
@@ -245,19 +346,14 @@ def scan_class_code_plagiarism(
     exp_name: str = 'A1_cutin_aeb',
 ) -> Dict[str, Any]:
     """在全班学生目录下批量扫描指定实验的代码相似度矩阵。
-    基于母版指纹自动过滤课程自带模板与纯标量参数微调，仅比对学生自主编写/重构的算法逻辑。
-
-    :param homes_base: 学生 home 根目录
-    :param exp_name: 待扫描的实验名（如 'A1_cutin_aeb'）
-    :return: 查重分析总结字典
+    基于母版指纹自动过滤课程自带模板与纯标量参数微调，区分核心控制算法与外层脚手架。
     """
     if not os.path.exists(homes_base):
         return {'exp_name': exp_name, 'n_students': 0, 'flagged_count': 0, 'pairs': []}
 
-    # 提取官方母版 Notebook 的单元格 AST 指纹，严格排除课程自带模板与纯参数微调干扰
     template_fps = load_template_ast_fingerprints(exp_name)
 
-    student_custom_ast = {}
+    student_profiles = {}
     unmodified_students = set()
     users = sorted(os.listdir(homes_base))
 
@@ -268,7 +364,6 @@ def scan_class_code_plagiarism(
         if not os.path.exists(u_nb_dir):
             continue
 
-        # 匹配 pro 或 普通 notebook
         target_nb = None
         for cand in [f"{exp_name}_pro.ipynb", f"{exp_name}.ipynb"]:
             p = os.path.join(u_nb_dir, cand)
@@ -277,14 +372,14 @@ def scan_class_code_plagiarism(
                 break
 
         if target_nb:
-            custom_seq, is_unmodified = extract_custom_ast_sequence(target_nb, template_fps)
-            if is_unmodified or len(custom_seq) < 3:
+            prof = extract_custom_code_profiles(target_nb, template_fps)
+            if prof['is_unmodified'] or len(prof['custom_nodes']) < 3:
                 unmodified_students.add(u)
-                student_custom_ast[u] = []
+                student_profiles[u] = {'custom_nodes': [], 'custom_core_nodes': [], 'is_unmodified': True}
             else:
-                student_custom_ast[u] = custom_seq
+                student_profiles[u] = prof
 
-    student_list = list(student_custom_ast.keys())
+    student_list = list(student_profiles.keys())
     n = len(student_list)
     flagged_pairs = []
 
@@ -293,31 +388,47 @@ def scan_class_code_plagiarism(
         for j in range(i + 1, n):
             u1 = student_list[i]
             u2 = student_list[j]
-            seq_a = student_custom_ast[u1]
-            seq_b = student_custom_ast[u2]
+            p1 = student_profiles[u1]
+            p2 = student_profiles[u2]
 
-            # 核心防误判规则：若任一方为标准母版跟跑（无自主拓展算法结构），不计入雷同抄袭预警
-            if not seq_a or not seq_b:
+            # 核心防误判规则：若任一方为标准母版跟跑，不计入雷同抄袭预警
+            if p1['is_unmodified'] or p2['is_unmodified']:
                 continue
 
-            sim = calculate_jaccard_similarity(seq_a, seq_b, n_gram=3)
-            pct = sim * 100.0
+            core_a = p1['custom_core_nodes']
+            core_b = p2['custom_core_nodes']
+            all_a = p1['custom_nodes']
+            all_b = p2['custom_nodes']
 
-            if pct >= 85.0:
+            overall_sim = round(calculate_jaccard_similarity(all_a, all_b, n_gram=3) * 100.0, 1)
+
+            if core_a and core_b:
+                core_jaccard = calculate_jaccard_similarity(core_a, core_b, n_gram=2)
+                core_ratio = calculate_sequence_ratio(core_a, core_b)
+                core_sim = round((0.3 * core_jaccard + 0.7 * core_ratio) * 100.0, 1)
+            else:
+                core_sim = 0.0
+
+            if core_sim >= 85.0:
                 st = 'CRITICAL_PLAGIARISM'
-                desc = '高度雷同：自主编写部分的核心抽象语法树与运算流几乎完全吻合，存在重大抄袭嫌疑。'
-            elif pct >= 70.0:
+                desc = f'高度雷同：核心控制决策与数学运算子树几乎完全吻合 ({core_sim:.1f}%)，存在重大抄袭嫌疑。'
+            elif core_sim >= 70.0:
                 st = 'MODERATE_SIMILARITY'
-                desc = '中度相似：自主编写部分的控制结构与算法主干逻辑相近，建议重点复核。'
+                desc = f'中度相似：核心算法逻辑与控制结构相近 ({core_sim:.1f}%)，建议重点复核。'
+            elif overall_sim >= 65.0 and core_sim < 55.0:
+                st = 'TEMPLATE_CONVERGENCE'
+                desc = f'框架自然收敛：整体工程框架同源 ({overall_sim:.1f}%)，但核心算法独立编写 ({core_sim:.1f}%)，排除抄袭。'
             else:
                 st = 'INDEPENDENT'
-                desc = '独立完成：自主编写代码语法结构具有显著差异。'
+                desc = f'独立完成：算法子树结构具有显著独创性 ({core_sim:.1f}%)。'
 
-            if pct >= 65.0:  # 记录有疑似风险的点对
+            # 记录需要展示的记录：疑似抄袭、算法相近，或框架高度同源需要告知教师的对
+            if core_sim >= 65.0 or (overall_sim >= 75.0 and core_sim >= 40.0):
                 flagged_pairs.append({
                     'student_a': u1,
                     'student_b': u2,
-                    'similarity_pct': round(pct, 1),
+                    'similarity_pct': core_sim,
+                    'overall_similarity_pct': overall_sim,
                     'status': st,
                     'description': desc,
                 })
@@ -329,26 +440,35 @@ def scan_class_code_plagiarism(
         'n_students': n,
         'n_custom_authors': n - len(unmodified_students),
         'n_template_baseline': len(unmodified_students),
-        'flagged_count': len(flagged_pairs),
+        'flagged_count': len([p for p in flagged_pairs if p['status'] in ('CRITICAL_PLAGIARISM', 'MODERATE_SIMILARITY')]),
+        'total_analyzed_pairs': len(flagged_pairs),
         'pairs': flagged_pairs,
     }
 
 
 def render_plagiarism_report_html(report: Dict[str, Any]) -> str:
-    """生成教师面板专用的代码查重警报看板 (HTML)"""
+    """生成具备现代工程质感、4级状态胶囊的教师面板代码查重警报看板 (HTML)"""
     exp = report.get('exp_name', '未知实验')
     n_stu = report.get('n_students', 0)
     pairs = report.get('pairs', [])
+    n_base = report.get('n_template_baseline', 0)
+    n_cust = report.get('n_custom_authors', 0)
+    n_flagged = report.get('flagged_count', 0)
 
-    if not pairs:
-        n_base = report.get('n_template_baseline', 0)
-        n_cust = report.get('n_custom_authors', 0)
+    if not pairs or n_flagged == 0:
         return f"""
-        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px; margin: 10px 0; font-family: system-ui, sans-serif;">
-            <strong style="color: #16a34a; font-size: 14px;">✅ 【{exp}】全班代码 AST 结构查重正常</strong>
-            <p style="margin: 4px 0 0 0; color: #4b5563; font-size: 12px;">
-                共比对 {n_stu} 名学生提交的代码（已自动过滤母版自带模板代码：{n_base} 人标准模板跟跑，{n_cust} 人含自主重构逻辑），未发现异常语法树雷同。
-            </p>
+        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 16px 20px; margin: 12px 0; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <strong style="color: #15803d; font-size: 15px;">✅ 【{exp}】全班代码 AST 语法树查重健康</strong>
+                    <p style="margin: 4px 0 0 0; color: #4b5563; font-size: 13px;">
+                        共比对 <b>{n_stu}</b> 名学生提交的实验课件（已自动分离母版脚手架：<b>{n_base}</b> 人标准模板跟跑，<b>{n_cust}</b> 人含自主编写算法），未发现异常算法雷同。
+                    </p>
+                </div>
+                <span style="background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: 700;">
+                    学术防线正常
+                </span>
+            </div>
         </div>
         """
 
@@ -356,47 +476,61 @@ def render_plagiarism_report_html(report: Dict[str, Any]) -> str:
     for p in pairs:
         st = p['status']
         if st == 'CRITICAL_PLAGIARISM':
-            badge = '<span style="background: #fef2f2; color: #dc2626; border: 1px solid #f87171; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">🚨 疑似抄袭</span>'
+            badge = '<span style="background: #fef2f2; color: #dc2626; border: 1px solid #f87171; padding: 3px 10px; border-radius: 6px; font-weight: 700; font-size: 11px;">🚨 疑似抄袭</span>'
+            color_sim = "#dc2626"
+        elif st == 'MODERATE_SIMILARITY':
+            badge = '<span style="background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; padding: 3px 10px; border-radius: 6px; font-weight: 700; font-size: 11px;">⚠️ 逻辑雷同</span>'
+            color_sim = "#d97706"
+        elif st == 'TEMPLATE_CONVERGENCE':
+            badge = '<span style="background: #eff6ff; color: #2563eb; border: 1px solid #93c5fd; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 11px;">📘 框架同源(算法独立)</span>'
+            color_sim = "#2563eb"
         else:
-            badge = '<span style="background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">⚠️ 逻辑雷同</span>'
+            badge = '<span style="background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 11px;">🟢 独立自研</span>'
+            color_sim = "#16a34a"
 
         rows += f"""
-        <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 8px 12px; font-weight: 600; color: #0f172a;">{p['student_a']} ↔ {p['student_b']}</td>
-            <td style="padding: 8px 12px; font-weight: bold; color: #dc2626; font-size: 14px;">{p['similarity_pct']:.1f}%</td>
-            <td style="padding: 8px 12px;">{badge}</td>
-            <td style="padding: 8px 12px; font-size: 12px; color: #475569;">{p['description']}</td>
+        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+            <td style="padding: 10px 14px; font-weight: 600; color: #0f172a; font-family: monospace;">{p['student_a']} ↔ {p['student_b']}</td>
+            <td style="padding: 10px 14px; font-weight: 700; color: {color_sim}; font-size: 14px;">{p['similarity_pct']:.1f}%</td>
+            <td style="padding: 10px 14px; color: #64748b; font-size: 12px;">{p.get('overall_similarity_pct', '--')}%</td>
+            <td style="padding: 10px 14px;">{badge}</td>
+            <td style="padding: 10px 14px; font-size: 12px; color: #334155;">{p['description']}</td>
         </tr>
         """
 
     html = f"""
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin: 12px 0; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 12px;">
+    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; margin: 14px 0; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 14px;">
             <div>
-                <h4 style="margin: 0; color: #0f172a; font-size: 15px;">
-                    🛡️ 代码 AST 语法树查重预警: {exp} ({n_stu} 名学生)
+                <h4 style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 700;">
+                    🛡️ 代码 AST 语法树子树差分查重预警: {exp} ({n_stu} 名学生)
                 </h4>
-                <p style="margin: 3px 0 0 0; color: #64748b; font-size: 12px;">
-                    基于抽象语法树归一化，精准识别变相变量替换与格式伪装抄袭
+                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">
+                    剥离绘图与打印脚手架，精准比对核心决策与数学运算流，有效消除模板同源引起的假警报
                 </p>
             </div>
-            <span style="background: #fef2f2; color: #b91c1c; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">
-                发现 {len(pairs)} 组异常雷同
-            </span>
+            <div style="text-align: right;">
+                <span style="background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;">
+                    预警 {n_flagged} 组异常雷同
+                </span>
+            </div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-            <thead>
-                <tr style="background: #f8fafc; color: #475569; border-bottom: 1px solid #e2e8f0;">
-                    <th style="padding: 8px 12px;">比对学生对 (Pair)</th>
-                    <th style="padding: 8px 12px;">结构相似度</th>
-                    <th style="padding: 8px 12px;">风险级别</th>
-                    <th style="padding: 8px 12px;">诊断说明</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead>
+                    <tr style="background: #f8fafc; color: #475569; border-bottom: 1px solid #e2e8f0; font-weight: 600;">
+                        <th style="padding: 10px 14px;">比对学生对 (Pair)</th>
+                        <th style="padding: 10px 14px;">核心算法雷同度 (Core Algo)</th>
+                        <th style="padding: 10px 14px;">工程框架相似度</th>
+                        <th style="padding: 10px 14px;">风险诊断级别</th>
+                        <th style="padding: 10px 14px;">诊断说明与复核建议</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </div>
     </div>
     """
     return html

@@ -5,7 +5,7 @@
 
 核心功能：
   1. 个人全课程 29 门实验进度与综合总评自动核算；
-  2. 7 大工程能力维度雷达图实时绘制 (render_student_radar_svg)；
+  2. 8 大工程能力维度雷达图实时绘制 (render_student_radar_svg)；
   3. 智能进阶推荐引擎 (Next-Step Recommendations)：
      - 识别当前尚未开展或得分偏低的能力维度，推荐优先突破实验；
   4. 实验报告提交前预审自检器 (pre_submit_report_check)：
@@ -154,7 +154,7 @@ def render_student_cockpit_html(progress: Dict[str, Any], student_name: str = "�
                     🚀 {student_name} 的个人工程能力画像与学习自检驾驶舱
                 </h3>
                 <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">
-                    数据驱动闭环，实时观测自身 7 大核心工程能力演进轨迹
+                    数据驱动闭环，实时观测自身 8 大核心工程能力演进轨迹
                 </p>
             </div>
             <div style="display: flex; gap: 14px; text-align: center; flex-wrap: wrap;">
