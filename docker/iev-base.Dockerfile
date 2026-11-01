@@ -86,10 +86,11 @@ ENV PATH="/opt/esmini/esmini/bin:${PATH}"
 # uv 默认把解释器装进 /root/.local，jovyan 用户无权访问 → 显式指定全局路径
 ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# ipywidgets：py310 内核的 Phase 0 探索器需要（此前缺失导致阶段零静默缺失）
 RUN uv python install 3.10 \
  && uv venv --python 3.10 /opt/envs/py310-fastsim \
  && uv pip install --python /opt/envs/py310-fastsim/bin/python \
-      "fastsim==2.1.5" ipykernel pymoo ipywidgets \  # ipywidgets：py310 内核的 Phase 0 探索器需要（此前缺失导致阶段零静默缺失）
+      "fastsim==2.1.5" ipykernel pymoo ipywidgets \
  && /opt/envs/py310-fastsim/bin/python -m ipykernel install \
       --name py310-fastsim --display-name "Python 3.10 (FASTSim)"
 
