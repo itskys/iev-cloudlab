@@ -17,16 +17,25 @@
 
 ## 🏗️ 核心架构与功能矩阵
 
-### 1. 课程体系矩阵（8 大基础模块 + 1 项跨域综合大作业）
-平台包含 **59 个精心调测的 Jupyter 实验笔记本**（29 个 Base 基础实验 + 29 个 Pro 工业进阶实验 + 1 个 Capstone 终极实验）：
+### 1. 「三轨贯通」课程体系矩阵（8 大基础模块 + 1 项跨域综合大作业）
+平台首创面向工程教育认证与汽车工业实际研发需求的高校智能电动汽车**「三轨贯通」培养体系（Tri-Track Learning System）**：
+- **轨 1 · 新手直觉探索轨 (Phase 0 / Lite)**：零代码交互探索。全套 30 门实验标配顶部 Phase 0 直觉驾驶舱（实时滑杆 + 动力学曲线 + 导学任务打卡）；另提供 5 门独立 Lite 体验本（A1/B2/C1/D1/E3 的 `*_lite.ipynb`）。零门槛建立控制与能量第一性原理直觉。
+- **轨 2 · 工业仿真进阶轨 (Simulation Pro)**：29 门 V1.0 官方标准实验 + Capstone 跨域综合大作业。采用 Python 现代科学计算与仿真生态（PyBaMM, FASTSim, SUMO, esmini, CasADi, FMPy, ROS2），完成闭环动力学仿真、参数灵敏度辨识与工程报告撰写。
+- **轨 3 · ⚡ MISRA-C 量产嵌入式轨 (Production C Track)**：对标汽车工业级 ECU/VCU/BMS/域控真实量产标准，采用严格遵循 MISRA-C 规范的 ANSI C 算法核心，零动态内存分配、全定长缓冲区、确定性硬实时单步执行（0.034 ~ 4.5 μs）：
+  - `A1_cutin_aeb_pro.ipynb`：AEB TTC 距离判定与多级制动有限状态机 (0.034 μs/步, ~44x 加速)
+  - `A3_aeb_closedloop_pro.ipynb`：Euro NCAP CCRb 增强型二次项 TTC + 150ms EHB 液压建压滞后 (1.296 μs/步)
+  - `B1_idm_calibration_pro.ipynb`：弦稳定 (String-Stable) IDM 5 车 CACC 编队控制 (0.953 μs/步)
+  - `C4_ems_comparison_pro.ipynb`：HEV 混合动力四模态状态机 + ±2% SOC 滞环防震荡 (1.195 μs/步)
+  - `D3_ocv_soc_export_pro.ipynb`：BMS 库仑积分 + 一阶 RC 观测器 + 静置 OCV 重校准 (1.417 μs/步)
+  - `E3_mpc_follow_pro.ipynb`：自动驾驶纵向预测控制紧缩型 QP 求解器 (Projected Gauss-Seidel, 4.48 μs/次解, ~7,800x 加速)
 
 | 模块代号 | 实验领域 | 核心仿真引擎与底层依赖 | 典型实验与工程产出 |
 |---|---|---|---|
-| **A 模块** | 自动驾驶决策与控制 | `esmini 3.10.0` (OpenSCENARIO) + 运动学闭环 | A1 Cut-in 加塞 AEB、A2 ACC 跟车、A3 增广 TTC、A4 交叉口让行、A5 汇流 |
-| **B 模块** | 微观与宏观交通流仿真 | `SUMO 1.20` + `TraCI` | B1 IDM 跟车标定、B2 交叉口信号配时、B3 CACC 编队控制、B4 冲击波物理、B5 绿波带协调 |
-| **C 模块** | 新能源动力总成与能耗 | `FASTSim 2.1.5` (py310-fastsim 独立内核) | C1 纯电整车能耗（加载 D3 电池）、C2 混合动力构型、C3 灵敏度正交方差、C4 三种能量管理策略 |
-| **D 模块** | 锂电池电化学机理 | `PyBaMM 24.5` (SPM / DFN 机理模型) | D1 1C 单粒子放电、D2 Peukert 倍率衰减拟合、D3 OCV-SOC 标定（导出整车电池库）、D4 析锂物理临界判据 |
-| **E 模块** | 优化控制与动态规划 | `CasADi` + `IPOPT` + `pymoo` + Bellman DP | E1 传动比单目标遗传算法、E2 NSGA-II 多目标 Pareto 前沿、E3 MPC 预测跟车、E4 Bellman 能量管理全局最优 (1.92L) |
+| **A 模块** | 自动驾驶决策与控制 | `esmini 3.10.0` (OpenSCENARIO) + 运动学闭环 + `ANSI C` | A1 Cut-in 加塞 AEB [⚡C轨]、A2 ACC 跟车、A3 增广 TTC [⚡C轨]、A4 交叉口让行、A5 汇流 |
+| **B 模块** | 微观与宏观交通流仿真 | `SUMO 1.20` + `TraCI` + `ANSI C` | B1 IDM 跟车标定与CACC编队 [⚡C轨]、B2 交叉口信号配时、B3 CACC 编队控制、B4 冲击波物理、B5 绿波带协调 |
+| **C 模块** | 新能源动力总成与能耗 | `FASTSim 2.1.5` (py310-fastsim 独立内核) + `ANSI C` | C1 纯电整车能耗（加载 D3 电池）、C2 混合动力构型、C3 灵敏度正交方差、C4 三种能量管理策略 [⚡C轨] |
+| **D 模块** | 锂电池电化学机理 | `PyBaMM 24.5` (SPM / DFN 机理模型) + `ANSI C` | D1 1C 单粒子放电、D2 Peukert 倍率衰减拟合、D3 OCV-SOC 标定与BMS观测器 [⚡C轨]、D4 析锂物理临界判据 |
+| **E 模块** | 优化控制与动态规划 | `CasADi` + `IPOPT` + `pymoo` + Bellman DP + `ANSI C` | E1 传动比单目标遗传算法、E2 NSGA-II 多目标 Pareto 前沿、E3 MPC 预测跟车 [⚡C轨]、E4 Bellman 能量管理全局最优 (1.92L) |
 | **F 模块** | 工业系统模型交换 | `FMPy` (FMI 2.0 Co-Simulation) | F1 FMI 标准架构验证、F2 手工 C 语言 FMU 封装、F3 Jacobi 并行步进多 FMU 协仿真 |
 | **G 模块** | 智能汽车操作系统中间件 | `rclpy` (ROS 2 Jazzy) + MiniROS | G1 话题发布/订阅与 QoS 通信机制、G2 服务调用开关 AEB 与动态参数服务器 |
 | **H 模块** | 仿真场景工程与模糊测试 | `scenariogeneration` + `esmini` | H1 批量场景矩阵生成与回放验证、H2 50 场景蒙特卡洛模糊测试 (Fuzzing) 探寻算法失效边界 |

@@ -172,10 +172,13 @@ def _parse_number(val_str: str) -> Optional[float]:
     return None
 
 
-# 目标/要求类措辞：出现在指标名前，说明后面跟的是考核要求而非实测结果。
-# 报告常把要求和实测写在一起（如“目标最小TTC 1.5s，实际 2.57s”），
-# 若把要求误当实测提取，就会制造虚假不一致。2026-10-31 P1 修复。
-_TARGET_WORDS = ("目标", "要求", "标准")
+# 目标/要求/参数设定类措辞：出现在指标名前，说明后面跟的是考核要求或参数设定而非实测结果。
+# 报告常把要求和实测写在一起（如“目标最小TTC 1.5s，实际 2.57s”或“最小TTC: 1.85s; TTC阈值: 3.0s”），
+# 若把要求/参数误当实测提取，就会制造虚假不一致甚至伪造报警。
+_TARGET_WORDS = (
+    "目标", "要求", "标准", "阈值", "门限", "设定", "设定值", "参数", "基准", "期望", "标称", "限值",
+    "target", "threshold", "setting", "benchmark", "param", "limit"
+)
 
 
 def _has_target_prefix(text: str, match_start: int, window: int = 8) -> bool:
@@ -196,8 +199,10 @@ def extract_claims_from_markdown(markdown_text: str) -> Dict[str, Any]:
     """从 Markdown 报告中提取所有提及的量化指标和布尔状态。
     
     返回字典: {canonical_metric_key: parsed_value}
+    具备置信度防覆写机制：实测值/高特异性关键词优先，防止后序通用词或参数行覆写已提取的实测值。
     """
     claims = {}
+    claims_confidence = {}  # canonical_key -> int (3: 实测/实际, 2: 专有全称, 1: 通用简称)
     lines = markdown_text.splitlines()
 
     # 1. 优先解析 Markdown 表格行：| 列1 | 列2 | ... |
@@ -206,51 +211,84 @@ def extract_claims_from_markdown(markdown_text: str) -> Dict[str, Any]:
         if line_strip.startswith('|') and line_strip.endswith('|'):
             cells = [c.strip() for c in line_strip.split('|')[1:-1]]
             if len(cells) >= 2:
-                # 遍历可能的列，尝试找出指标名称和对应数值
                 name_cell = cells[0]
                 val_cell = cells[1]
-                # 目标/要求行（如“目标最小TTC”）不是实测陈述，跳过
+                # 目标/要求/阈值设定行（如“目标最小TTC”、“TTC阈值”）不是实测陈述，跳过
                 if any(w in name_cell for w in _TARGET_WORDS):
                     continue
                 norm_name = _clean_str(name_cell)
 
-                # 匹配 canonical key
+                # 计算该行陈述的置信度权重
+                is_explicit_measured = any(w in name_cell for w in ('实测', '实际', '测试', '仿真结果', '结果', 'measured', 'actual'))
+                
+                # 匹配 canonical key (按关键词长度降序优先匹配更具体的专有词)
+                matched_key = None
+                matched_kw_len = 0
                 for canonical_key, keywords in METRIC_KEYWORD_MAP.items():
-                    if any(_clean_str(kw) in norm_name for kw in keywords):
-                        # 判断是否为布尔类型指标
-                        if canonical_key in ('collision', 'completed', 'fmu_loaded', 'service_ok', 'monotonic'):
-                            b_val = _parse_bool(val_cell)
-                            if b_val is not None:
-                                claims[canonical_key] = b_val
-                                break
-                        # 数值类型指标
-                        num_val = _parse_number(val_cell)
-                        if num_val is not None:
-                            claims[canonical_key] = num_val
+                    # 排序关键词：长度长的优先匹配
+                    sorted_kws = sorted(keywords, key=lambda k: len(k), reverse=True)
+                    for kw in sorted_kws:
+                        if _clean_str(kw) in norm_name:
+                            if len(kw) > matched_kw_len:
+                                matched_key = canonical_key
+                                matched_kw_len = len(kw)
                             break
+
+                if matched_key:
+                    conf = 3 if is_explicit_measured else (2 if matched_kw_len >= 4 else 1)
+                    # 若已有提取项，仅当新项置信度严格更高时才允许更新
+                    if matched_key in claims and claims_confidence.get(matched_key, 0) >= conf:
+                        continue
+
+                    # 判断是否为布尔类型指标
+                    if matched_key in ('collision', 'completed', 'fmu_loaded', 'service_ok', 'monotonic'):
+                        b_val = _parse_bool(val_cell)
+                        if b_val is not None:
+                            claims[matched_key] = b_val
+                            claims_confidence[matched_key] = conf
+                            continue
+
+                    # 数值类型指标
+                    num_val = _parse_number(val_cell)
+                    if num_val is not None:
+                        claims[matched_key] = num_val
+                        claims_confidence[matched_key] = conf
 
     # 2. 解析行内键值对与列表：- 最小TTC: 1.85s / min_ttc = 1.85 / 延误降低: 72.8%
     kv_pattern = re.compile(r'[-*•]?\s*([^:\n=]{2,25})\s*[:=：]\s*([^\n,，;；]+)')
     for match in kv_pattern.finditer(markdown_text):
         key_raw, val_raw = match.groups()
-        # 目标/要求键（如“目标最小TTC: 1.5s”）不是实测陈述，跳过
         if any(w in key_raw for w in _TARGET_WORDS):
             continue
         norm_key = _clean_str(key_raw)
+        is_explicit_measured = any(w in key_raw for w in ('实测', '实际', '测试', '仿真结果', '结果', 'measured', 'actual'))
 
+        matched_key = None
+        matched_kw_len = 0
         for canonical_key, keywords in METRIC_KEYWORD_MAP.items():
-            if canonical_key in claims:
-                continue  # 表格提取优先
-            if any(_clean_str(kw) in norm_key for kw in keywords):
-                if canonical_key in ('collision', 'completed', 'fmu_loaded', 'service_ok', 'monotonic'):
-                    b_val = _parse_bool(val_raw)
-                    if b_val is not None:
-                        claims[canonical_key] = b_val
-                        break
-                num_val = _parse_number(val_raw)
-                if num_val is not None:
-                    claims[canonical_key] = num_val
+            sorted_kws = sorted(keywords, key=lambda k: len(k), reverse=True)
+            for kw in sorted_kws:
+                if _clean_str(kw) in norm_key:
+                    if len(kw) > matched_kw_len:
+                        matched_key = canonical_key
+                        matched_kw_len = len(kw)
                     break
+
+        if matched_key:
+            conf = 3 if is_explicit_measured else (2 if matched_kw_len >= 4 else 1)
+            if matched_key in claims and claims_confidence.get(matched_key, 0) >= conf:
+                continue
+
+            if matched_key in ('collision', 'completed', 'fmu_loaded', 'service_ok', 'monotonic'):
+                b_val = _parse_bool(val_raw)
+                if b_val is not None:
+                    claims[matched_key] = b_val
+                    claims_confidence[matched_key] = conf
+                    continue
+            num_val = _parse_number(val_raw)
+            if num_val is not None:
+                claims[matched_key] = num_val
+                claims_confidence[matched_key] = conf
 
     # 3. 解析叙述性自然语言模式（针对高频核心指标的兜底）
     #    目标措辞前缀的匹配（如“目标最小TTC 1.5s”）不是实测陈述，跳过取下一处。

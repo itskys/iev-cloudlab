@@ -20,6 +20,18 @@
 实验文件命名规则：**字母=模块，数字=模块内顺序（难度与依赖递增），文件命名为 `<模块编号>_<实验名称>_pro.ipynb`（IEV CloudLab V1.0 官方标准实验）**，文件浏览器里的排列顺序就是推荐学习顺序。
 > 💡 注：早期的初代原型实验（V0.1版）已移入 `archive/v0.1_base/` 存档目录，仅作为历史教学对照。正式学习请使用当前的 V1.0 标准实验。
 
+### 🌟 三轨制培养体系 (Tri-Track Learning System)
+平台首创面向工程教育认证与汽车产业人才需求的高校智能电动汽车**「三轨贯通」培养体系**：
+- **轨 1 · 新手直觉探索轨 (Phase 0 / Lite)**：零代码交互探索。全套 30 门实验标配顶部 Phase 0 直觉驾驶舱（实时滑杆 + 动力学曲线 + 导学任务打卡）；另提供 5 门独立 Lite 体验本（A1/B2/C1/D1/E3 的 `*_lite.ipynb`）。零门槛建立控制与能量第一性原理直觉。
+- **轨 2 · 工业仿真进阶轨 (Simulation Pro)**：29 门 V1.0 官方标准实验 + Capstone 跨域综合大作业。采用 Python 现代科学计算与仿真生态（PyBaMM, FASTSim, SUMO, esmini, CasADi, FMPy, ROS2），完成闭环动力学仿真、参数灵敏度辨识与工程报告撰写。
+- **轨 3 · ⚡ MISRA-C 量产嵌入式轨 (Production C Track)**：对标汽车工业级 ECU/VCU/BMS/域控真实量产标准，采用严格遵循 MISRA-C 规范的 ANSI C 算法核心，零动态内存分配、全定长缓冲区、确定性硬实时单步执行（0.034 ~ 4.5 μs）：
+  - `A1_cutin_aeb_pro.ipynb`：AEB TTC 距离判定与多级制动有限状态机 (0.034 μs/步, ~44x 加速)
+  - `A3_aeb_closedloop_pro.ipynb`：Euro NCAP CCRb 增强型二次项 TTC + 150ms EHB 液压建压滞后 (1.296 μs/步)
+  - `B1_idm_calibration_pro.ipynb`：弦稳定 (String-Stable) IDM 5 车 CACC 编队控制 (0.953 μs/步)
+  - `C4_ems_comparison_pro.ipynb`：HEV 混合动力四模态状态机 + ±2% SOC 滞环防震荡 (1.195 μs/步)
+  - `D3_ocv_soc_export_pro.ipynb`：BMS 库仑积分 + 一阶 RC 观测器 + 静置 OCV 重校准 (1.417 μs/步)
+  - `E3_mpc_follow_pro.ipynb`：自动驾驶纵向预测控制紧缩型 QP 求解器 (Projected Gauss-Seidel, 4.48 μs/次解, ~7,800x 加速)
+
 ---
 
 ## A 模块 · 自动驾驶场景（引擎：esmini）
@@ -28,9 +40,9 @@
 
 | 实验 | 做什么 | 判据（实测） | 难度 | 时长 | 前置 | 内核 |
 |---|---|---|---|---|---|---|
-| A1 cutin_aeb | 前车加塞场景下实现AEB紧急制动 | 最小TTC>1.5s且无碰撞 | ★ | 1 | 无 | python3 |
+| A1 cutin_aeb [⚡ MISRA-C 量产轨] | 前车加塞场景下实现AEB紧急制动 (含C语言FSM内核对照) | 最小TTC>1.5s且无碰撞 | ★ | 1 | 无 | python3 |
 | A2 acc_follow | 用PD控制器实现ACC自适应巡航跟车 | 最大间距误差≤1.5m | ★ | 1 | A1 | python3 |
-| A3 aeb_closedloop | 对比朴素TTC与增强TTC（考虑前车加速度） | 增强版无碰撞；误触发率<5%（朴素版会碰撞，这是预期教学点） | ★★ | 1 | A1 | python3 |
+| A3 aeb_closedloop [⚡ MISRA-C 量产轨] | 对比朴素TTC与增强TTC (含C语言CCRb+150ms液压建压滞后) | 增强版无碰撞；误触发率<5%（朴素版会碰撞，这是预期教学点） | ★★ | 1 | A1 | python3 |
 | A4 intersection_yield | 无信号交叉口左转让行，四状态有限状态机 | PET>1.0s（实测2.05s）且无碰撞 | ★★ | 1 | A1 | python3 |
 | A5 merge_kinematic_demo | 高速汇流的间隙接受决策（运动学演示） | 演示完整运行 | ★ | 0.5 | 无 | python3 |
 
@@ -40,7 +52,7 @@
 
 | 实验 | 做什么 | 判据（实测） | 难度 | 时长 | 前置 | 内核 |
 |---|---|---|---|---|---|---|
-| B1 idm_calibration | 用真实轨迹数据最小二乘标定IDM跟车模型参数 | 标定RMSE<0.6（实测0.405） | ★★ | 1.5 | 无 | python3 |
+| B1 idm_calibration [⚡ MISRA-C 量产轨] | 用真实轨迹标定IDM跟车参数 (含C语言5车弦稳定编队对照) | 标定RMSE<0.6（实测0.405） | ★★ | 1.5 | 无 | python3 |
 | B2 traffic_signal | 用Webster公式设计信号配时并与固定配时对比 | 平均延误降低>50%（实测72.8%） | ★ | 1 | 无 | python3 |
 | B3 sumo_cacc | 四车CACC协同编队（V2V通信） | 最大间距误差<2.0m（实测1.09m）；仿真步数≥300 | ★★ | 1.5 | A2 | python3 |
 | B4 congestion_wave | 复现拥堵冲击波并拟合波速 | 波速为负（实测−2.4 km/h）；拟合R²>0.5（实测0.663） | ★★ | 1 | B1 | python3 |
@@ -55,7 +67,7 @@
 | C1 fastsim_energy | 跑UDDS循环算百公里电耗；电池参数来自D3标定（链1） | 电耗10–20 kWh/100km（实测12.5） | ★ | 1 | D3（建议） | py310-fastsim |
 | C2 vehicle_comparison | 横向对比6款量产电车能耗与续航 | 对比≥5款车（实测：Spark EV 10.4最优 … Cupra Born 15.2） | ★ | 1 | C1 | py310-fastsim |
 | C3 sensitivity_analysis | 质量、风阻、滚阻对电耗的灵敏度 | 给出灵敏度系数（实测：质量0.610 > 风阻0.210，市区工况） | ★★ | 1 | C1 | py310-fastsim |
-| C4 ems_comparison | 对比CD/CS/ECMS-like三种能量管理策略油耗 | 对比≥3种策略（实测1.22 / 2.56 / 1.46 L/100km，SOC窗口近似实现，已声明） | ★★ | 1.5 | C1 | py310-fastsim |
+| C4 ems_comparison [⚡ MISRA-C 量产轨] | 对比CD/CS/ECMS三种策略 (含C语言四模态FSM+±2%滞环对照) | 对比≥3种策略（实测1.22 / 2.56 / 1.46 L/100km，SOC窗口近似实现，已声明） | ★★ | 1.5 | C1 | py310-fastsim |
 
 ## D 模块 · 电池（引擎：PyBaMM）
 
@@ -63,7 +75,7 @@
 |---|---|---|---|---|---|---|
 | D1 pybamm_battery | SPM单粒子模型跑1C放电，看电压平台与容量 | 容量4.85Ah±5%（实测4.96） | ★ | 1 | 无 | python3 |
 | D2 rate_capacity | 0.5C–3C倍率下的容量衰减，拟合Peukert指数 | Peukert指数1.0–1.15（实测1.0511）；3C容量保持90.4% | ★ | 1 | D1 | python3 |
-| D3 ocv_soc_export | 标定OCV-SOC曲线并导出电池库CSV（链1源头） | 标定误差<5%（实测平均1.05%） | ★★ | 1.5 | D1 | python3 |
+| D3 ocv_soc_export [⚡ MISRA-C 量产轨] | 标定OCV-SOC曲线导出电池库 (含C语言BMS库仑+RC+OCV校准) | 标定误差<5%（实测平均1.05%） | ★★ | 1.5 | D1 | python3 |
 | D4 lithium_plating | DFN模型看快充析锂：负极电位何时跌破0V | 3C最低电位<0（实测−0.64V，析锂46.7s）；1C为−0.05V（临界） | ★★★ | 1.5 | D1 | python3 |
 
 ## E 模块 · 优化控制 ⚙️ 内核须选 py310-fastsim
@@ -72,7 +84,7 @@
 |---|---|---|---|---|---|---|
 | E1 single_objective | 遗传算法优化传动比，FASTSim真实复核 | 优化后节油>0（实测4.23%） | ★★ | 1 | C1 | py310-fastsim |
 | E2 pymoo_multiobj | NSGA-II多目标：动力性 vs 成本的Pareto前沿 | Pareto解≥50个（实测60），识别拐点 | ★★ | 1 | 无 | py310-fastsim |
-| E3 mpc_follow | CasADi+IPOPT实现MPC跟车控制 | 平均单步求解<50ms（实测11.5ms，满足实时性） | ★★★ | 1.5 | A2 | python3 |
+| E3 mpc_follow [⚡ MISRA-C 量产轨] | CasADi+IPOPT实现MPC跟车控制 (含C语言紧缩QP PGS求解器对照，4.5μs) | 平均单步求解<50ms（实测11.5ms，C求解器4.5μs） | ★★★ | 1.5 | A2 | python3 |
 | E4 dp_ems | 真Bellman动态规划求能量管理全局最优（链3源头） | DP油耗<2.2（实测1.92，优于C4的ECMS-like 2.14） | ★★★ | 2 | C4 | py310-fastsim |
 
 ## F 模块 · 模型交换 FMI（引擎：FMPy）
