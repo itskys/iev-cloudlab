@@ -89,7 +89,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN uv python install 3.10 \
  && uv venv --python 3.10 /opt/envs/py310-fastsim \
  && uv pip install --python /opt/envs/py310-fastsim/bin/python \
-      "fastsim==2.1.5" ipykernel pymoo \
+      "fastsim==2.1.5" ipykernel pymoo ipywidgets \  # ipywidgets：py310 内核的 Phase 0 探索器需要（此前缺失导致阶段零静默缺失）
  && /opt/envs/py310-fastsim/bin/python -m ipykernel install \
       --name py310-fastsim --display-name "Python 3.10 (FASTSim)"
 
