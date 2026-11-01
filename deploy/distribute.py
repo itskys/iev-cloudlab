@@ -27,7 +27,7 @@ UID = GID = 1000
 MANIFEST_NAME = ".ievlab_manifest.json"
 
 EXCLUDE_DIRS = {"__pycache__", ".ipynb_checkpoints", "archive"}
-EXCLUDE_FILES = {"教师面板_成绩与学生管理.ipynb"}
+EXCLUDE_FILES = {"教师面板_成绩与学生管理.ipynb", "dashboard.ipynb"}
 # 根目录下需要分发到学生 home 根目录的教学指导文档
 ROOT_FILES = ["demo_script_10min.md"]
 # results/ 与 preview_checkins/、lite/、reports/ 只建空目录，不分发其中内容（那是学生自己的产出区）
