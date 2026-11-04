@@ -822,8 +822,10 @@ def explain_failure(experiment_id: str, metrics: Dict[str, Any]) -> str:
 
 def render_copilot_card(diag_result: Dict[str, Any]) -> str:
     """生成高保真工业汽车级智能伴学诊断看板 (HTML)"""
-    exp_name = diag_result['experiment_name']
+    exp_id = diag_result.get('experiment_id', '')
+    exp_name = diag_result.get('experiment_name', exp_id)
     is_ok = diag_result['is_healthy']
+    display_title = f"{exp_id} · {exp_name}" if (exp_id and exp_id != exp_name) else exp_name
 
     if is_ok:
         return f"""
@@ -835,7 +837,7 @@ def render_copilot_card(diag_result: Dict[str, Any]) -> str:
                         IEV Diagnostic Tutor: 系统物理运行健康
                     </h4>
                     <p style="margin: 3px 0 0 0; font-size: 12px; color: #a7f3d0; line-height: 1.4;">
-                        【{exp_name}】所有实测指标均处于汽车工程第一性原理最优区间，无动力学/电化学约束冲突。继续保持！
+                        【{display_title}】所有实测指标均处于汽车工程第一性原理最优区间，无动力学/电化学约束冲突。继续保持！
                     </p>
                 </div>
             </div>
@@ -936,7 +938,7 @@ def render_copilot_card(diag_result: Dict[str, Any]) -> str:
                         IEV Automotive Diagnostic Tutor · 汽车工程失效归因与调优助理
                     </h3>
                     <p style="margin: 3px 0 0 0; font-size: 11.5px; color: #94a3b8;">
-                        目标实验: <strong style="color: #f8fafc;">{exp_name}</strong> | 自动捕获并归因 <strong style="color: #f87171;">{diag_result['findings_count']}</strong> 项物理/控制待整定项
+                        目标实验: <strong style="color: #f8fafc;">{display_title}</strong> | 自动捕获并归因 <strong style="color: #f87171;">{diag_result['findings_count']}</strong> 项物理/控制待整定项
                     </p>
                 </div>
             </div>
