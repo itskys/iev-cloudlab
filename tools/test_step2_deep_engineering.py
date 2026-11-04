@@ -36,7 +36,7 @@ class TestStep2DeepEngineering(unittest.TestCase):
         self.assertIn("</svg>", svg_out)
         self.assertIn("D3", svg_out)
         self.assertIn("Capstone", svg_out)
-        self.assertIn("ocv_soc.csv", svg_out)
+        self.assertIn("ocv_soc_export.json", svg_out)
         self.assertIn("stroke=\"#10b981\"", svg_out) # 已达标连线
 
         # 验证完整 cockpit html 渲染
@@ -52,7 +52,7 @@ class TestStep2DeepEngineering(unittest.TestCase):
             'scores': test_scores
         }
         html_out = render_student_cockpit_html(mock_progress, student_name="张三")
-        self.assertIn("跨域工程数据血缘与全域链路拓扑图", html_out)
+        self.assertIn("跨域学习路径与全域链路拓扑图", html_out)
         self.assertIn("三链汇流贯通", html_out)
         self.assertIn("<svg", html_out)
         print("✓ [DAG & Student Cockpit] Passed integration check.")

@@ -118,12 +118,14 @@ def get_student_study_progress(results_dir: Optional[str] = None) -> Dict[str, A
 
 
 def render_data_lineage_dag_svg(scores: Optional[Dict[str, Any]] = None) -> str:
-    """生成三链贯通跨域工程数据血缘 DAG 拓扑图 SVG (响应式矢量图)
+    """生成三链贯通跨域学习路径 DAG 拓扑图 SVG (响应式矢量图)
 
-    展示 3 条核心新能源与智能汽车工程链向下游整车集成（Capstone）汇流的数据传递与误差闭环：
+    展示 3 条学习路径（按模块依赖与难度递进的学习顺序，非数据自动流转）向 Capstone 汇流：
       - 链 1 (动力与能耗): D3 (准静态OCV) -> C1 (FASTSim动力学) -> C4 (混动ECMS) -> Capstone
       - 链 2 (智驾感知规控): H1 (空间测绘) -> A1 (Cut-in AEB) -> A2 (ACC巡航) -> E3 (MPC优化) -> Capstone
-      - 链 3 (车联网车路协同): B1 (IDM标定) -> B3 (CACC弦稳定) -> B4 (冲击波抑制) -> B5 (绿波带) -> Capstone
+      - 链 3 (交通流与编队协同): B1 (IDM标定) -> B3 (CACC弦稳定) -> B4 (冲击波抑制) -> B5 (绿波带) -> Capstone
+    仅 D3 -> C1 有一条校验链路（chain_validator 校验 D3 标定误差，不达标回退官方基线曲线）；
+    其余连线表示学习顺序，节点标注的人工件名为规划中的交接格式，除 D3 的 ocv_soc_export.json 外暂未自动流转。
     """
     scores = scores or {}
 
@@ -145,21 +147,21 @@ def render_data_lineage_dag_svg(scores: Optional[Dict[str, Any]] = None) -> str:
 
     nodes = [
         # 链 1
-        {"id": "D3", "title": "电芯准静态OCV", "chain": 1, "x": 60, "y": 65, "artifact": "ocv_soc.csv"},
+        {"id": "D3", "title": "电芯准静态OCV", "chain": 1, "x": 60, "y": 65, "artifact": "ocv_soc_export.json"},
         {"id": "C1", "title": "FASTSim动力学电耗", "chain": 1, "x": 260, "y": 65, "artifact": "kwh_100km.json"},
-        {"id": "C4", "title": "混动ECMS能量管理", "chain": 1, "x": 490, "y": 65, "artifact": "ecms_s_factor.json"},
+        {"id": "C4", "title": "混动ECMS能量管理", "chain": 1, "x": 490, "y": 65, "artifact": "ecms_opt.json"},
 
         # 链 2
-        {"id": "H1", "title": "加塞场景空间测绘", "chain": 2, "x": 60, "y": 160, "artifact": "cutin_space.xosc"},
+        {"id": "H1", "title": "加塞场景空间测绘", "chain": 2, "x": 60, "y": 160, "artifact": "cutin.xosc"},
         {"id": "A1", "title": "Cut-in AEB避碰", "chain": 2, "x": 240, "y": 160, "artifact": "aeb_profile.json"},
-        {"id": "A2", "title": "ACC巡航跟车", "chain": 2, "x": 420, "y": 160, "artifact": "acc_spacing.csv"},
-        {"id": "E3", "title": "CasADi MPC优化", "chain": 2, "x": 600, "y": 160, "artifact": "mpc_weights.json"},
+        {"id": "A2", "title": "ACC巡航跟车", "chain": 2, "x": 420, "y": 160, "artifact": "acc_err.csv"},
+        {"id": "E3", "title": "CasADi MPC优化", "chain": 2, "x": 600, "y": 160, "artifact": "mpc_cmd.json"},
 
         # 链 3
-        {"id": "B1", "title": "IDM真实跟驰标定", "chain": 3, "x": 60, "y": 255, "artifact": "idm_calib.json"},
-        {"id": "B3", "title": "V2X编队弦稳定", "chain": 3, "x": 240, "y": 255, "artifact": "cacc_delay.json"},
-        {"id": "B4", "title": "LWR交通冲击波", "chain": 3, "x": 420, "y": 255, "artifact": "wave_speed.json"},
-        {"id": "B5", "title": "干线绿波带协调", "chain": 3, "x": 600, "y": 255, "artifact": "offset_sync.json"},
+        {"id": "B1", "title": "IDM真实跟驰标定", "chain": 3, "x": 60, "y": 255, "artifact": "idm_params.json"},
+        {"id": "B3", "title": "CACC编队弦稳定", "chain": 3, "x": 240, "y": 255, "artifact": "delay_flow.json"},
+        {"id": "B4", "title": "LWR交通冲击波", "chain": 3, "x": 420, "y": 255, "artifact": "shockwave.json"},
+        {"id": "B5", "title": "干线绿波带协调", "chain": 3, "x": 600, "y": 255, "artifact": "green_wave.json"},
 
         # 终点
         {"id": "Capstone", "title": "全域协同总成调度", "chain": 0, "x": 800, "y": 160, "artifact": "iev_integrated_report.pdf"},
@@ -167,7 +169,7 @@ def render_data_lineage_dag_svg(scores: Optional[Dict[str, Any]] = None) -> str:
 
     edges = [
         # Chain 1
-        ("D3", "C1", "ocv_soc.csv"),
+        ("D3", "C1", "ocv_soc_export.json"),
         ("C1", "C4", "kwh_100km.json"),
         ("C4", "Capstone", "ecms_opt.json"),
 
@@ -200,7 +202,8 @@ def render_data_lineage_dag_svg(scores: Optional[Dict[str, Any]] = None) -> str:
     # 链条分类标签
     svg.append('<text x="20" y="32" font-size="12" font-weight="700" fill="#2563eb">🔋 链 1：动力电池与整车能耗链</text>')
     svg.append('<text x="20" y="130" font-size="12" font-weight="700" fill="#0284c7">🚗 链 2：智驾极限感知与规划控制链</text>')
-    svg.append('<text x="20" y="228" font-size="12" font-weight="700" fill="#059669">🌐 链 3：车联网车路协同与交通流链</text>')
+    svg.append('<text x="20" y="228" font-size="12" font-weight="700" fill="#059669">🌐 链 3：交通流与编队协同链</text>')
+    svg.append('<text x="20" y="308" font-size="11" fill="#64748b">注：连线为学习顺序；仅 D3→C1 有校验链路，其余人工件名为规划交接格式，暂未自动流转。</text>')
 
     # 绘制连线
     for u_id, v_id, asset in edges:
@@ -405,7 +408,7 @@ def render_student_cockpit_html(progress: Dict[str, Any], student_name: str = "�
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
                 <div>
                     <h4 style="margin: 0; color: #0f172a; font-size: 14px; font-weight: 700;">
-                        🔗 跨域工程数据血缘与全域链路拓扑图 (Cross-Domain Engineering Data Lineage DAG)
+                        🔗 跨域学习路径与全域链路拓扑图 (Cross-Domain Learning-Path DAG)
                     </h4>
                     <p style="margin: 3px 0 0 0; color: #64748b; font-size: 12px;">
                         三链汇流贯通 · 实时反映上游数据资产向下游整车仿真的误差传递与闭环依赖

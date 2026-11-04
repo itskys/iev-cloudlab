@@ -776,7 +776,7 @@ def show_d4_explorer():
     """
     display(HTML(intro_html))
     
-    benchmarks_widget = _create_benchmark_badge("负极界面电化学析锂安全红线", [('安全嵌锂电位', 'Φs - Φe > 0.05V', 'success'), ('析锂临界红线', 'Φs - Φe = 0.00V', 'danger'), ('低温快充禁令', '≤0°C 严禁大功率充 (>0.2C)', 'danger'), ('常温超充温控', '25°C ~ 45°C', 'info')], "对标 宁德时代超充安全边界规范 & GB 38031")
+    benchmarks_widget = _create_benchmark_badge("负极界面电化学析锂安全红线", [('安全嵌锂电位', 'Φs - Φe > 0.05V', 'success'), ('析锂临界红线', 'Φs - Φe = 0.00V', 'danger'), ('低温快充禁令', '≤0°C 严禁大功率充 (>0.2C)', 'danger'), ('常温超充温控', '25°C ~ 45°C', 'info')], "参考 GB 38031 与行业低温快充安全实践（教学参考）")
     presets = [{'title': '❄️ 极寒未预热强充 (-10°C, 2.0C 致命析锂)', 'style': 'danger', 'values': {'crate': 2.0, 'temp': -10}, 'tip': '负极电位暴跌穿透 0V，极板严重沉积锂枝晶短路'}, {'title': '♨️ 热管理预热后快充 (25°C, 2.0C 安全嵌锂)', 'style': 'success', 'values': {'crate': 2.0, 'temp': 25}, 'tip': '离子扩散活化能充裕，全程无金属锂析出'}, {'title': '⚡ 常温大倍率闪充 (25°C, 3.5C 临界触边)', 'style': 'warning', 'values': {'crate': 3.5, 'temp': 25}, 'tip': '大倍率逼近 0V 临界红线，极度依赖热管理散热'}]
     default_vals = {'crate': 2.0, 'temp': 25}
     setter_map = {'crate': slider_crate, 'temp': slider_temp}
@@ -915,7 +915,7 @@ def show_e2_explorer():
     """
     display(HTML(intro_html))
     
-    benchmarks_widget = _create_benchmark_badge("量产乘用车零百加速与电机 BOM 成本", [('普及型代步车', '8.0~10.5s (单电机小总成)', 'info'), ('家用主流黄金段', '5.5~7.0s (最佳性价比)', 'success'), ('性能跑车级', '< 4.0s (双电机高成本)', 'danger')], "对标 乘用车动力总成采购选型成本库")
+    benchmarks_widget = _create_benchmark_badge("量产乘用车零百加速与电机 BOM 成本", [('普及型代步车', '8.0~10.5s (单电机小总成)', 'info'), ('家用主流黄金段', '5.5~7.0s (最佳性价比)', 'success'), ('性能跑车级', '< 4.0s (双电机高成本)', 'danger')], "参考量产选型经验区间（教学参考）")
     presets = [{'title': '🎯 膝点最优决策 (零百 5.5s, 黄金平衡)', 'style': 'success', 'values': {'accel': 5.5}, 'tip': 'Pareto 前沿膝点，性能提升显著而成本边际增量平缓'}, {'title': '⚡ 极致性能跑车 (零百 3.8s, 高额成本)', 'style': 'danger', 'values': {'accel': 3.8}, 'tip': '双大电机总成，成本暴增 85%'}, {'title': '🛒 极致平价代步 (零百 7.5s, 最低成本)', 'style': '', 'values': {'accel': 7.5}, 'tip': '单小功率电机，BOM 成本极低'}]
     default_vals = {'accel': 5.5}
     setter_map = {'accel': slider_accel}
@@ -1736,7 +1736,7 @@ def show_a1_explorer():
     """
     display(HTML(intro_html))
     
-    benchmarks_widget = _create_benchmark_badge("Euro NCAP AEB 介入时机量规", [('FCW 碰撞预警', '2.7~3.0s', 'info'), ('PB 部分制动', '1.8~2.2s', 'warning'), ('EB 极限制动', '1.2~1.5s', 'danger')], "对标 Euro NCAP 2023 & ISO 22838")
+    benchmarks_widget = _create_benchmark_badge("Euro NCAP CCRs 场景族教学参考量规", [('FCW 碰撞预警', '2.7~3.0s', 'info'), ('PB 部分制动', '1.8~2.2s', 'warning'), ('EB 极限制动', '1.2~1.5s', 'danger')], "参考 Euro NCAP 2023 场景族（教学参考区间）& ISO 22838")
     presets = [{'title': '⚡ 激进加塞 (TTC=1.8s)', 'style': 'warning', 'values': {'ttc': 1.8}, 'tip': '近距离变道加塞，AEB 紧急制动介入'}, {'title': '🎯 极限制动 (TTC=2.4s)', 'style': 'primary', 'values': {'ttc': 2.4}, 'tip': '临界安全阈值，刚好零碰撞刹停'}, {'title': '🛡️ 稳健安全 (TTC=3.2s)', 'style': 'success', 'values': {'ttc': 3.2}, 'tip': '提前制动介入，从容避碰'}]
     default_vals = {'ttc': 3.0}
     setter_map = {'ttc': slider_ttc}
@@ -1997,7 +1997,7 @@ def show_c1_explorer():
     """
     display(HTML(intro_html))
     
-    benchmarks_widget = _create_benchmark_badge("行业真实车型风阻系数 Cd 谱系", [('保时捷 Taycan', '0.22', 'success'), ('特斯拉 Model 3', '0.23', 'info'), ('主流轿车', '0.28', 'neutral'), ('城市 SUV', '0.34', 'warning'), ('硬派越野', '0.40+', 'danger')], "对标 SAE 汽车空气动力学对标数据库")
+    benchmarks_widget = _create_benchmark_badge("行业真实车型风阻系数 Cd 谱系", [('保时捷 Taycan', '0.22', 'success'), ('特斯拉 Model 3', '0.23', 'info'), ('主流轿车', '0.28', 'neutral'), ('城市 SUV', '0.34', 'warning'), ('硬派越野', '0.40+', 'danger')], "参考公开车型风阻数据（教学参考）")
     presets = [{'title': '🚗 纯电轿跑低风阻 (0kg, Cd=0.22 仿Taycan)', 'style': 'success', 'values': {'kg': 0, 'cd': 0.22}, 'tip': '低风阻单人空载，百公里电耗极低'}, {'title': '🚙 满员满载城市 SUV (+300kg, Cd=0.34)', 'style': 'warning', 'values': {'kg': 300, 'cd': 0.34}, 'tip': 'SUV迎风面与质量双增，滚动与风阻功剧增'}, {'title': '🛻 满载越野恶劣风阻 (+400kg, Cd=0.40)', 'style': 'danger', 'values': {'kg': 400, 'cd': 0.4}, 'tip': '高车身满负荷，百公里电耗增加 40%+'}]
     default_vals = {'kg': 0, 'cd': 0.29}
     setter_map = {'kg': slider_kg, 'cd': slider_cd}

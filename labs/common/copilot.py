@@ -61,7 +61,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
                     '检查制动减速度上限，确认紧急避碰段制动需求设定为 -5.5 ~ -6.5 m/s² 之间；',
                     '核实车辆反应时间常数与执行器建压时延是否在时步积分中被过度放大。'
                 ],
-                'oem_benchmark': '对标 Euro NCAP 2023 CCRs (Car-to-Car Rear Stationary) 标定规范：FCW 碰撞预警须于 TTC ≥ 2.7s 启动，AEB 全制动须于 TTC ≥ 1.8s 前介入以确保 0 碰撞。'
+                'oem_benchmark': '参考 Euro NCAP 2023 CCRs (Car-to-Car Rear Stationary) 场景族：教学参考区间为 FCW 碰撞预警约 TTC 2.7s、AEB 全制动介入约 TTC 1.8s，具体量产标定阈值以主机厂标定为准。'
             },
             {
                 'condition': lambda m: _val(m, 'min_ttc_s', 'min_ttc', default=0) > 3.5,
@@ -75,7 +75,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
                     '收紧 TTC 判定阈值至 2.0s ~ 2.5s 工业量产区间；',
                     '引入分级预警逻辑：初段采用轻度点刹 (-2.0 m/s²)，紧急段再全力制动。'
                 ],
-                'oem_benchmark': 'ISO 22839 前向虚警抑制规范：在邻道正常并线工况下，减速度超过 0.3g 的不必要制动发生率应 < 0.1%。'
+                'oem_benchmark': '参考 ISO 22839 前向碰撞缓解虚警抑制思路：教学参考为邻道正常并线工况下不必要强减速应尽可能低（本处 0.1% 为教学参考值，非规范原文）。'
             }
         ]
     },
@@ -131,7 +131,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
                     '提高横向重叠度门限，仅在目标车侵入本车道宽度 35% 以上时进入制动预警；',
                     '增加持续帧确认机制 (Debounce Filter)，防止雷达单帧航迹毛刺诱发刹车。'
                 ],
-                'oem_benchmark': 'Euro NCAP 误触发试验规范：相邻车道超车与弯道会车工况下误动作触发率必须为 0。'
+                'oem_benchmark': '参考 Euro NCAP 误触发试验场景族：相邻车道超车与弯道会车工况下误动作应尽可能为 0（教学参考要求）。'
             }
         ]
     },
@@ -198,7 +198,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '交叉口信号配时优化',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'delay_reduction_pct', default=0) < 50.0,
+                'condition': lambda m: _val(m, 'delay_reduction_pct', default=100) < 50.0,
                 'severity': 'warning',
                 'symptom': '车均延误降低率未达到 50% 优化要求 (实测对标基准 72.8%)',
                 'physics_root_cause': '红绿灯周期 C 或绿信比未能匹配东西向与南北向非对称交通流量比 (y_ew / y_ns)，导致次要方向空放而主要方向严重排队溢出。',
@@ -219,23 +219,27 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
             {
                 'condition': lambda m: _val(m, 'max_spacing_error', 'max_spacing_error_m', default=0) > 2.0,
                 'severity': 'critical',
-                'symptom': 'CACC 编队间距误差超标 (>2.0m)，车队发生弦不稳定振荡',
+                'symptom': 'CACC 编队间距误差超标 (>2.0m)，车队发生弦不稳定振荡（主实验为 PD 反馈；前馈与通信分析见 §7.2 V2X 拓展格）',
                 'physics_root_cause': (
-                    'V2X 车车通信延时与丢包导致领航车加速度前馈信息失步。控制器闭环传递函数幅值上界 ‖H(jω)‖_∞ > 1.0，'
-                    '导致前方车辆的轻微加减速扰动沿着车队队列向上游逐车放大，极易诱发第 4~5 辆车的幽灵堵车乃至连环追尾。'
+                    '主实验为 PD 反馈控制（headway/kp/kd），未建模 V2X 前馈与通信时延；以下机理用于理解振荡放大，'
+                    '量化的前馈与时延补偿分析见 §7.2 V2X 拓展格：V2X 车车通信延时与丢包导致领航车加速度前馈信息失步，'
+                    '控制器闭环传递函数幅值上界 ‖H(jω)‖_∞ > 1.0，导致前方车辆的轻微加减速扰动沿着车队队列向上游逐车放大，'
+                    '极易诱发第 4~5 辆车的幽灵堵车乃至连环追尾。'
                 ),
                 'tuning_matrix': [
-                    {'param': 'ka_feedforward', 'current': lambda m: '--', 'action': '适度下调前馈 ↓', 'step': '-0.15', 'recommended': '0.55 ~ 0.75'},
-                    {'param': 'kv_damping', 'current': lambda m: '--', 'action': '增加速度阻尼 ↑', 'step': '+0.25', 'recommended': '0.80 ~ 1.20'},
+                    {'param': 'headway', 'current': lambda m: '--', 'action': '增大时距裕度 ↑', 'step': '+0.2', 'recommended': '增大（默认 0.8s）'},
+                    {'param': 'kp', 'current': lambda m: '--', 'action': '增大间距刚度 ↑', 'step': '+0.3', 'recommended': '增大（默认 1.2）'},
+                    {'param': 'kd', 'current': lambda m: '--', 'action': '增大速度阻尼 ↑', 'step': '+0.2', 'recommended': '增大（默认 0.8）'},
                 ],
                 'prescriptions': [
                     '严格校核弦稳定性频域判据：保证在全部频段 |E_i(jω) / E_{i-1}(jω)| ≤ 1.0；',
-                    '在 CACC 控制律中加入时延补偿预测器（Smith Predictor 或卡尔曼滤波前推）。'
+                    '主实验调参：增大 headway（时距裕度，默认 0.8s）或 kp（间距刚度，默认 1.2）/ kd（速度阻尼，默认 0.8），重跑后观察 max_spacing_error 是否回落；',
+                    '如需研究通信时延与丢包对弦稳定的影响，请运行 §7.2 V2X 拓展格（40ms 抖动 + 3% 丢包建模）。'
                 ],
                 'oem_benchmark': 'SAE J3161/1 联网车队协同自适应巡航 (CACC) 弦稳定性测试规范。'
             },
             {
-                'condition': lambda m: _val(m, 'steps', default=0) < 300,
+                'condition': lambda m: _val(m, 'steps', default=400) < 300,
                 'severity': 'warning',
                 'symptom': '仿真步数不足 300 步 (实测不充分)',
                 'physics_root_cause': '编队仿真运行时间过短，未经历减速波向下游完全传递并恢复稳态的完整周期。',
@@ -250,7 +254,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '交通拥堵激波传播',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'wave_speed_kmh', default=1) >= 0.0,
+                'condition': lambda m: _val(m, 'wave_speed_kmh', default=-10) >= 0.0,
                 'severity': 'critical',
                 'symptom': '拥堵激波波速方向非负 (违背交通流冲击波向上游传播定律)',
                 'physics_root_cause': (
@@ -268,7 +272,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
                 'oem_benchmark': '交通波理论与道路通行能力手册 (LWR Kinematic Wave Theory)。'
             },
             {
-                'condition': lambda m: _val(m, 'r_squared', default=0) < 0.5,
+                'condition': lambda m: _val(m, 'r_squared', default=1.0) < 0.5,
                 'severity': 'warning',
                 'symptom': '激波传播轨迹拟合 R² 优度低于 0.5 (实测基准 0.663)',
                 'physics_root_cause': '微观随机扰动过大或排队波头识别算法存在时空噪点。',
@@ -283,7 +287,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '干线连续绿波带协调',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'stops_reduction_pct', default=0) < 50.0,
+                'condition': lambda m: _val(m, 'stops_reduction_pct', default=100) < 50.0,
                 'severity': 'warning',
                 'symptom': '干线停车次数减少幅度低于 50% (实测对标基准 76.5%)',
                 'physics_root_cause': '相邻交叉口之间的相位差 Offset 与设计协调车速不匹配，绿波带宽度过窄被上游慢车或路段红灯阻截。',
@@ -342,7 +346,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '不同车型谱系横向能耗对比',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'n_vehicles', default=0) < 5,
+                'condition': lambda m: _val(m, 'n_vehicles', default=99) < 5,
                 'severity': 'warning',
                 'symptom': '对比车型数量不足 5 款 (实测对标基准 6 款)',
                 'physics_root_cause': '未完整加载车型库中的轿跑、SUV、MPV 及越野车型，无法构建跨车身形态的风阻与质量能耗谱系。',
@@ -357,7 +361,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '质量与风阻无量纲灵敏度分析',
         'rules': [
             {
-                'condition': lambda m: _val(m, 's_mass', default=0) <= 0.0 or _val(m, 's_cd', default=0) <= 0.0,
+                'condition': lambda m: _val(m, 's_mass', default=1.0) <= 0.0 or _val(m, 's_cd', default=1.0) <= 0.0,
                 'severity': 'warning',
                 'symptom': '质量或风阻灵敏度系数未成功计算或符号异常反转',
                 'physics_root_cause': (
@@ -379,7 +383,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '混动能量管理策略对比',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'n_strategies', default=0) < 3,
+                'condition': lambda m: _val(m, 'n_strategies', default=99) < 3,
                 'severity': 'warning',
                 'symptom': '对比策略不足 3 种 (要求覆盖 CD/CS 规则基与 ECMS 等效能耗最小化)',
                 'physics_root_cause': '未完整仿真 CD (Charge Depleting)、CS (Charge Sustaining) 与 ECMS 策略，无法展示瞬态等效伴随状态变量 s 的自适应节油机制。',
@@ -396,7 +400,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '电芯恒流放电电化学仿真',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'capacity_ah', default=0) < 4.6 or _val(m, 'capacity_ah', default=0) > 5.1,
+                'condition': lambda m: _val(m, 'capacity_ah', default=4.85) < 4.6 or _val(m, 'capacity_ah', default=4.85) > 5.1,
                 'severity': 'warning',
                 'symptom': '1C 容量偏离 4.85Ah 标称区间 (实测基准 4.96Ah)',
                 'physics_root_cause': 'PyBaMM 单粒子模型 (SPM) 中正负极初始嵌锂化学计量比 (x_100, x_0, y_100, y_0) 或活性物质涂布厚度未校准，导致可用锂离子总摩尔量发生偏差。',
@@ -415,7 +419,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '电池大倍率容量衰减特性',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'peukert_k', default=0) < 1.0 or _val(m, 'peukert_k', default=0) > 1.15,
+                'condition': lambda m: _val(m, 'peukert_k', default=1.05) < 1.0 or _val(m, 'peukert_k', default=1.05) > 1.15,
                 'severity': 'warning',
                 'symptom': 'Peukert 指数偏离 1.0 ~ 1.15 理化常模 (实测基准 1.0511)',
                 'physics_root_cause': (
@@ -456,7 +460,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '极端快充负极界面枝晶析锂',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'min_potential_3c_v', default=0) >= 0.0,
+                'condition': lambda m: _val(m, 'min_potential_3c_v', default=-0.5) >= 0.0,
                 'severity': 'warning',
                 'symptom': '3C 极端大倍率快充未能复现析锂过电位跌破 0V 红线 (实测基准 -0.64V)',
                 'physics_root_cause': '本实验旨在暴露大倍率充电时由于固相嵌锂饱和与液相扩散传质受限导致的负极电位击穿 0V 失效边界，未跌穿说明未施加大倍率或未在低温恶劣工况下考核。',
@@ -468,7 +472,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
                     '将快充倍率调至 3.0C，或降低环境温度至 0°C / -10°C 模拟极寒未预热快充；',
                     '密切观察隔膜界面处负极局部电位 Φ_s - Φ_e 的跌落轨迹。'
                 ],
-                'oem_benchmark': '宁德时代超充安全边界规范 & GB 38031：全生命周期严禁负极界面过电位跌破 0V vs Li/Li+ 以杜绝金属锂枝晶短路。'
+                'oem_benchmark': '参考 GB 38031 与行业低温快充安全实践：教学参考红线为全生命周期负极界面电位不跌破 0V vs Li/Li+，以杜绝金属锂枝晶短路。'
             }
         ]
     },
@@ -478,7 +482,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '单目标参数优化',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'saving_pct', default=0) <= 0.0,
+                'condition': lambda m: _val(m, 'saving_pct', default=100) <= 0.0,
                 'severity': 'warning',
                 'symptom': '优化算法后未实现有效节油 (实测对标基准 4.23%)',
                 'physics_root_cause': '优化算法搜索步长过大越过局部极值，或发动机最优工作线 (OOL) 目标函数权重矩阵配置有误。',
@@ -493,7 +497,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '多目标优化 Pareto 前沿求解',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'n_pareto', default=0) < 50,
+                'condition': lambda m: _val(m, 'n_pareto', default=99) < 50,
                 'severity': 'warning',
                 'symptom': 'Pareto 最优前沿解数量不足 50 个 (实测基准 60 个)',
                 'physics_root_cause': 'NSGA-II 遗传算法种群规模过小或迭代代数过少，导致解集在燃油经济性与动力性双目标之间分布过于稀疏。',
@@ -527,7 +531,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
                     '缩短预测时域 N 至 10~15 步（时距覆盖 1.0s~1.5s 足够保证闭环稳定性）；',
                     '将硬约束松弛为罚函数软约束，启用 IPOPT 的 warm-start 热启动技术。'
                 ],
-                'oem_benchmark': 'ISO 26262 ASIL-D 级电控单元硬实时调度时限：主控制循环执行时间必须严格 ≤ 50ms。'
+                'oem_benchmark': '参考 ISO 26262 ASIL-D 级电控单元硬实时设计思路：教学参考为 MPC 主控制循环通常要求数十毫秒量级（本处 50ms 为教学参考值，具体以 ECU 调度设计为准）。'
             }
         ]
     },
@@ -535,7 +539,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': '动态规划 (DP) 全局能量管理',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'fuel_l_100km', default=99) > 2.2,
+                'condition': lambda m: _val(m, 'fuel_l_100km', default=1.92) > 2.2,
                 'severity': 'warning',
                 'symptom': 'DP 最优油耗未击穿 2.2 L/100km 极限 (实测基准 1.92 L/100km)',
                 'physics_root_cause': '状态离散网格（SOC grid 与工况时步）划分过粗，导致插值重采样过程产生非物理数值耗散，或者终端 SOC 惩罚项权重不足导致电池出现虚假电量透支。',
@@ -572,7 +576,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': 'OpenModelica 手建 FMU 精度校验',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'max_error', default=1) > 1e-6,
+                'condition': lambda m: _val(m, 'max_error', default=0) > 1e-6,
                 'severity': 'critical',
                 'symptom': 'FMU 求解结果与物理微积分方程解析解误差超标 (>1e-6)',
                 'physics_root_cause': '积分器步长设定过大或 Modelica 连续时间状态方程中引入了不恰当的高阶截断误差。',
@@ -608,7 +612,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': 'ROS 2 话题实时通信',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'messages_received', default=0) < 1,
+                'condition': lambda m: _val(m, 'messages_received', default=99) < 1,
                 'severity': 'critical',
                 'symptom': 'ROS 2 订阅者未收到任何发布消息 (通信断流)',
                 'physics_root_cause': '话题命名空间不匹配、DDS 域 (Domain ID) 隔离或 QoS 策略 (Reliability/Durability) 不兼容导致无法握手。',
@@ -642,7 +646,7 @@ DIAGNOSTIC_KNOWLEDGE_BASE = {
         'name': 'OpenSCENARIO 场景批量生成',
         'rules': [
             {
-                'condition': lambda m: _val(m, 'n_scenarios', default=0) < 9,
+                'condition': lambda m: _val(m, 'n_scenarios', default=99) < 9,
                 'severity': 'warning',
                 'symptom': '生成的有效测试用例数量少于 9 个',
                 'physics_root_cause': '加塞车速与横向切入时距离散网格点数不足，无法形成覆盖临界安全边界的参数空间。',
@@ -744,7 +748,16 @@ def diagnose_experiment(
                 break
 
     findings = []
-    if spec:
+    if spec and not metrics:
+        findings.append({
+            'severity': 'info',
+            'symptom': '未提供实测指标，无法进行机理归因',
+            'physics_root_cause': '诊断输入为空：可能结果文件缺失、旧格式或部分运行。请先完整运行实验并确认结果已保存，再重新诊断。',
+            'tuning_matrix': [],
+            'prescriptions': ['完整运行实验并保存结果后，重新运行诊断。'],
+            'oem_benchmark': '',
+        })
+    elif spec:
         for rule in spec['rules']:
             try:
                 if rule['condition'](metrics):
@@ -837,7 +850,7 @@ def render_copilot_card(diag_result: Dict[str, Any]) -> str:
                         IEV Diagnostic Tutor: 系统物理运行健康
                     </h4>
                     <p style="margin: 3px 0 0 0; font-size: 12px; color: #a7f3d0; line-height: 1.4;">
-                        【{display_title}】所有实测指标均处于汽车工程第一性原理最优区间，无动力学/电化学约束冲突。继续保持！
+                        【{display_title}】未检出机理失效：已提供的指标均在机理约束范围内。继续保持！
                     </p>
                 </div>
             </div>

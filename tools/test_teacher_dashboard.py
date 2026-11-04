@@ -40,7 +40,7 @@ class TestTeacherDashboard(unittest.TestCase):
             self.assertIn("优秀满分工程方案", html_out)
             self.assertIn("典型受阻方案", html_out)
             self.assertIn("核心控制参数标定", html_out)
-            self.assertIn("实测动力学响应输出", html_out)
+            self.assertIn("教学示意动态曲线对比", html_out)
         print("✓ [Side-by-Side Comparison] Verified dual-column golden vs failed comparisons.")
 
     def test_03_teacher_live_dashboard_html(self):

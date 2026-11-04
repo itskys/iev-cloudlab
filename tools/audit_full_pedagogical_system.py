@@ -96,7 +96,7 @@ class FullSystemPedagogyAudit(unittest.TestCase):
         self.assertIn("<svg", svg)
         self.assertIn("🔋 链 1：动力电池与整车能耗链", svg)
         self.assertIn("🚗 链 2：智驾极限感知与规划控制链", svg)
-        self.assertIn("🌐 链 3：车联网车路协同与交通流链", svg)
+        self.assertIn("🌐 链 3：交通流与编队协同链", svg)
         self.assertIn("Capstone", svg)
 
         # 2. A1 BEV 激光测距与急刹滑移胎痕
@@ -171,7 +171,7 @@ class FullSystemPedagogyAudit(unittest.TestCase):
             'scores': mock_scores,
         }
         cockpit_html = render_student_cockpit_html(mock_progress, student_name="王同学")
-        self.assertIn("跨域工程数据血缘与全域链路拓扑图", cockpit_html)
+        self.assertIn("跨域学习路径与全域链路拓扑图", cockpit_html)
         self.assertIn("待攻坚实验智能失效归因与调优处方", cockpit_html)
         self.assertIn("A1_cutin_aeb", cockpit_html)
         self.assertIn("B3_sumo_cacc", cockpit_html)

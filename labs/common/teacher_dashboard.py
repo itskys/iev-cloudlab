@@ -58,23 +58,23 @@ SIDE_BY_SIDE_CASES = {
         }
     },
     'B3_sumo_cacc': {
-        'name': 'CACC 车队协同编队控制',
+        'name': 'CACC 车队协同编队控制（§7.2 V2X 拓展格对标）',
         'domain': '车联网车路协同与交通流',
         'focus_metric': '编队间距误差与传递函数弦稳定性',
         'failed': {
-            'title': '典型受阻标定方案 (车队弦不稳定振荡发散)',
+            'title': '典型受阻标定方案（§7.2 V2X 拓展格：车队弦不稳定振荡发散）',
             'params': {'ka_feedforward': '1.15 (前馈过敏)', 'kv_damping': '0.40 (阻尼偏弱)', 'time_delay': '120 ms'},
             'metrics': {'max_spacing_error': '3.82 m (超标发散 ❌)', 'string_stability': '振荡放大 ‖H(jω)‖_∞ = 1.34', 'tail_car_jerk': '4.2 m/s³'},
             'behavior_curve': '领航车轻微减速扰动向下游传播时未被衰减，在第 4~5 辆尾车引发急刹幽灵堵车。',
-            'root_cause': '前馈增益超调且未补偿通信延迟，闭环幅值上界击穿 1.0 产生谐振。',
+            'root_cause': '本对标针对 §7.2 V2X 拓展格（前馈 + 通信模型）；主实验为 PD 反馈，调参请用 headway/kp/kd。前馈增益超调且未补偿通信延迟，闭环幅值上界击穿 1.0 产生谐振。',
             'bg_color': '#fef2f2', 'border_color': '#ef4444', 'badge_color': '#dc2626'
         },
         'golden': {
-            'title': '优秀量产级标定方案 (单调衰减平稳跟随)',
+            'title': '优秀量产级标定方案（§7.2 V2X 拓展格：单调衰减平稳跟随）',
             'params': {'ka_feedforward': '0.65 (稳态前馈)', 'kv_damping': '1.05 (临界阻尼)', 'delay_comp': 'Smith 预估补偿'},
             'metrics': {'max_spacing_error': '0.78 m (高精跟踪 ✔)', 'string_stability': '单调衰减 ‖H(jω)‖_∞ = 0.88', 'tail_car_jerk': '1.1 m/s³'},
             'behavior_curve': '扰动传至第 2 辆车即被吸收 60%，尾车速度与间距曲线保持高平滑度巡航。',
-            'root_cause': '严格满足频域弦稳定性李雅普诺夫判据，通信时延被有效内模补偿。',
+            'root_cause': '本对标针对 §7.2 V2X 拓展格（前馈 + 通信模型）；主实验为 PD 反馈，调参请用 headway/kp/kd。严格满足频域弦稳定性判据，通信时延被有效内模补偿。',
             'bg_color': '#f0fdf4', 'border_color': '#22c55e', 'badge_color': '#16a34a'
         }
     },
@@ -108,7 +108,7 @@ SIDE_BY_SIDE_CASES = {
             'params': {'charge_rate': '3.0 C (激进过充)', 'temperature': '-10 °C (低温未预热)', 'preheat_active': 'False'},
             'metrics': {'min_potential': '-0.58 V (严重跌穿 0V ❌)', 'plating_time': '248 s (持续沉积)', 'dendrite_length': '28 μm (刺破隔膜)'},
             'behavior_curve': '低温固相离子扩散阻抗剧增，石墨嵌锂速率赶不上电荷堆积，金属锂单质在表面快速析出并长成针状结晶。',
-            'root_cause': '违背 Arrhenius 活化能扩散定律与宁德时代低温充电规范，存在灾难性内短路隐患。',
+            'root_cause': '违背 Arrhenius 活化能扩散定律与 GB 38031 低温充电安全要求，存在灾难性内短路隐患。',
             'bg_color': '#fef2f2', 'border_color': '#ef4444', 'badge_color': '#dc2626'
         },
         'golden': {
@@ -215,7 +215,7 @@ def compute_class_failure_analytics(all_results: Optional[Dict[str, Any]] = None
     exp_stats = {}
 
     for stu, exps in all_results.items():
-        if stu in ('admin', 'lost+found'):
+        if stu in ('admin', 'teacher', 'testuser', 'lost+found'):
             continue
         for exp_id, metrics in exps.items():
             if exp_id not in exp_stats:
@@ -295,7 +295,7 @@ def render_side_by_side_comparison_html(exp_id: str = 'A1_cutin_aeb') -> str:
             </div>
 
             <div style="font-size: 12px; margin-bottom: 10px;">
-                <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">📊 实测动力学响应输出：</div>
+                <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">📊 教学示意动态曲线对比（非本本实测输出）：</div>
                 {metrics_html}
             </div>
 
@@ -339,7 +339,8 @@ def render_teacher_live_dashboard_html(
     class_name: str = "智能网联新能源汽车专业 2026 级"
 ) -> str:
     """生成全景观摩与多媒体大屏授课演示中心 (HTML)"""
-    if all_results is None:
+    is_demo = all_results is None
+    if is_demo:
         all_results = _get_demo_class_results()
 
     # 1. 基础全班统计
@@ -411,8 +412,12 @@ def render_teacher_live_dashboard_html(
     # 4. 嵌入一个默认的 A1 同屏对比
     sample_compare_html = render_side_by_side_comparison_html('A1_cutin_aeb')
 
+    demo_banner = ""
+    if is_demo:
+        demo_banner = """<div style="background: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 14px; color: #92400e;">⚠️ 当前为演示数据：未读取到班级成绩汇总（all_results.json），以下 32 名学生学情为模拟数据，仅用于功能演示，请勿作为真实学情发布。</div>"""
     html = f"""
     <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 22px; margin: 12px 0; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06);">
+        {demo_banner}
         <!-- 顶栏：教学大屏抬头与全班总体概况 -->
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
             <div>
@@ -487,7 +492,8 @@ def export_teacher_debrief_markdown(
     class_name: str = "智能网联新能源汽车专业 2026 级"
 ) -> str:
     """导出可直接复制为 PPT 或教学汇报的 Markdown 格式课堂讲评教案"""
-    if all_results is None:
+    is_demo = all_results is None
+    if is_demo:
         all_results = _get_demo_class_results()
 
     grade_table = build_grade_table(all_results)
@@ -495,7 +501,8 @@ def export_teacher_debrief_markdown(
     analytics = compute_class_failure_analytics(all_results)
 
     lines = [
-        f"# 🎓 {class_name} 实验教学全景学情与课堂讲评教案",
+        f"# 🎓 {class_name} 实验教学全景学情与课堂讲评教案" + ("（演示数据）" if is_demo else ""),
+        "> ⚠️ 本教案基于演示数据生成（未读取到班级成绩汇总 all_results.json），仅用于功能演示，请勿作为真实学情发布。" if is_demo else "",
         "",
         "## 一、全班总体学情关键指标",
         f"- **在册学生人数**：{stats.get('n_students', 0)} 人",
