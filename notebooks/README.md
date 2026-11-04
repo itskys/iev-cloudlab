@@ -24,13 +24,14 @@
 平台首创面向工程教育认证与汽车产业人才需求的高校智能电动汽车**「三轨贯通」培养体系**：
 - **轨 1 · 新手直觉探索轨 (Phase 0 / Lite)**：零代码交互探索。全套 30 门实验标配顶部 Phase 0 直觉驾驶舱（实时滑杆 + 动力学曲线 + 导学任务打卡）；另提供 5 门独立 Lite 体验本（A1/B2/C1/D1/E3 的 `*_lite.ipynb`）。零门槛建立控制与能量第一性原理直觉。
 - **轨 2 · 工业仿真进阶轨 (Simulation Pro)**：29 门 V1.0 官方标准实验 + Capstone 跨域综合大作业。采用 Python 现代科学计算与仿真生态（PyBaMM, FASTSim, SUMO, esmini, CasADi, FMPy, ROS2），完成闭环动力学仿真、参数灵敏度辨识与工程报告撰写。
-- **轨 3 · ⚡ MISRA-C 量产嵌入式轨 (Production C Track)**：对标汽车工业级 ECU/VCU/BMS/域控真实量产标准，采用严格遵循 MISRA-C 规范的 ANSI C 算法核心，零动态内存分配、全定长缓冲区、确定性硬实时单步执行（0.034 ~ 4.5 μs）：
-  - `A1_cutin_aeb_pro.ipynb`：AEB TTC 距离判定与多级制动有限状态机 (0.034 μs/步, ~44x 加速)
-  - `A3_aeb_closedloop_pro.ipynb`：Euro NCAP CCRb 增强型二次项 TTC + 150ms EHB 液压建压滞后 (1.296 μs/步)
-  - `B1_idm_calibration_pro.ipynb`：弦稳定 (String-Stable) IDM 5 车 CACC 编队控制 (0.953 μs/步)
-  - `C4_ems_comparison_pro.ipynb`：HEV 混合动力四模态状态机 + ±2% SOC 滞环防震荡 (1.195 μs/步)
-  - `D3_ocv_soc_export_pro.ipynb`：BMS 库仑积分 + 一阶 RC 观测器 + 静置 OCV 重校准 (1.417 μs/步)
-  - `E3_mpc_follow_pro.ipynb`：自动驾驶纵向预测控制紧缩型 QP 求解器 (Projected Gauss-Seidel, 4.48 μs/次解, ~7,800x 加速)
+- **轨 3 · ⚡ MISRA-C 量产嵌入式轨 (Production C Track)**：对标汽车工业级 ECU/VCU/BMS/域控真实量产标准，采用严格遵循 MISRA-C 规范的 ANSI C 算法核心，零动态内存分配、全定长缓冲区、确定性硬实时单步执行（微秒级，实测值见各实验 §7.3）：
+  - `A1_cutin_aeb_pro.ipynb`：AEB TTC 距离判定与多级制动有限状态机
+  - `A3_aeb_closedloop_pro.ipynb`：Euro NCAP CCRb 增强型二次项 TTC + 150ms EHB 液压建压滞后
+  - `B1_idm_calibration_pro.ipynb`：弦稳定 (String-Stable) IDM 5 车 CACC 编队控制
+  - `C4_ems_comparison_pro.ipynb`：HEV 混合动力四模态状态机 + ±2% SOC 滞环防震荡
+  - `D3_ocv_soc_export_pro.ipynb`：BMS 库仑积分 + 一阶 RC 观测器 + 静置 OCV 重校准
+  - `E3_mpc_follow_pro.ipynb`：自动驾驶纵向预测控制紧缩型 QP 求解器 (Projected Gauss-Seidel)
+  注：各门单步时延与加速比以本本 §7.3 实测输出为准（经 ctypes 封装口径，含调用开销）；本页不刊登单点比值。
 
 ---
 

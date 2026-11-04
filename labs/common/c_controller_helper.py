@@ -149,7 +149,12 @@ def record_c_track_achievement(
 
     if bench_res:
         record["metrics"]["c_us_per_step"] = bench_res.get("c_us_per_step")
-        record["metrics"]["c_speedup_ratio"] = bench_res.get("speedup_ratio")
+        # 加速比只登记实测值：未实测的课程不写该字段，并清除旧记录中的残留比值，
+        # 避免徽章把历史比值当成当次结果展示。
+        if bench_res.get("speedup_ratio") is not None:
+            record["metrics"]["c_speedup_ratio"] = bench_res.get("speedup_ratio")
+        else:
+            record["metrics"].pop("c_speedup_ratio", None)
         record["metrics"]["c_realtime_margin_pct"] = bench_res.get("realtime_margin_pct")
 
     if extra_metrics:
@@ -177,13 +182,13 @@ def record_c_track_achievement(
                             </div>
                             <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">
                                 C 原生动态库单步时延: <b style="color: #38bdf8;">{record['metrics'].get('c_us_per_step', '--')} μs</b>
-                                (相对 Python 提速 <b style="color: #4ade80;">{record['metrics'].get('c_speedup_ratio', '--')}x</b>，1ms 控制裕度 <b style="color: #fbbf24;">{record['metrics'].get('c_realtime_margin_pct', '--')}%</b>)
+                                (相对 Python 实测比值 <b style="color: #4ade80;">{record['metrics'].get('c_speedup_ratio', '--')}x</b>，1ms 控制裕度 <b style="color: #fbbf24;">{record['metrics'].get('c_realtime_margin_pct', '--')}%</b>)
                             </div>
                         </div>
                     </div>
                     <span style="background: rgba(99, 102, 241, 0.25); border: 1px solid #818cf8; color: #c7d2fe;
                                  padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: 700;">
-                        +5 分荣誉加分已登记
+                        +1 分荣誉加分已登记（C 轨累计封顶 +5 分）
                     </span>
                 </div>
             </div>
