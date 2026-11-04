@@ -507,9 +507,10 @@ def export_teacher_debrief_markdown(
         ""
     ]
 
+    n_students_total = max(1, stats.get('n_students', len(all_results)))
     for idx, f in enumerate(analytics.get('top_failures', []), 1):
         lines.append(f"### {idx}. 【{f['exp_id']}】{f['symptom']}")
-        lines.append(f"- **受影响人数**：{f['occurrences']} 人 (占比 {(f['occurrences']/len(all_results))*100:.1f}%)")
+        lines.append(f"- **受影响人数**：{f['occurrences']} 人 (占比 {(f['occurrences']/n_students_total)*100:.1f}%)")
         lines.append(f"- **严重级别**：{f['severity'].upper()}")
         lines.append(f"- **物理第一性原理因果**：{f['physics_root_cause']}")
         lines.append(f"- **主机厂工程规范**：{f['oem_benchmark']}")

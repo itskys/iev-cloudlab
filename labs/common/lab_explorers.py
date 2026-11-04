@@ -96,7 +96,7 @@ def _wrap_hbox(children, gap="10px", margin="4px 0"):
             display='flex',
             flex_flow='row wrap',
             align_items='center',
-            gap=gap,
+            grid_gap=gap,
             margin=margin,
             width='100%'
         )
