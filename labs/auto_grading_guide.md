@@ -3,14 +3,19 @@
 ## 位置
 `labs/common/evaluator.py`
 
-## 学生自查（在notebook末尾运行）
+## 学生自查与智能伴学诊断（在notebook末尾运行）
 ```python
-from common.evaluator import grade_metrics
-score = grade_metrics('C1_fastsim_energy', {'energy_kwh_100km': 12.5})
-print(score['score'], '分')  # 100.0
+from common.evaluator import grade_metrics, display_grade_card
+
+# 1. 评分并自动触发机理失效诊断 (未达标时自动注入 diagnosis 与 diagnosis_html)
+grade_res = grade_metrics('A1_cutin_aeb', {'collision': True, 'min_ttc_s': 0.8})
+print(grade_res['score'], '分, 通过:', grade_res['passed'])
+
+# 2. 以高保真工控卡片形式渲染成绩，并在下方联动弹出机理归因与调参处方矩阵
+display_grade_card(grade_res)
 ```
 
-## 教师批改
+## 教师批改与课堂大屏演示
 ```bash
 # 评单个实验的结果文件
 python -m common.evaluator C1_fastsim_energy
@@ -20,6 +25,12 @@ python -m common.evaluator --all
 
 # 执行学生notebook后评分（带超时看门狗）
 python -m common.evaluator /path/to/student_notebook.ipynb
+```
+
+```python
+# 教师端启动投屏互动演示大屏与同屏对标视窗
+from common.teacher_dashboard import show_teacher_presentation
+show_teacher_presentation()
 ```
 
 ## 评分体系与 29+1 课程架构
@@ -49,3 +60,9 @@ python -m common.evaluator /path/to/student_notebook.ipynb
    - **AST 查重引擎**：自动加载官方母版指纹差分过滤，排除模板自带代码与纯标量参数微调，精准比对学生自主编写代码的 3-Gram Jaccard 相似度；
    - **报告数值一致性校验**：自动比对学生报告中的数据与底层 `results/*.json`，偏差 >5% 即高亮预警；
    - **B3 步数判据**：含 `steps≥300`，彻底阻断 0 步空跑假通过漏洞。
+4. **全体系智能机理故障归因与调优导师 (Diagnostic Tutor)**：
+   - 在 `grade_metrics()` 中无缝联动，实验未通过或数值异常时自动调用 `diagnose_experiment()`；
+   - 覆盖全部 29 门实验 + Capstone，输出第一性原理物理因果剖析、结构化可执行调参矩阵与主机厂工程对标规范。
+5. **教师课堂实时演示大屏与同屏对标视窗 (`teacher_dashboard.py`)**：
+   - 教师端支持一键调用 `show_teacher_presentation()`；
+   - 提供全班 KPI 态势、Top 5 机理失效排行榜、A1/B3/C1/D4/E3 标杆解 vs 翻车解同屏动态对标与复盘讲义导出。
