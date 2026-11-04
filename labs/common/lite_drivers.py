@@ -87,10 +87,12 @@ def run_a1_lite(ttc_threshold, scenario=None, road=None):
     obs = env.reset(ego_x=10.0, ego_y=0.0, ego_yaw=0.0, ego_v=14.0)
     controller.reset()
     times, speeds, gaps = [], [], []
+    ttcs, aeb_actives = [], []
     replay_ego, replay_tgt = [], []
     min_ttc, min_gap, is_collision, brake_steps = float("inf"), float("inf"), False, 0
     for _ in range(400):
         action = controller.step(obs)
+        is_braking = 1.0 if action.get("target_a", 0.0) < -1.0 else 0.0
         if action["target_a"] < -0.5:
             brake_steps += 1
         obs, done, _info = env.step(action)
@@ -102,6 +104,7 @@ def run_a1_lite(ttc_threshold, scenario=None, road=None):
                            "speed": round(ego["v"], 2)})
         tgts = obs.get("targets", [])
         gap_step = None
+        current_ttc = 99.0
         if tgts:
             tgt = tgts[0]
             replay_tgt.append({"x": round(tgt["x"], 2), "y": round(tgt.get("y", 0.0), 2),
@@ -111,15 +114,19 @@ def run_a1_lite(ttc_threshold, scenario=None, road=None):
             min_gap = min(min_gap, rel_d)
             rel_v = ego["v"] - tgt["v"]
             if rel_v > 0.1:
-                min_ttc = min(min_ttc, rel_d / rel_v)
+                current_ttc = rel_d / rel_v
+                min_ttc = min(min_ttc, current_ttc)
             if rel_d < 0.5:
                 is_collision = True
         gaps.append(gap_step)
+        ttcs.append(round(min(99.0, current_ttc), 2))
+        aeb_actives.append(is_braking)
         if done or is_collision:
             break
     env.close()
     return {
         "times": times, "speeds": speeds, "gaps": gaps,
+        "ttcs": ttcs, "aeb_actives": aeb_actives,
         "replay_ego": replay_ego, "replay_tgt": replay_tgt,
         "min_ttc": None if min_ttc == float("inf") else round(min_ttc, 2),
         "min_gap": round(min_gap, 2),
@@ -541,9 +548,14 @@ def a1_replay(res):
                     "v": [t["speed"] for t in tgt[:n]]}]
     return render_trajectory_replay(
         t=res["times"][:n], ego=ego_d, targets=targets,
-        metrics=None,
-        title="A1 新手回放 · Cut-in 加塞",
-        subtitle="你调的 TTC 阈值，决定了自车什么时候刹车")
+        metrics={
+            "ttc": res.get("ttcs", [99.0]*n)[:n],
+            "spacing": [g if g is not None else 99.0 for g in res["gaps"][:n]],
+            "aeb_active": res.get("aeb_actives", [0.0]*n)[:n],
+        },
+        title="A1 新手回放 · Cut-in 加塞 (BEV 鸟瞰视场 + 实时 HUD)",
+        subtitle="感知探测锥动态变色 · 激光测距标尺 · 紧急制动摩擦拖痕",
+        show_radar=True)
 
 
 # ---------------------------------------------------------------- 指标卡片

@@ -675,21 +675,51 @@ def show_d4_explorer():
 
         with out:
             clear_output(wait=True)
-            fig, ax = plt.subplots(figsize=(10, 4.0))
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13.5, 4.2))
 
-            ax.plot(t_base, v_drop_base, label="基准慢充 (1.0C @ 25°C)", color="#94a3b8", ls="--", lw=1.8)
-            ax.plot(t, v_drop, label=f"当前测试 ({c_rate:.1f}C @ {temp}°C)", color="#2563eb" if min_v >= 0 else "#dc2626", lw=2.2)
+            # 1. 固液相界面电位时域曲线
+            ax1.plot(t_base, v_drop_base, label="基准慢充 (1.0C @ 25°C)", color="#94a3b8", ls="--", lw=1.8)
+            ax1.plot(t, v_drop, label=f"当前测试 ({c_rate:.1f}C @ {temp}°C)", color="#2563eb" if min_v >= 0 else "#dc2626", lw=2.2)
 
-            ax.axhline(0.0, color="#ef4444", lw=2.0, ls="-", label="0V 析锂临界安全红线 (Lithium Plating Limit)")
-            ax.axhspan(-1.0, 0.0, color="#ef4444", alpha=0.15, label="危险析锂区 (析出金属锂结晶)")
-            ax.axhspan(0.0, 0.2, color="#22c55e", alpha=0.12, label="安全可逆嵌锂区")
+            ax1.axhline(0.0, color="#ef4444", lw=2.0, ls="-", label="0V 析锂临界安全红线")
+            ax1.axhspan(-1.0, 0.0, color="#ef4444", alpha=0.15, label="危险析锂区 (析出金属锂结晶)")
+            ax1.axhspan(0.0, 0.2, color="#22c55e", alpha=0.12, label="安全可逆嵌锂区")
 
-            ax.set_xlabel("快充持续时间 Time (s)")
-            ax.set_ylabel("负极/隔膜交界固液电位差 Φs - Φe (V)")
-            ax.set_title(f"负极界面电化学析锂热力学走势（简化解析模型）")
-            ax.legend(loc="lower left", fontsize=9)
-            ax.grid(True, alpha=0.3)
-            ax.set_ylim(-0.8, 0.2)
+            ax1.set_xlabel("快充持续时间 Time (s)")
+            ax1.set_ylabel("负极/隔膜交界固液电位差 Φs - Φe (V)")
+            ax1.set_title("负极界面电化学析锂热力学走势")
+            ax1.legend(loc="lower left", fontsize=8.5)
+            ax1.grid(True, alpha=0.3)
+            ax1.set_ylim(-0.8, 0.2)
+
+            # 2. 电芯微观剖面厚度方向电位梯度与枝晶析锂 (1D Newman)
+            x_norm = np.linspace(0, 1.0, 100)
+            eta_profile = min_v * (0.35 + 0.65 * (x_norm ** 1.4))
+            ax2.plot(x_norm, eta_profile, color="#dc2626" if min_v < 0 else "#2563eb", lw=2.4,
+                     label=f"厚度过电位 (隔膜处最低 {min_v:.3f}V)")
+            ax2.axhline(0.0, color="#ef4444", lw=1.5, ls="--", label="0V 析锂红线")
+            ax2.axhspan(-1.0, 0.0, color="#ef4444", alpha=0.10)
+            ax2.axhspan(0.0, 0.2, color="#22c55e", alpha=0.10)
+
+            # 绘制多孔石墨颗粒
+            particle_x = np.linspace(0.08, 0.92, 10)
+            ax2.scatter(particle_x, [0.08]*len(particle_x), s=100, color="#cbd5e1", edgecolors="#64748b", zorder=4, label="石墨多孔颗粒 ($LiC_6$)")
+
+            if min_v < 0:
+                ax2.scatter([0.96, 0.98, 1.0], [min_v, min_v*0.75, min_v*0.45], marker="^", s=130, color="#ef4444", zorder=5, label="析出金属锂枝晶 (Dendrite)")
+                ax2.annotate("[危险] 枝晶刺穿隔膜！\n引发内短路热失控", xy=(0.95, min_v), xytext=(0.35, min_v - 0.16),
+                             arrowprops=dict(facecolor="#dc2626", shrink=0.08, width=1.5, headwidth=6),
+                             fontsize=9.5, fontweight="bold", color="#b91c1c", bbox=dict(boxstyle="round,pad=0.3", fc="#fee2e2", ec="#ef4444"))
+            else:
+                ax2.text(0.5, 0.02, "[安全] 均匀可逆嵌锂 ($LiC_6$ 无游离锂单质)", ha="center", va="bottom",
+                         fontsize=9.5, fontweight="bold", color="#15803d", bbox=dict(boxstyle="round,pad=0.3", fc="#dcfce7", ec="#86efac"))
+
+            ax2.set_xlabel("极板归一化厚度 x/La (0.0=集流体 → 1.0=隔膜界面)")
+            ax2.set_ylabel("固液界面局部电位 (V)")
+            ax2.set_title("极板厚度方向电位梯度与枝晶析锂态势")
+            ax2.set_ylim(-0.8, 0.2)
+            ax2.grid(True, alpha=0.3)
+            ax2.legend(loc="lower left", fontsize=8.5)
 
             plt.tight_layout()
             plt.show()
@@ -1885,12 +1915,41 @@ def show_c1_explorer():
             for b in bars:
                 ax1.text(b.get_x() + b.get_width()/2., b.get_height() + 0.3, f"{b.get_height():.2f}", ha="center", va="bottom", fontweight="bold")
 
-            roll_share = 38.0 + (slider_kg.value / 100.0) * 2.5
-            aero_share = 28.0 + ((slider_cd.value - 0.29) / 0.05) * 4.0
-            accel_share = max(10.0, 100.0 - roll_share - aero_share)
-            ax2.pie([aero_share, roll_share, accel_share], labels=["空气阻力功", "轮胎滚动阻力", "启停惯性功"],
-                    colors=["#38bdf8", "#fbbf24", "#f43f5e"], autopct="%1.0f%%", startangle=140, explode=(0.03, 0.03, 0.03))
-            ax2.set_title("当前工况三大损耗物理去向分解")
+            # 动力总成动力流损耗与动能回馈分解 (Powertrain Energy Flow Waterfall)
+            e_tot = stu_kwh
+            loss_motor = round(e_tot * 0.12, 2)
+            loss_aux = 0.85
+            net_wheel = max(5.0, e_tot - loss_motor - loss_aux)
+            aero_ratio = 0.28 + ((slider_cd.value - 0.29) / 0.05) * 0.06
+            roll_ratio = 0.42 + (slider_kg.value / 100.0) * 0.04
+            brake_ratio = max(0.10, 1.0 - aero_ratio - roll_ratio)
+            tot_r = aero_ratio + roll_ratio + brake_ratio
+
+            work_aero = round(net_wheel * (aero_ratio / tot_r), 2)
+            work_roll = round(net_wheel * (roll_ratio / tot_r), 2)
+            work_brake = round(net_wheel * (brake_ratio / tot_r), 2)
+            regen_kwh = round(work_brake * 0.70 + 0.5, 2)
+
+            wf_labels = ["① 电池放电", "② 电驱损耗", "③ 低压附件", "④ 空气阻力", "⑤ 轮胎滚阻", "⑥ 机械制动", "⑦ 动能回馈"]
+            wf_vals = [e_tot, -loss_motor, -loss_aux, -work_aero, -work_roll, -work_brake, regen_kwh]
+            wf_colors = ["#2563eb", "#f97316", "#8b5cf6", "#0284c7", "#d97706", "#dc2626", "#16a34a"]
+
+            y_pos = np.arange(len(wf_labels))[::-1]
+            bars2 = ax2.barh(y_pos, [abs(v) for v in wf_vals], color=wf_colors, height=0.55)
+            ax2.set_yticks(y_pos)
+            ax2.set_yticklabels(wf_labels, fontsize=9)
+            ax2.set_xlabel("能量去向绝对值 (kWh/100km)")
+            ax2.set_title("整车动力流损耗与动能回馈瀑布分解 (Waterfall)")
+            ax2.grid(True, axis="x", alpha=0.3, linestyle="--")
+            max_v = max([abs(v) for v in wf_vals])
+            ax2.set_xlim(0, max_v * 1.38)
+
+            for b, v in zip(bars2, wf_vals):
+                w = b.get_width()
+                sign = "+" if v > 0 and b != bars2[0] else ("" if b == bars2[0] else "-")
+                pct_str = f"{abs(v)/e_tot*100:.1f}%" if e_tot > 0 else "0%"
+                ax2.text(w + 0.15, b.get_y() + b.get_height()/2., f"{sign}{abs(v):.2f} kWh ({pct_str})",
+                         ha="left", va="center", fontsize=8.5, fontweight="bold", color="#334155")
 
             plt.tight_layout()
             plt.show()

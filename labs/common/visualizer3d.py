@@ -515,7 +515,52 @@ def render_trajectory_replay(
                 const tgtScrX = cx + (tx - egoX) * scale;
                 const tgtScrY = cy - (ty * scale);
                 drawCar2D(tgtScrX, tgtScrY, scale, tgt.color, tgt.name, false);
+
+                // 绘制动态激光测距虚线与距离胶囊标尺
+                const distM = (tx - egoX - 4.5);
+                if (distM > 0 && distM < 80) {{
+                    ctx.save();
+                    ctx.strokeStyle = (distM < 10) ? "rgba(248, 81, 73, 0.85)" : "rgba(56, 189, 248, 0.75)";
+                    ctx.setLineDash([5, 4]);
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + 2.3 * scale, cy - (egoY * scale));
+                    ctx.lineTo(tgtScrX - 2.3 * scale, tgtScrY);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // 绘制距离胶囊
+                    const midX = (cx + 2.3 * scale + tgtScrX - 2.3 * scale) / 2;
+                    const midY = (cy - (egoY * scale) + tgtScrY) / 2 - 14;
+                    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+                    ctx.strokeStyle = (distM < 10) ? "#ef4444" : "#0ea5e9";
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    if (ctx.roundRect) {{
+                        ctx.roundRect(midX - 28, midY - 9, 56, 18, 4);
+                    }} else {{
+                        ctx.rect(midX - 28, midY - 9, 56, 18);
+                    }}
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = (distM < 10) ? "#fca5a5" : "#38bdf8";
+                    ctx.font = "bold 10px monospace";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(distM.toFixed(1) + " m", midX, midY);
+                }}
             }});
+        }}
+
+        // 绘制紧急制动地面轮胎摩擦拖痕 (Skid Marks)
+        const isBraking = (data.metrics && data.metrics.aeb_active && data.metrics.aeb_active[currentFrame] > 0.5) ||
+                          (hudStatus && hudStatus.innerText.includes("AEB"));
+        if (isBraking) {{
+            ctx.fillStyle = "rgba(10, 15, 25, 0.70)";
+            const carLen = 4.6 * scale;
+            const carWid = 1.9 * scale;
+            ctx.fillRect(cx - carLen * 0.5 - 22, cy - (egoY * scale) - carWid * 0.45, 22, carWid * 0.22);
+            ctx.fillRect(cx - carLen * 0.5 - 22, cy - (egoY * scale) + carWid * 0.23, 22, carWid * 0.22);
         }}
 
         // 绘制雷达/感知检测锥
