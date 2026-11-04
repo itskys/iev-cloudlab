@@ -83,6 +83,14 @@ from .semester_archiver import (
     export_teacher_semester_archive,
     render_download_link_html,
 )
+from .teacher_dashboard import (
+    render_teacher_live_dashboard_html,
+    show_teacher_presentation,
+    render_side_by_side_comparison_html,
+    compute_class_failure_analytics,
+    export_teacher_debrief_markdown,
+    SIDE_BY_SIDE_CASES,
+)
 from .lab_explorers import (
     show_a1_explorer,
     show_a2_explorer,
@@ -156,6 +164,10 @@ __all__ = [
     "V2XMessage", "V2XWirelessChannel", "CACCPlatoonSimulator", "render_v2x_topology_html",
     # 学期结课总归档与毕业成就包 (P3.3)
     "export_student_portfolio", "export_teacher_semester_archive", "render_download_link_html",
+    # 教师演示大屏与学情全景洞察看板 (Step 4)
+    "render_teacher_live_dashboard_html", "show_teacher_presentation",
+    "render_side_by_side_comparison_html", "compute_class_failure_analytics",
+    "export_teacher_debrief_markdown", "SIDE_BY_SIDE_CASES",
     # 新手直觉探索与课前导学交互引擎 (Phase 0: 全矩阵 29 门 + 1 门 Capstone 全覆盖)
     "show_a1_explorer", "show_a2_explorer", "show_a3_explorer", "show_a4_explorer", "show_a5_explorer",
     "show_b1_explorer", "show_b2_explorer", "show_b3_explorer", "show_b4_explorer", "show_b5_explorer",
