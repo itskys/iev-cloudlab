@@ -308,6 +308,41 @@ def render_student_cockpit_html(progress: Dict[str, Any], student_name: str = "�
     radar_svg = render_student_radar_svg(p, student_name=student_name, width=480, height=360)
     dag_svg = render_data_lineage_dag_svg(progress.get('scores', {}))
 
+    # 扫描未达标实验的智能工程失效归因 (Step 3: Diagnostic Tutor Integration)
+    failed_diags_html = ""
+    try:
+        from common.copilot import diagnose_experiment, render_copilot_card
+    except ImportError:
+        try:
+            from .copilot import diagnose_experiment, render_copilot_card
+        except ImportError:
+            diagnose_experiment = None
+            render_copilot_card = None
+
+    if diagnose_experiment and render_copilot_card:
+        for exp_k, exp_v in progress.get('scores', {}).items():
+            sc = exp_v.get('score', 0) if isinstance(exp_v, dict) else (exp_v if isinstance(exp_v, (int, float)) else 0)
+            passed = exp_v.get('passed', False) if isinstance(exp_v, dict) else (sc >= 60)
+            if not passed:
+                mets = exp_v.get('metrics', {}) if isinstance(exp_v, dict) else {}
+                d_res = diagnose_experiment(exp_k, mets)
+                if not d_res.get('is_healthy', True):
+                    failed_diags_html += render_copilot_card(d_res)
+
+    failed_diags_section = f"""
+    <div style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h4 style="margin: 0; color: #b91c1c; font-size: 14px; font-weight: 700;">
+                🛠️ 待攻坚实验智能失效归因与调优处方
+            </h4>
+            <span style="font-size: 11px; color: #64748b;">
+                基于汽车工程第一性原理与量产标定经验自动捕获
+            </span>
+        </div>
+        {failed_diags_html}
+    </div>
+    """ if failed_diags_html else ""
+
     # 推荐列表 HTML
     rec_items = ""
     for r in progress['recommendations']:
@@ -384,6 +419,7 @@ def render_student_cockpit_html(progress: Dict[str, Any], student_name: str = "�
             </div>
             {dag_svg}
         </div>
+        {failed_diags_section}
     </div>
     """
     return html

@@ -63,6 +63,14 @@ from .copilot import (
     diagnose_experiment,
     render_copilot_card,
     ask_copilot,
+    explain_failure,
+)
+from .evaluator import (
+    GRADING_SPECS,
+    grade_metrics,
+    grade_result_file,
+    grade_notebook,
+    display_grade_card,
 )
 from .v2x_fleet import (
     V2XMessage,
@@ -141,7 +149,9 @@ __all__ = [
     # 教师端 AST 语法树代码查重 (P2.3)
     "check_code_similarity", "scan_class_code_plagiarism", "render_plagiarism_report_html",
     # 智能工程导师与启发式伴学 Copilot (P3.1)
-    "diagnose_experiment", "render_copilot_card", "ask_copilot",
+    "diagnose_experiment", "render_copilot_card", "ask_copilot", "explain_failure",
+    # 评测与自动化评分卡
+    "GRADING_SPECS", "grade_metrics", "grade_result_file", "grade_notebook", "display_grade_card",
     # 多车分布式 V2X CACC 编队引擎 (P3.2)
     "V2XMessage", "V2XWirelessChannel", "CACCPlatoonSimulator", "render_v2x_topology_html",
     # 学期结课总归档与毕业成就包 (P3.3)

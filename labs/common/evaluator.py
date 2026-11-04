@@ -414,6 +414,25 @@ def grade_metrics(experiment_id, metrics, executed_ok=None):
         'graded_at': datetime.now().isoformat(timespec='seconds'),
     }
 
+    # 智能工程失效归因与调优助理 (Step 3: Automotive Failure Attribution & Diagnostic Tutor)
+    try:
+        from common.copilot import diagnose_experiment, render_copilot_card
+    except ImportError:
+        try:
+            from .copilot import diagnose_experiment, render_copilot_card
+        except ImportError:
+            diagnose_experiment = None
+            render_copilot_card = None
+
+    if diagnose_experiment:
+        try:
+            diag_res = diagnose_experiment(experiment_id, metrics)
+            res['diagnosis'] = diag_res
+            if not diag_res.get('is_healthy', True) or not res['passed']:
+                res['diagnosis_html'] = render_copilot_card(diag_res)
+        except Exception:
+            pass
+
     # 达标自动打下安全快照锚点 (P2.2 时光机保护)
     if res['passed']:
         try:
@@ -500,6 +519,76 @@ def grade_all(results_dir=None):
                 if exp_id in GRADING_SPECS:
                     reports.append(grade_result_file(exp_id))
     return reports
+
+
+def display_grade_card(grade_result: dict):
+    """在 Jupyter Notebook 中以工控仪表盘卡片形式展示评分结果与智能归因诊断"""
+    from IPython.display import HTML, display
+    exp_id = grade_result.get('experiment', '未知实验')
+    name = grade_result.get('name', exp_id)
+    score = grade_result.get('score', 0.0)
+    passed = grade_result.get('passed', False)
+    details = grade_result.get('details', [])
+
+    status_bg = '#ecfdf5' if passed else '#fef2f2'
+    status_border = '#10b981' if passed else '#ef4444'
+    status_color = '#047857' if passed else '#b91c1c'
+    status_text = '达标通过' if passed else '未通过需整改'
+
+    rows_html = ""
+    for d in details:
+        ok = d.get('passed', False)
+        icon = '✅' if ok else '❌'
+        val = d.get('value', '--')
+        if isinstance(val, float):
+            val = round(val, 3)
+        rows_html += f"""
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 8px 10px; font-weight: 600; color: #1e293b;">{d.get('desc', d.get('metric'))}</td>
+            <td style="padding: 8px 10px; font-family: monospace; color: #475569;">{val}</td>
+            <td style="padding: 8px 10px; text-align: center;">{icon}</td>
+        </tr>
+        """
+
+    grade_html = f"""
+    <div style="background: #ffffff; border: 1.5px solid {status_border}; border-radius: 10px; padding: 16px 20px; margin: 12px 0; font-family: system-ui, sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px;">
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">
+                    IEV CloudLab Auto-Evaluator
+                </span>
+                <h3 style="margin: 2px 0 0 0; font-size: 16px; color: #0f172a; font-weight: 700;">
+                    {exp_id} · {name}
+                </h3>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="background: {status_bg}; border: 1px solid {status_border}; border-radius: 6px; padding: 4px 12px; text-align: center;">
+                    <div style="font-size: 10px; color: {status_color}; font-weight: 600;">{status_text}</div>
+                    <div style="font-size: 18px; font-weight: 800; color: {status_color}; line-height: 1.1;">{score:.1f} <span style="font-size: 11px; font-weight: normal;">分</span></div>
+                </div>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 11px;">
+                    <th style="padding: 6px 10px;">考核判据项</th>
+                    <th style="padding: 6px 10px;">实测数值</th>
+                    <th style="padding: 6px 10px; text-align: center; width: 60px;">状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+        </table>
+    </div>
+    """
+
+    diag_html = grade_result.get('diagnosis_html', '')
+    if diag_html:
+        display(HTML(grade_html + diag_html))
+    else:
+        display(HTML(grade_html))
 
 
 def generate_report(reports, fmt='markdown'):
